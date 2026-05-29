@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { PlayerId, RoomView, Team } from "@sequence/shared";
+import type { DeckSummary, PlayerId, RoomView, Team } from "@sequence/shared";
 import { TEAM_CHIP, TEAM_LABEL } from "../lib/cards";
 
 interface Props {
@@ -7,10 +7,11 @@ interface Props {
   myPlayerId: PlayerId;
   connected: boolean;
   error: string | null;
+  decks: DeckSummary[];
   onClearError: () => void;
   onChooseTeam: (team: Team) => Promise<void>;
   onSetReady: (ready: boolean) => Promise<void>;
-  onStart: (opts: { sequencesToWin: number }) => Promise<void>;
+  onStart: (opts: { sequencesToWin: number; deckId: string | null }) => Promise<void>;
   onLeave: () => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ export function LobbyScreen({
   myPlayerId,
   connected,
   error,
+  decks,
   onClearError,
   onChooseTeam,
   onSetReady,
@@ -28,6 +30,7 @@ export function LobbyScreen({
   const mySeat = room.seats.find((s) => s.id === myPlayerId);
   const isHost = mySeat?.isHost ?? false;
   const [sequencesToWin, setSequencesToWin] = useState(2);
+  const [deckId, setDeckId] = useState<string>("");
 
   // Heuristic for whether the host can start.
   const teamsPresent = new Set(room.seats.map((s) => s.team).filter(Boolean));
@@ -170,10 +173,26 @@ export function LobbyScreen({
               <option value={4}>4 (marathon)</option>
             </select>
           </label>
+          <label className="flex items-center justify-between text-sm">
+            <span className="text-slate-300">Card layout</span>
+            <select
+              value={deckId}
+              onChange={(e) => setDeckId(e.target.value)}
+              className="bg-slate-900 border border-slate-700 rounded px-2 py-1 max-w-[60%]"
+              data-testid="deck-select"
+            >
+              <option value="">Built-in (CSS rendered)</option>
+              {decks.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="button"
             disabled={!canStart}
-            onClick={() => onStart({ sequencesToWin })}
+            onClick={() => onStart({ sequencesToWin, deckId: deckId || null })}
             className="w-full py-3 rounded bg-amber-500 text-slate-900 font-bold hover:bg-amber-400 disabled:bg-slate-700 disabled:text-slate-400"
           >
             Start game

@@ -53,6 +53,8 @@ export interface GameConfig {
   handSize: number;
   /** RNG seed for deterministic deck shuffle + board generation. */
   seed: number;
+  /** Deck id (matches a folder under Card_layout/). null = built-in rendering. */
+  deckId: string | null;
 }
 
 export interface GameState {

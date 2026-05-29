@@ -3,6 +3,7 @@ import {
   createInitialState,
   toGameView,
   type Action,
+  type DeckManifest,
   type GameState,
   type GameView,
   type PlayerId,
@@ -28,6 +29,7 @@ export class Room {
   hostId: PlayerId;
   seats: RoomSeat[] = [];
   game: GameState | null = null;
+  deck: DeckManifest | null = null;
 
   constructor(code: string, host: { id: PlayerId; name: string; socketId: string }) {
     this.code = code;
@@ -117,7 +119,14 @@ export class Room {
     return sizes.every((n) => n === sizes[0]);
   }
 
-  start(opts: { sequencesToWin?: number; seed?: number } = {}): void {
+  start(
+    opts: {
+      sequencesToWin?: number;
+      seed?: number;
+      deckId?: string | null;
+      deck?: DeckManifest | null;
+    } = {},
+  ): void {
     if (!this.canStart()) throw new Error("cannot start: lobby not ready");
 
     // Build seat order: round-robin by team so play order alternates.
@@ -147,7 +156,9 @@ export class Room {
     this.game = createInitialState(seatInputs, {
       sequencesToWin: opts.sequencesToWin,
       seed: opts.seed,
+      deckId: opts.deckId ?? null,
     });
+    this.deck = opts.deck ?? null;
   }
 
   applyAction(playerId: PlayerId, action: Action) {
@@ -160,6 +171,7 @@ export class Room {
   stop(): void {
     if (!this.game) return;
     this.game = null;
+    this.deck = null;
     for (const seat of this.seats) seat.ready = false;
   }
 
@@ -183,6 +195,7 @@ export class Room {
   gameView(viewerId: PlayerId | null): GameView | null {
     if (!this.game) return null;
     const view = toGameView(this.game, viewerId);
+    view.deck = this.deck;
     // overlay real connection state on player public info
     view.players = view.players.map((p) => {
       const seat = this.seats.find((s) => s.id === p.id);

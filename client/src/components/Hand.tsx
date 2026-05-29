@@ -1,4 +1,4 @@
-import type { Card } from "@sequence/shared";
+import type { Card, DeckManifest } from "@sequence/shared";
 import { CardFace } from "./CardFace";
 
 interface Props {
@@ -6,10 +6,11 @@ interface Props {
   selectedCardId: number | null;
   deadCardIds: ReadonlySet<number>;
   disabled: boolean;
+  deck: DeckManifest | null;
   onSelect: (cardId: number) => void;
 }
 
-export function Hand({ hand, selectedCardId, deadCardIds, disabled, onSelect }: Props) {
+export function Hand({ hand, selectedCardId, deadCardIds, disabled, deck, onSelect }: Props) {
   return (
     <div className="flex gap-1 sm:gap-2 items-end justify-center p-2 sm:p-3 bg-slate-800/60 rounded-md overflow-x-auto">
       {hand.map((card) => {
@@ -29,7 +30,7 @@ export function Hand({ hand, selectedCardId, deadCardIds, disabled, onSelect }: 
             } ${isSelected ? "ring-2 ring-amber-400 rounded" : ""}`}
             title={isDead ? "dead card" : undefined}
           >
-            <CardFace card={card} size="responsive" faded={isDead && !isSelected} />
+            <CardFace card={card} size="responsive" faded={isDead && !isSelected} deck={deck} />
           </button>
         );
       })}

@@ -34,8 +34,9 @@ export function createInitialState(
   const handSize = configOverride.handSize ?? defaultHandSize(seats.length);
   const sequencesToWin =
     configOverride.sequencesToWin ?? defaultSequencesToWin(teams.size);
+  const deckId = configOverride.deckId ?? null;
 
-  const config: GameConfig = { seed, handSize, sequencesToWin };
+  const config: GameConfig = { seed, handSize, sequencesToWin, deckId };
 
   const board = generateBoard(seed);
   const chips: Chip[][] = [];

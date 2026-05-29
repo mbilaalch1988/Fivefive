@@ -1,6 +1,26 @@
 import type { Action, BoardSquare, Card, Chip, Team, PlayerId, Sequence } from "./types.js";
 
 /* ------------------------------------------------------------------ */
+/* Deck (card-art) manifests                                          */
+/* ------------------------------------------------------------------ */
+
+/** A card-art deck. URLs are relative to /decks/<id>/ on the server. */
+export interface DeckManifest {
+  id: string;
+  name: string;
+  /** Path (relative to /decks/<id>/) of the card-back image. */
+  back: string;
+  /** Map from card code "RS"/"2H"/"TC"/... to image path. */
+  cards: Record<string, string>;
+}
+
+/** Summary shown in lobby UI (excludes the full card map). */
+export interface DeckSummary {
+  id: string;
+  name: string;
+}
+
+/* ------------------------------------------------------------------ */
 /* Lobby                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -50,6 +70,8 @@ export interface GameView {
   discardedThisTurn: boolean;
   sequencesToWin: number;
   teamSequenceCounts: Record<Team, number>;
+  /** Card-art manifest if the host picked a deck; null = built-in CSS rendering. */
+  deck: DeckManifest | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -79,7 +101,7 @@ export interface ClientToServerEvents {
     ack: (res: AckResult<{}>) => void,
   ) => void;
   startGame: (
-    payload: { sequencesToWin?: number },
+    payload: { sequencesToWin?: number; deckId?: string | null },
     ack: (res: AckResult<{}>) => void,
   ) => void;
   stopGame: (ack: (res: AckResult<{}>) => void) => void;

@@ -14,6 +14,7 @@ import {
 } from "@sequence/shared";
 import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
+import { DeckRegistry } from "./decks.js";
 import { newPlayerId } from "./util.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
@@ -33,10 +34,20 @@ app.get("/health", (_req, res) => {
 // SPA routes. The build lives at <repo>/client/dist; this file lives at
 // <repo>/server/src/index.ts, so the path is ../../client/dist.
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const CARD_LAYOUT = join(__dirname, "..", "..", "Card_layout");
+const deckRegistry = new DeckRegistry(CARD_LAYOUT);
+
+if (existsSync(CARD_LAYOUT)) {
+  app.use("/decks", express.static(CARD_LAYOUT));
+}
+app.get("/api/decks", (_req, res) => {
+  res.json({ decks: deckRegistry.list() });
+});
+
 const CLIENT_DIST = join(__dirname, "..", "..", "client", "dist");
 if (existsSync(CLIENT_DIST)) {
   app.use(express.static(CLIENT_DIST));
-  app.get(/^\/(?!health|socket\.io).*/, (_req, res) => {
+  app.get(/^\/(?!health|api|decks|socket\.io).*/, (_req, res) => {
     res.sendFile(join(CLIENT_DIST, "index.html"));
   });
   console.log(`[server] serving client from ${CLIENT_DIST}`);
@@ -160,7 +171,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("startGame", ({ sequencesToWin }, ack) => {
+  socket.on("startGame", ({ sequencesToWin, deckId }, ack) => {
     const code = socketRoom.get(socket.id);
     const room = code ? registry.get(code) : undefined;
     if (!room) return ack({ ok: false, error: "not in a room" });
@@ -169,8 +180,12 @@ io.on("connection", (socket) => {
     if (seat.id !== room.hostId) {
       return ack({ ok: false, error: "only the host can start the game" });
     }
+    const deck = deckId ? deckRegistry.get(deckId) ?? null : null;
+    if (deckId && !deck) {
+      return ack({ ok: false, error: `unknown deck "${deckId}"` });
+    }
     try {
-      room.start({ sequencesToWin });
+      room.start({ sequencesToWin, deckId: deck?.id ?? null, deck });
       ack({ ok: true });
       broadcastRoom(room);
       broadcastGame(room);

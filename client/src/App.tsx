@@ -25,6 +25,7 @@ export default function App() {
         myPlayerId={g.playerId}
         connected={g.connected}
         error={g.error}
+        decks={g.decks}
         onClearError={g.clearError}
         onChooseTeam={g.chooseTeam}
         onSetReady={g.setReady}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   buildCardIndex,
   cardKey,
@@ -58,6 +58,23 @@ export function GameScreen({
   }, [view.myHand, view.chips, cardIndex]);
 
   const lockedSet = useMemo(() => new Set(view.lockedChips), [view.lockedChips]);
+
+  // Detect newly-locked chips so we can fire the chip flip animation.
+  const prevLockedRef = useRef<Set<string>>(new Set());
+  const [justLocked, setJustLocked] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    const current = new Set(view.lockedChips);
+    const newly = new Set<string>();
+    for (const key of current) {
+      if (!prevLockedRef.current.has(key)) newly.add(key);
+    }
+    prevLockedRef.current = current;
+    if (newly.size > 0) {
+      setJustLocked(newly);
+      const t = setTimeout(() => setJustLocked(new Set()), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [view.lockedChips]);
 
   function highlight(pos: Pos): "none" | "playable" | "removable" {
     if (!myTurn || !selectedCard || view.winner) return "none";
@@ -132,7 +149,12 @@ export function GameScreen({
       )}
 
       <div className="w-full max-w-3xl">
-        <Board view={view} highlight={highlight} onSquareClick={onSquareClick} />
+        <Board
+          view={view}
+          justLocked={justLocked}
+          highlight={highlight}
+          onSquareClick={onSquareClick}
+        />
       </div>
 
       <div className="w-full max-w-3xl space-y-2">
@@ -159,6 +181,7 @@ export function GameScreen({
               selectedCardId={selectedCardId}
               deadCardIds={deadCardIds}
               disabled={!myTurn || view.winner !== null}
+              deck={view.deck}
               onSelect={(id) =>
                 setSelectedCardId((prev) => (prev === id ? null : id))
               }
@@ -183,7 +206,7 @@ export function GameScreen({
           <span className="text-[0.6rem] sm:text-xs text-slate-400 mb-1 uppercase tracking-widest">
             Last played
           </span>
-          <CardFace card={view.discardPileTop} size="sm" />
+          <CardFace card={view.discardPileTop} size="sm" deck={view.deck} />
         </div>
       )}
 

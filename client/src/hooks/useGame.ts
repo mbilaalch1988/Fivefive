@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   Action,
+  DeckSummary,
   GameView,
   PlayerId,
   RoomView,
@@ -51,7 +52,8 @@ export interface UseGame {
   leave: () => Promise<void>;
   chooseTeam: (team: Team) => Promise<void>;
   setReady: (ready: boolean) => Promise<void>;
-  startGame: (opts?: { sequencesToWin?: number }) => Promise<void>;
+  decks: DeckSummary[];
+  startGame: (opts?: { sequencesToWin?: number; deckId?: string | null }) => Promise<void>;
   stopGame: () => Promise<void>;
   doAction: (action: Action) => Promise<{ ok: boolean; error?: string }>;
 }
@@ -64,8 +66,20 @@ export function useGame(): UseGame {
   const [room, setRoom] = useState<RoomView | null>(null);
   const [game, setGame] = useState<GameView | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [decks, setDecks] = useState<DeckSummary[]>([]);
 
   const phase: Phase = game ? "game" : room ? "lobby" : "landing";
+
+  // Fetch available decks once on mount.
+  useEffect(() => {
+    const apiBase =
+      import.meta.env.VITE_SERVER_URL ??
+      (import.meta.env.DEV ? "http://localhost:3001" : "");
+    fetch(`${apiBase}/api/decks`)
+      .then((r) => (r.ok ? r.json() : { decks: [] }))
+      .then((data: { decks: DeckSummary[] }) => setDecks(data.decks ?? []))
+      .catch(() => setDecks([]));
+  }, []);
 
   // Socket lifecycle + event subscriptions.
   useEffect(() => {
@@ -199,7 +213,7 @@ export function useGame(): UseGame {
   );
 
   const startGame = useCallback(
-    async (opts: { sequencesToWin?: number } = {}) => {
+    async (opts: { sequencesToWin?: number; deckId?: string | null } = {}) => {
       const s = socketRef.current!;
       const res = (await emit(s, "startGame", opts)) as {
         ok: boolean;
@@ -245,6 +259,7 @@ export function useGame(): UseGame {
     leave,
     chooseTeam,
     setReady,
+    decks,
     startGame,
     stopGame,
     doAction,

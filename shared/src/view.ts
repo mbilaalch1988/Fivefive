@@ -34,6 +34,7 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     discardedThisTurn: state.discardedThisTurn,
     sequencesToWin: state.config.sequencesToWin,
     teamSequenceCounts,
+    deck: null, // server overrides with the Room's manifest if any
   };
 }
 
