@@ -38,6 +38,14 @@ export interface RoomView {
   hostId: PlayerId;
   seats: Seat[];
   inGame: boolean;
+  /** Display names for each team (host-customizable). */
+  teamNames: Record<Team, string>;
+  /** Cumulative team wins in this room session. */
+  teamScores: Record<Team, number>;
+  /** Cumulative player wins keyed by display name. */
+  playerScores: Record<string, number>;
+  /** Total games completed in this room. */
+  gamesPlayed: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -72,6 +80,8 @@ export interface GameView {
   teamSequenceCounts: Record<Team, number>;
   /** Card-art manifest if the host picked a deck; null = built-in CSS rendering. */
   deck: DeckManifest | null;
+  /** Display names for each team. */
+  teamNames: Record<Team, string>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -105,6 +115,10 @@ export interface ClientToServerEvents {
     ack: (res: AckResult<{}>) => void,
   ) => void;
   stopGame: (ack: (res: AckResult<{}>) => void) => void;
+  renameTeam: (
+    payload: { team: Team; name: string },
+    ack: (res: AckResult<{}>) => void,
+  ) => void;
   doAction: (
     payload: Action,
     ack: (res: AckResult<{}>) => void,

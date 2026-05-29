@@ -29,6 +29,7 @@ export default function App() {
         onClearError={g.clearError}
         onChooseTeam={g.chooseTeam}
         onSetReady={g.setReady}
+        onRenameTeam={g.renameTeam}
         onStart={(opts) => g.startGame(opts)}
         onLeave={g.leave}
       />
@@ -40,11 +41,12 @@ export default function App() {
   return (
     <GameScreen
       view={g.game}
+      room={g.room}
       myPlayerId={g.playerId}
       isHost={isHost}
       dispatch={g.doAction}
       onStopGame={g.stopGame}
-      onPlayAgain={g.stopGame}
+      onRematch={g.stopGame}
     />
   );
 }

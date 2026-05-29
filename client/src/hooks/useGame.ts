@@ -55,6 +55,7 @@ export interface UseGame {
   decks: DeckSummary[];
   startGame: (opts?: { sequencesToWin?: number; deckId?: string | null }) => Promise<void>;
   stopGame: () => Promise<void>;
+  renameTeam: (team: Team, name: string) => Promise<void>;
   doAction: (action: Action) => Promise<{ ok: boolean; error?: string }>;
 }
 
@@ -230,6 +231,18 @@ export function useGame(): UseGame {
     handleAck(res);
   }, [handleAck]);
 
+  const renameTeam = useCallback(
+    async (team: Team, name: string) => {
+      const s = socketRef.current!;
+      const res = (await emit(s, "renameTeam", { team, name })) as {
+        ok: boolean;
+        error?: string;
+      };
+      handleAck(res);
+    },
+    [handleAck],
+  );
+
   const doAction = useCallback(
     async (action: Action) => {
       const s = socketRef.current!;
@@ -262,6 +275,7 @@ export function useGame(): UseGame {
     decks,
     startGame,
     stopGame,
+    renameTeam,
     doAction,
   };
 }

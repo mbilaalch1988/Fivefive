@@ -1,17 +1,17 @@
 import type { Card, Rank, Suit, Team } from "@sequence/shared";
 
 export const SUIT_SYMBOL: Record<Suit, string> = {
-  S: "♠", // ♠
-  H: "♥", // ♥
-  D: "♦", // ♦
-  C: "♣", // ♣
+  S: "♠",
+  H: "♥",
+  D: "♦",
+  C: "♣",
 };
 
 export const SUIT_COLOR: Record<Suit, string> = {
-  S: "text-slate-900",
-  H: "text-red-600",
-  D: "text-red-600",
-  C: "text-slate-900",
+  S: "text-zinc-900",
+  H: "text-rose-600",
+  D: "text-rose-600",
+  C: "text-zinc-900",
 };
 
 export const RANK_DISPLAY: Record<Rank, string> = {
@@ -19,19 +19,27 @@ export const RANK_DISPLAY: Record<Rank, string> = {
   T: "10", J: "J", Q: "Q", K: "K", A: "A",
 };
 
+/** Team chip pills (filled circle bg + border). */
 export const TEAM_CHIP: Record<Team, string> = {
-  red: "bg-red-500 border-red-700",
-  blue: "bg-blue-500 border-blue-700",
+  red: "bg-rose-500 border-rose-700",
+  blue: "bg-sky-500 border-sky-700",
   green: "bg-emerald-500 border-emerald-700",
 };
 
-export const TEAM_RING: Record<Team, string> = {
-  red: "ring-red-400",
-  blue: "ring-blue-400",
-  green: "ring-emerald-400",
+/** Soft, low-saturation surface for team-tinted containers (Material tonal). */
+export const TEAM_SURFACE: Record<Team, string> = {
+  red: "bg-rose-500/15 border-rose-400/40",
+  blue: "bg-sky-500/15 border-sky-400/40",
+  green: "bg-emerald-500/15 border-emerald-400/40",
 };
 
-export const TEAM_LABEL: Record<Team, string> = {
+export const TEAM_TEXT: Record<Team, string> = {
+  red: "text-rose-300",
+  blue: "text-sky-300",
+  green: "text-emerald-300",
+};
+
+export const DEFAULT_TEAM_LABEL: Record<Team, string> = {
   red: "Red",
   blue: "Blue",
   green: "Green",

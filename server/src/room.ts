@@ -23,6 +23,7 @@ interface RoomSeat {
 }
 
 const TEAM_ORDER: Team[] = ["red", "blue", "green"];
+const MAX_TEAM_NAME = 24;
 
 export class Room {
   readonly code: string;
@@ -30,6 +31,10 @@ export class Room {
   seats: RoomSeat[] = [];
   game: GameState | null = null;
   deck: DeckManifest | null = null;
+  teamNames: Record<Team, string> = { red: "Red", blue: "Blue", green: "Green" };
+  teamScores: Record<Team, number> = { red: 0, blue: 0, green: 0 };
+  playerScores: Record<string, number> = {};
+  gamesPlayed = 0;
 
   constructor(code: string, host: { id: PlayerId; name: string; socketId: string }) {
     this.code = code;
@@ -92,7 +97,7 @@ export class Room {
     const seat = this.seats.find((s) => s.id === playerId);
     if (!seat) throw new Error("not in room");
     seat.team = team;
-    seat.ready = false; // re-confirm after switching
+    seat.ready = false;
   }
 
   setReady(playerId: PlayerId, ready: boolean): void {
@@ -103,14 +108,21 @@ export class Room {
     seat.ready = ready;
   }
 
+  renameTeam(team: Team, name: string): void {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error("name required");
+    if (trimmed.length > MAX_TEAM_NAME) {
+      throw new Error(`name too long (max ${MAX_TEAM_NAME})`);
+    }
+    this.teamNames[team] = trimmed;
+  }
+
   canStart(): boolean {
     if (this.game) return false;
     if (this.seats.length < 2) return false;
     if (!this.seats.every((s) => s.team !== null && s.ready)) return false;
     const teams = new Set(this.seats.map((s) => s.team));
     if (teams.size < 2) return false;
-
-    // All teams must have equal counts (so seats round-robin fairly).
     const counts = new Map<Team, number>();
     for (const s of this.seats) {
       counts.set(s.team!, (counts.get(s.team!) ?? 0) + 1);
@@ -129,7 +141,6 @@ export class Room {
   ): void {
     if (!this.canStart()) throw new Error("cannot start: lobby not ready");
 
-    // Build seat order: round-robin by team so play order alternates.
     const byTeam = new Map<Team, RoomSeat[]>();
     for (const s of this.seats) {
       const arr = byTeam.get(s.team!) ?? [];
@@ -163,11 +174,26 @@ export class Room {
 
   applyAction(playerId: PlayerId, action: Action) {
     if (!this.game) throw new Error("game not started");
-    const result = applyAction(this.game, playerId, action);
-    return result;
+    return applyAction(this.game, playerId, action);
   }
 
-  /** End the current game; lobby state is preserved but ready flags clear. */
+  /** Call after applyAction; if a winner was just declared, record the win. */
+  maybeRecordWin(): boolean {
+    if (!this.game || !this.game.winner) return false;
+    if (this.game.winner) {
+      const winner = this.game.winner;
+      this.teamScores[winner] = (this.teamScores[winner] ?? 0) + 1;
+      for (const p of this.game.players) {
+        if (p.team === winner) {
+          this.playerScores[p.name] = (this.playerScores[p.name] ?? 0) + 1;
+        }
+      }
+      this.gamesPlayed += 1;
+      return true;
+    }
+    return false;
+  }
+
   stop(): void {
     if (!this.game) return;
     this.game = null;
@@ -189,6 +215,10 @@ export class Room {
       hostId: this.hostId,
       seats,
       inGame: this.game !== null,
+      teamNames: { ...this.teamNames },
+      teamScores: { ...this.teamScores },
+      playerScores: { ...this.playerScores },
+      gamesPlayed: this.gamesPlayed,
     };
   }
 
@@ -196,7 +226,7 @@ export class Room {
     if (!this.game) return null;
     const view = toGameView(this.game, viewerId);
     view.deck = this.deck;
-    // overlay real connection state on player public info
+    view.teamNames = { ...this.teamNames };
     view.players = view.players.map((p) => {
       const seat = this.seats.find((s) => s.id === p.id);
       return { ...p, connected: seat?.connected ?? false };
@@ -204,7 +234,6 @@ export class Room {
     return view;
   }
 
-  /** Socket IDs of every connected seat — for room broadcast emission. */
   connectedSocketIds(): string[] {
     return this.seats
       .filter((s) => s.connected && s.socketId !== null)

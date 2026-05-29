@@ -7,9 +7,10 @@ interface Props {
   chip: Chip;
   locked: boolean;
   justLocked: boolean;
+  /** Non-null = chip is part of celebrating team's winning sequences; delay ms before glow. */
+  celebrateDelayMs: number | null;
   highlight: "none" | "playable" | "removable";
   deck: DeckManifest | null;
-  /** ms before the entry flip starts (used at game start for the wave effect). */
   flipDelayMs: number;
   onClick: () => void;
   testId?: string;
@@ -20,6 +21,7 @@ export function Square({
   chip,
   locked,
   justLocked,
+  celebrateDelayMs,
   highlight,
   deck,
   flipDelayMs,
@@ -39,8 +41,8 @@ export function Square({
       onClick={onClick}
       data-testid={testId}
       data-highlight={highlight}
-      className={`relative aspect-square w-full rounded-sm overflow-hidden bg-slate-900 ${baseRing} ${
-        highlight !== "none" ? "cursor-pointer hover:brightness-105" : "cursor-default"
+      className={`relative aspect-[5/7] w-full rounded-md overflow-hidden bg-zinc-950 ${baseRing} ${
+        highlight !== "none" ? "cursor-pointer hover:brightness-110" : "cursor-default"
       }`}
       style={{ perspective: "600px" }}
     >
@@ -58,7 +60,14 @@ export function Square({
           <SquareBack deck={deck} />
         </div>
       </div>
-      {chip && <ChipDisk team={chip} locked={locked} justLocked={justLocked} />}
+      {chip && (
+        <ChipDisk
+          team={chip}
+          locked={locked}
+          justLocked={justLocked}
+          celebrateDelayMs={celebrateDelayMs}
+        />
+      )}
     </button>
   );
 }
@@ -137,16 +146,20 @@ function ChipDisk({
   team,
   locked,
   justLocked,
+  celebrateDelayMs,
 }: {
   team: Team;
   locked: boolean;
   justLocked: boolean;
+  celebrateDelayMs: number | null;
 }) {
+  const celebrating = celebrateDelayMs !== null;
   return (
     <div
-      className={`absolute inset-0.5 sm:inset-1 rounded-full border-2 ${TEAM_CHIP[team]} flex items-center justify-center shadow-md ${
+      className={`absolute inset-1 sm:inset-1.5 rounded-full border-2 ${TEAM_CHIP[team]} flex items-center justify-center shadow-md ${
         justLocked ? "chip-flip" : ""
-      } ${locked ? "ring-2 ring-yellow-300 ring-offset-1 ring-offset-slate-50" : ""}`}
+      } ${celebrating ? "chip-celebrate" : ""}`}
+      style={celebrating ? { animationDelay: `${celebrateDelayMs}ms` } : undefined}
     >
       {locked && (
         <svg
@@ -155,7 +168,6 @@ function ChipDisk({
           fill="currentColor"
           aria-hidden="true"
         >
-          {/* Stylized crown */}
           <path d="M3 8l3.5 3 2.5-5 3 5 3-5 2.5 5L21 8l-1.6 9H4.6L3 8zm1.7 11h14.6v2H4.7v-2z" />
         </svg>
       )}

@@ -1,28 +1,98 @@
-import type { Team } from "@sequence/shared";
-import { TEAM_CHIP, TEAM_LABEL } from "../lib/cards";
+import type { RoomView, Team } from "@sequence/shared";
+import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 
 interface Props {
   team: Team;
-  onPlayAgain?: () => void;
+  teamName: string;
+  room: RoomView | null;
+  onRematch: () => void;
+  onLeave: () => void;
 }
 
-export function WinOverlay({ team, onPlayAgain }: Props) {
+export function WinOverlay({ team, teamName, room, onRematch, onLeave }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-slate-100 text-slate-900 rounded-lg p-8 max-w-sm w-full text-center space-y-4 shadow-2xl">
-        <div
-          className={`mx-auto w-16 h-16 rounded-full border-4 ${TEAM_CHIP[team]}`}
-        />
-        <h2 className="text-2xl font-bold">{TEAM_LABEL[team]} team wins!</h2>
-        {onPlayAgain && (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)" }}
+    >
+      <div
+        className="overlay-enter w-full max-w-sm rounded-3xl p-6 space-y-5 shadow-2xl"
+        style={{ background: "var(--md-surface-1)" }}
+      >
+        <div className="text-center space-y-3">
+          <div
+            className={`mx-auto w-20 h-20 rounded-full border-4 flex items-center justify-center ${TEAM_CHIP[team]} shadow-lg`}
+          >
+            <svg viewBox="0 0 24 24" className="w-12 h-12 text-yellow-200 drop-shadow" fill="currentColor">
+              <path d="M3 8l3.5 3 2.5-5 3 5 3-5 2.5 5L21 8l-1.6 9H4.6L3 8zm1.7 11h14.6v2H4.7v-2z" />
+            </svg>
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
+              Winner
+            </div>
+            <h2 className={`text-3xl font-semibold tracking-tight ${TEAM_TEXT[team]}`}>
+              {teamName}
+            </h2>
+          </div>
+        </div>
+
+        {room && (
+          <section className="rounded-2xl p-3 space-y-2" style={{ background: "var(--md-surface-2)" }}>
+            <div className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
+              Scoreboard
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-center text-sm">
+              {(["red", "blue"] as Team[]).map((t) => (
+                <div key={t} className="rounded-xl py-2" style={{ background: "var(--md-surface-3)" }}>
+                  <div className={`text-xs uppercase tracking-wider ${TEAM_TEXT[t]}`}>
+                    {room.teamNames[t]}
+                  </div>
+                  <div className="text-xl font-semibold">{room.teamScores[t]}</div>
+                </div>
+              ))}
+            </div>
+            {Object.keys(room.playerScores).length > 0 && (
+              <ul className="space-y-1 text-sm pt-1">
+                {Object.entries(room.playerScores)
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([name, wins]) => (
+                    <li
+                      key={name}
+                      className="flex items-center justify-between rounded-lg px-3 py-1.5"
+                      style={{ background: "var(--md-surface-3)" }}
+                    >
+                      <span>{name}</span>
+                      <span className="font-semibold text-amber-300">{wins}</span>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </section>
+        )}
+
+        <div className="flex gap-3">
           <button
             type="button"
-            onClick={onPlayAgain}
-            className="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700"
+            onClick={onLeave}
+            className="state-layer flex-1 py-3 rounded-full font-medium text-zinc-200
+                       bg-transparent border border-zinc-700 hover:border-zinc-500
+                       transition-colors"
           >
-            Play again
+            Leave
           </button>
-        )}
+          <button
+            type="button"
+            onClick={onRematch}
+            data-testid="rematch"
+            className="state-layer flex-1 py-3 rounded-full font-medium text-indigo-50
+                       bg-indigo-500 hover:bg-indigo-400 shadow-sm shadow-indigo-900/30
+                       transition-colors"
+          >
+            Re-match
+          </button>
+        </div>
       </div>
     </div>
   );

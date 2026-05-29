@@ -12,7 +12,10 @@ interface Props {
 
 export function Hand({ hand, selectedCardId, deadCardIds, disabled, deck, onSelect }: Props) {
   return (
-    <div className="flex gap-1 sm:gap-2 items-end justify-center p-2 sm:p-3 bg-slate-800/60 rounded-md overflow-x-auto">
+    <div
+      className="hand-scroll flex gap-1.5 sm:gap-2 items-end justify-center p-2.5 sm:p-3 rounded-2xl overflow-x-auto"
+      style={{ background: "var(--md-surface-1)" }}
+    >
       {hand.map((card) => {
         const isSelected = card.id === selectedCardId;
         const isDead = deadCardIds.has(card.id);
@@ -25,12 +28,19 @@ export function Hand({ hand, selectedCardId, deadCardIds, disabled, deck, onSele
             data-testid={`hand-${card.id}`}
             data-selected={isSelected}
             data-dead={isDead}
-            className={`transition-transform ${isSelected ? "-translate-y-3" : "hover:-translate-y-1"} ${
-              disabled ? "cursor-not-allowed" : "cursor-pointer"
-            } ${isSelected ? "ring-2 ring-amber-400 rounded" : ""}`}
+            className={`transition-transform shrink-0 ${
+              isSelected ? "-translate-y-3" : "hover:-translate-y-1"
+            } ${disabled ? "cursor-not-allowed" : "cursor-pointer"} ${
+              isSelected ? "ring-2 ring-amber-300 rounded-md" : ""
+            }`}
             title={isDead ? "dead card" : undefined}
           >
-            <CardFace card={card} size="responsive" faded={isDead && !isSelected} deck={deck} />
+            <CardFace
+              card={card}
+              size="responsive"
+              faded={isDead && !isSelected}
+              deck={deck}
+            />
           </button>
         );
       })}

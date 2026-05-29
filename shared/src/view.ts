@@ -35,6 +35,7 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     sequencesToWin: state.config.sequencesToWin,
     teamSequenceCounts,
     deck: null, // server overrides with the Room's manifest if any
+    teamNames: { red: "Red", blue: "Blue", green: "Green" },
   };
 }
 

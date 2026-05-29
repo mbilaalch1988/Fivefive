@@ -221,8 +221,31 @@ io.on("connection", (socket) => {
     try {
       const result = room.applyAction(seat.id, action);
       if (!result.ok) return ack({ ok: false, error: result.error });
+      // Persist the win if this action ended the game; updated counts ride along
+      // in the next room broadcast.
+      const justWon = room.maybeRecordWin();
       ack({ ok: true });
       broadcastGame(room);
+      if (justWon) broadcastRoom(room);
+    } catch (e) {
+      ack({ ok: false, error: (e as Error).message });
+    }
+  });
+
+  socket.on("renameTeam", ({ team, name }, ack) => {
+    const code = socketRoom.get(socket.id);
+    const room = code ? registry.get(code) : undefined;
+    if (!room) return ack({ ok: false, error: "not in a room" });
+    const seat = room.seatBySocketId(socket.id);
+    if (!seat) return ack({ ok: false, error: "no seat" });
+    if (seat.id !== room.hostId) {
+      return ack({ ok: false, error: "only the host can rename teams" });
+    }
+    try {
+      room.renameTeam(team, name);
+      ack({ ok: true });
+      broadcastRoom(room);
+      if (room.game) broadcastGame(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
     }

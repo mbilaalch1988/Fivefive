@@ -3,9 +3,12 @@ import { join } from "node:path";
 import type { DeckManifest, DeckSummary } from "@sequence/shared";
 
 /**
- * Scan Card_layout/ for subdirectories containing a manifest.json. Each
- * matching subdir becomes an available deck. Result is cached at startup;
- * adding decks while the server runs requires a restart.
+ * Scan Card_layout/ for subdirectories. Each subdir becomes a deck.
+ * A deck's manifest is either:
+ *  - Read from manifest.json if present, OR
+ *  - Auto-derived from filenames matching <rank><suit>.<ext>, plus a back/front.<ext>.
+ *    Ranks 2-9, 10 (or T), J, Q, K, A. Suits S/H/D/C. Extensions jpg/jpeg/png/webp.
+ *    "10X" is normalized to "TX" in the cards map (the game engine uses single-char ranks).
  */
 export class DeckRegistry {
   private byId = new Map<string, DeckManifest>();
@@ -30,24 +33,34 @@ export class DeckRegistry {
     for (const name of entries) {
       const dir = join(this.rootDir, name);
       if (!safeIsDir(dir)) continue;
-      const manifestPath = join(dir, "manifest.json");
-      if (!existsSync(manifestPath)) continue;
+      const manifest = this.loadDeck(name, dir);
+      if (!manifest) continue;
+      this.byId.set(manifest.id, manifest);
+      this.summaries.push({ id: manifest.id, name: manifest.name });
+    }
+    this.summaries.sort((a, b) => a.name.localeCompare(b.name));
+    if (this.byId.size > 0) {
+      console.log(`[decks] loaded ${this.byId.size} deck(s): ${this.summaries.map((s) => s.id).join(", ")}`);
+    }
+  }
+
+  private loadDeck(folderName: string, dir: string): DeckManifest | null {
+    const manifestPath = join(dir, "manifest.json");
+    if (existsSync(manifestPath)) {
       try {
         const raw = readFileSync(manifestPath, "utf8");
         const parsed = JSON.parse(raw) as DeckManifest;
         if (!parsed.id || !parsed.back || !parsed.cards) {
-          console.warn(`[decks] ${name}/manifest.json missing required fields, skipped`);
-          continue;
+          console.warn(`[decks] ${folderName}/manifest.json missing required fields, skipped`);
+          return null;
         }
-        this.byId.set(parsed.id, parsed);
-        this.summaries.push({ id: parsed.id, name: parsed.name ?? parsed.id });
+        return parsed;
       } catch (e) {
-        console.warn(`[decks] ${name}/manifest.json invalid: ${(e as Error).message}`);
+        console.warn(`[decks] ${folderName}/manifest.json invalid: ${(e as Error).message}`);
+        return null;
       }
     }
-    if (this.byId.size > 0) {
-      console.log(`[decks] loaded ${this.byId.size} deck(s): ${[...this.byId.keys()].join(", ")}`);
-    }
+    return autoDerive(folderName, dir);
   }
 
   list(): DeckSummary[] {
@@ -57,6 +70,49 @@ export class DeckRegistry {
   get(id: string): DeckManifest | undefined {
     return this.byId.get(id);
   }
+}
+
+const CARD_RE = /^(10|[2-9TJQKA])([SHDC])\.(jpe?g|png|webp)$/i;
+const BACK_RE = /^(back|front)\.(jpe?g|png|webp)$/i;
+
+function autoDerive(folderName: string, dir: string): DeckManifest | null {
+  let files: string[];
+  try {
+    files = readdirSync(dir);
+  } catch {
+    return null;
+  }
+  let back: string | null = null;
+  const cards: Record<string, string> = {};
+
+  for (const f of files) {
+    const m = f.match(CARD_RE);
+    if (m) {
+      const rank = m[1]!.toUpperCase() === "10" ? "T" : m[1]!.toUpperCase();
+      const suit = m[2]!.toUpperCase();
+      cards[`${rank}${suit}`] = f;
+      continue;
+    }
+    if (!back && BACK_RE.test(f)) {
+      back = f;
+    }
+  }
+
+  if (!back) {
+    console.warn(`[decks] ${folderName}: no back card found (looked for back.*/front.*), skipped`);
+    return null;
+  }
+  const cardCount = Object.keys(cards).length;
+  if (cardCount < 40) {
+    console.warn(`[decks] ${folderName}: only ${cardCount} cards detected, skipped (need ≥40)`);
+    return null;
+  }
+  return {
+    id: folderName,
+    name: folderName.replace(/_/g, " "),
+    back,
+    cards,
+  };
 }
 
 function safeIsDir(p: string): boolean {
