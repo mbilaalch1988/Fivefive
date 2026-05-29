@@ -15,6 +15,7 @@ import {
 import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { DeckRegistry } from "./decks.js";
+import { initDb, isPersistenceEnabled } from "./db.js";
 import { newPlayerId } from "./util.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
@@ -27,7 +28,12 @@ const app = express();
 app.use(cors({ origin: CLIENT_ORIGIN as cors.CorsOptions["origin"] }));
 const registry = new RoomRegistry();
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, shared: SHARED_VERSION, rooms: registry.size() });
+  res.json({
+    ok: true,
+    shared: SHARED_VERSION,
+    rooms: registry.size(),
+    persistence: isPersistenceEnabled() ? "postgres" : "in-memory",
+  });
 });
 
 // In production, serve the built React client and fall back to index.html for
@@ -282,6 +288,8 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`[server] listening on port ${PORT} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
+void initDb().finally(() => {
+  httpServer.listen(PORT, () => {
+    console.log(`[server] listening on port ${PORT} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);
+  });
 });

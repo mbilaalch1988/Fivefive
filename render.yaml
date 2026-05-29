@@ -12,3 +12,7 @@ services:
         value: "22"
       - key: NODE_ENV
         value: production
+      # Optional: set this in the Render dashboard to enable scoreboard persistence.
+      # Format: postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres
+      - key: DATABASE_URL
+        sync: false

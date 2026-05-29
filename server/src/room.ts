@@ -12,6 +12,7 @@ import {
   type SeatInput,
   type Team,
 } from "@sequence/shared";
+import { loadRoomState, persistTeamName, persistWin } from "./db.js";
 
 interface RoomSeat {
   id: PlayerId;
@@ -47,6 +48,18 @@ export class Room {
       connected: true,
       socketId: host.socketId,
     });
+    // Fire-and-forget: if Postgres is connected and this room code was used
+    // before (e.g. server restart), rehydrate the scoreboard + team names.
+    void this.tryRehydrate();
+  }
+
+  private async tryRehydrate(): Promise<void> {
+    const persisted = await loadRoomState(this.code);
+    if (!persisted) return;
+    this.gamesPlayed = persisted.gamesPlayed;
+    this.teamNames = persisted.teamNames;
+    this.teamScores = persisted.teamScores;
+    this.playerScores = persisted.playerScores;
   }
 
   addPlayer(p: { id: PlayerId; name: string; socketId: string }): void {
@@ -115,6 +128,7 @@ export class Room {
       throw new Error(`name too long (max ${MAX_TEAM_NAME})`);
     }
     this.teamNames[team] = trimmed;
+    void persistTeamName(this.code, team, trimmed);
   }
 
   canStart(): boolean {
@@ -180,18 +194,18 @@ export class Room {
   /** Call after applyAction; if a winner was just declared, record the win. */
   maybeRecordWin(): boolean {
     if (!this.game || !this.game.winner) return false;
-    if (this.game.winner) {
-      const winner = this.game.winner;
-      this.teamScores[winner] = (this.teamScores[winner] ?? 0) + 1;
-      for (const p of this.game.players) {
-        if (p.team === winner) {
-          this.playerScores[p.name] = (this.playerScores[p.name] ?? 0) + 1;
-        }
+    const winner = this.game.winner;
+    this.teamScores[winner] = (this.teamScores[winner] ?? 0) + 1;
+    const winningNames: string[] = [];
+    for (const p of this.game.players) {
+      if (p.team === winner) {
+        this.playerScores[p.name] = (this.playerScores[p.name] ?? 0) + 1;
+        winningNames.push(p.name);
       }
-      this.gamesPlayed += 1;
-      return true;
     }
-    return false;
+    this.gamesPlayed += 1;
+    void persistWin(this.code, winner, winningNames);
+    return true;
   }
 
   stop(): void {
