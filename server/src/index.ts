@@ -15,7 +15,7 @@ import {
 import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { DeckRegistry } from "./decks.js";
-import { initDb, isPersistenceEnabled } from "./db.js";
+import { getTopPlayers, getTopTeams, initDb, isPersistenceEnabled } from "./db.js";
 import { newPlayerId } from "./util.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
@@ -48,6 +48,15 @@ if (existsSync(CARD_LAYOUT)) {
 }
 app.get("/api/decks", (_req, res) => {
   res.json({ decks: deckRegistry.list() });
+});
+
+app.get("/api/scoreboard", async (_req, res) => {
+  if (!isPersistenceEnabled()) {
+    res.json({ topPlayers: [], topTeams: [], persisted: false });
+    return;
+  }
+  const [topPlayers, topTeams] = await Promise.all([getTopPlayers(5), getTopTeams(5)]);
+  res.json({ topPlayers, topTeams, persisted: true });
 });
 
 const CLIENT_DIST = join(__dirname, "..", "..", "client", "dist");

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Scoreboard } from "../components/Scoreboard";
 
 const NAME_STORAGE_KEY = "sequence.playerName";
 
@@ -20,6 +21,7 @@ export function LandingScreen({
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const [scoreboardOpen, setScoreboardOpen] = useState(false);
 
   // Auto-fill from localStorage on first render.
   useEffect(() => {
@@ -136,7 +138,32 @@ export function LandingScreen({
             Join room
           </TonalButton>
         </section>
+
+        {/* Scoreboard preview (inline, compact) + full-dialog button */}
+        <section
+          className="rounded-3xl p-5 space-y-3 shadow-sm"
+          style={{ background: "var(--md-surface-1)" }}
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
+              Hall of fame
+            </h2>
+            <button
+              type="button"
+              onClick={() => setScoreboardOpen(true)}
+              data-testid="scoreboard-button"
+              className="state-layer text-indigo-300 hover:text-indigo-200 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-indigo-400/40"
+            >
+              View all
+            </button>
+          </div>
+          <Scoreboard />
+        </section>
       </div>
+
+      {scoreboardOpen && (
+        <Scoreboard asDialog onClose={() => setScoreboardOpen(false)} />
+      )}
     </main>
   );
 }

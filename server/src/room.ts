@@ -12,7 +12,7 @@ import {
   type SeatInput,
   type Team,
 } from "@sequence/shared";
-import { loadRoomState, persistTeamName, persistWin } from "./db.js";
+import { loadRoomState, persistTeamName, persistWin, type WinRecord } from "./db.js";
 
 interface RoomSeat {
   id: PlayerId;
@@ -197,14 +197,26 @@ export class Room {
     const winner = this.game.winner;
     this.teamScores[winner] = (this.teamScores[winner] ?? 0) + 1;
     const winningNames: string[] = [];
+    const allNames: string[] = [];
+    const allTeamNames = new Set<string>();
     for (const p of this.game.players) {
+      allNames.push(p.name);
+      allTeamNames.add(this.teamNames[p.team]);
       if (p.team === winner) {
         this.playerScores[p.name] = (this.playerScores[p.name] ?? 0) + 1;
         winningNames.push(p.name);
       }
     }
     this.gamesPlayed += 1;
-    void persistWin(this.code, winner, winningNames);
+    const record: WinRecord = {
+      roomCode: this.code,
+      winningTeam: winner,
+      winningPlayerNames: winningNames,
+      allPlayerNames: allNames,
+      allTeamNames: [...allTeamNames],
+      winningTeamName: this.teamNames[winner],
+    };
+    void persistWin(record);
     return true;
   }
 

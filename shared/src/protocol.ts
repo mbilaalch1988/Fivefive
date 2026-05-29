@@ -21,6 +21,25 @@ export interface DeckSummary {
 }
 
 /* ------------------------------------------------------------------ */
+/* Global leaderboard                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface ScoreboardEntry {
+  name: string;
+  wins: number;
+  games: number;
+  /** 0.0 to 1.0; 0 when games == 0. */
+  ratio: number;
+}
+
+export interface ScoreboardResponse {
+  topPlayers: ScoreboardEntry[];
+  topTeams: ScoreboardEntry[];
+  /** True when the response came from Postgres; false = nothing persisted yet. */
+  persisted: boolean;
+}
+
+/* ------------------------------------------------------------------ */
 /* Lobby                                                              */
 /* ------------------------------------------------------------------ */
 

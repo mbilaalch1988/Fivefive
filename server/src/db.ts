@@ -83,6 +83,23 @@ async function runMigration(): Promise<void> {
       wins INT NOT NULL DEFAULT 0,
       PRIMARY KEY (room_code, player_name)
     );
+
+    -- Global leaderboards: total wins and games across ALL rooms.
+    -- player_stats keyed by display name (matches scoreboard merging behavior).
+    CREATE TABLE IF NOT EXISTS player_stats (
+      name TEXT PRIMARY KEY,
+      total_wins INT NOT NULL DEFAULT 0,
+      total_games INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    -- team_stats keyed by the host-chosen team display name.
+    CREATE TABLE IF NOT EXISTS team_stats (
+      name TEXT PRIMARY KEY,
+      total_wins INT NOT NULL DEFAULT 0,
+      total_games INT NOT NULL DEFAULT 0,
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 }
 
@@ -149,13 +166,30 @@ export async function persistTeamName(
   }
 }
 
-export async function persistWin(
-  roomCode: string,
-  winningTeam: "red" | "blue" | "green",
-  winningPlayerNames: string[],
-): Promise<void> {
+export interface WinRecord {
+  roomCode: string;
+  winningTeam: "red" | "blue" | "green";
+  winningPlayerNames: string[];
+  /** All player names who participated (winners + losers). */
+  allPlayerNames: string[];
+  /** Display names of every team that played this game (winners + losers). */
+  allTeamNames: string[];
+  /** Display name of the winning team. */
+  winningTeamName: string;
+}
+
+export async function persistWin(record: WinRecord): Promise<void> {
   if (!pool) return;
+  const {
+    roomCode,
+    winningTeam,
+    winningPlayerNames,
+    allPlayerNames,
+    allTeamNames,
+    winningTeamName,
+  } = record;
   try {
+    // Room-scoped (existing schema)
     await pool.query(
       `INSERT INTO room_meta (room_code, games_played) VALUES ($1, 1)
        ON CONFLICT (room_code) DO UPDATE SET games_played = room_meta.games_played + 1, updated_at = NOW()`,
@@ -173,7 +207,73 @@ export async function persistWin(
         [roomCode, name],
       );
     }
+
+    // Global leaderboards
+    for (const name of allPlayerNames) {
+      const isWinner = winningPlayerNames.includes(name);
+      await pool.query(
+        `INSERT INTO player_stats (name, total_wins, total_games)
+         VALUES ($1, $2, 1)
+         ON CONFLICT (name) DO UPDATE SET
+           total_wins = player_stats.total_wins + EXCLUDED.total_wins,
+           total_games = player_stats.total_games + 1,
+           updated_at = NOW()`,
+        [name, isWinner ? 1 : 0],
+      );
+    }
+    for (const name of allTeamNames) {
+      const isWinner = name === winningTeamName;
+      await pool.query(
+        `INSERT INTO team_stats (name, total_wins, total_games)
+         VALUES ($1, $2, 1)
+         ON CONFLICT (name) DO UPDATE SET
+           total_wins = team_stats.total_wins + EXCLUDED.total_wins,
+           total_games = team_stats.total_games + 1,
+           updated_at = NOW()`,
+        [name, isWinner ? 1 : 0],
+      );
+    }
   } catch (e) {
     console.warn("[db] persistWin failed:", (e as Error).message);
   }
+}
+
+interface TopRow {
+  name: string;
+  total_wins: number;
+  total_games: number;
+}
+
+async function topFrom(table: "player_stats" | "team_stats", limit: number): Promise<TopRow[]> {
+  if (!pool) return [];
+  try {
+    const r = await pool.query<TopRow>(
+      `SELECT name, total_wins, total_games FROM ${table}
+       WHERE total_games > 0
+       ORDER BY total_wins DESC, total_games ASC, name ASC
+       LIMIT $1`,
+      [limit],
+    );
+    return r.rows;
+  } catch (e) {
+    console.warn(`[db] top ${table} failed:`, (e as Error).message);
+    return [];
+  }
+}
+
+export async function getTopPlayers(limit: number) {
+  return rowsToEntries(await topFrom("player_stats", limit));
+}
+
+export async function getTopTeams(limit: number) {
+  return rowsToEntries(await topFrom("team_stats", limit));
+}
+
+function rowsToEntries(rows: TopRow[]) {
+  return rows.map((r) => ({
+    name: r.name,
+    wins: Number(r.total_wins),
+    games: Number(r.total_games),
+    ratio: r.total_games > 0 ? Number(r.total_wins) / Number(r.total_games) : 0,
+  }));
 }
