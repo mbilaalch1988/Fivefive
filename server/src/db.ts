@@ -59,6 +59,8 @@ export async function initDb(): Promise<void> {
 
 async function runMigration(): Promise<void> {
   if (!pool) return;
+  // Migration is idempotent: creates tables if missing, then adds new columns
+  // (ALTER TABLE IF NOT EXISTS available since Postgres 9.6).
   await pool.query(`
     CREATE TABLE IF NOT EXISTS room_meta (
       room_code TEXT PRIMARY KEY,
@@ -100,6 +102,11 @@ async function runMigration(): Promise<void> {
       total_games INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    -- New player career stats (added after initial deploy).
+    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS sequences_closed INT NOT NULL DEFAULT 0;
+    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS mvp_games INT NOT NULL DEFAULT 0;
+    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS chips_placed INT NOT NULL DEFAULT 0;
   `);
 }
 
@@ -166,16 +173,24 @@ export async function persistTeamName(
   }
 }
 
+export interface PlayerGameContribution {
+  name: string;
+  chipsPlaced: number;
+  sequencesClosed: number;
+  isWinner: boolean;
+  isMvp: boolean;
+}
+
 export interface WinRecord {
   roomCode: string;
   winningTeam: "red" | "blue" | "green";
   winningPlayerNames: string[];
-  /** All player names who participated (winners + losers). */
-  allPlayerNames: string[];
   /** Display names of every team that played this game (winners + losers). */
   allTeamNames: string[];
   /** Display name of the winning team. */
   winningTeamName: string;
+  /** Per-player breakdown — winners + losers + their per-game contributions. */
+  contributions: PlayerGameContribution[];
 }
 
 export async function persistWin(record: WinRecord): Promise<void> {
@@ -184,12 +199,12 @@ export async function persistWin(record: WinRecord): Promise<void> {
     roomCode,
     winningTeam,
     winningPlayerNames,
-    allPlayerNames,
     allTeamNames,
     winningTeamName,
+    contributions,
   } = record;
   try {
-    // Room-scoped (existing schema)
+    // Room-scoped (unchanged schema)
     await pool.query(
       `INSERT INTO room_meta (room_code, games_played) VALUES ($1, 1)
        ON CONFLICT (room_code) DO UPDATE SET games_played = room_meta.games_played + 1, updated_at = NOW()`,
@@ -208,19 +223,30 @@ export async function persistWin(record: WinRecord): Promise<void> {
       );
     }
 
-    // Global leaderboards
-    for (const name of allPlayerNames) {
-      const isWinner = winningPlayerNames.includes(name);
+    // Global player stats (rich)
+    for (const c of contributions) {
       await pool.query(
-        `INSERT INTO player_stats (name, total_wins, total_games)
-         VALUES ($1, $2, 1)
+        `INSERT INTO player_stats (
+           name, total_wins, total_games, sequences_closed, mvp_games, chips_placed
+         ) VALUES ($1, $2, 1, $3, $4, $5)
          ON CONFLICT (name) DO UPDATE SET
            total_wins = player_stats.total_wins + EXCLUDED.total_wins,
            total_games = player_stats.total_games + 1,
+           sequences_closed = player_stats.sequences_closed + EXCLUDED.sequences_closed,
+           mvp_games = player_stats.mvp_games + EXCLUDED.mvp_games,
+           chips_placed = player_stats.chips_placed + EXCLUDED.chips_placed,
            updated_at = NOW()`,
-        [name, isWinner ? 1 : 0],
+        [
+          c.name,
+          c.isWinner ? 1 : 0,
+          c.sequencesClosed,
+          c.isMvp ? 1 : 0,
+          c.chipsPlaced,
+        ],
       );
     }
+
+    // Global team stats (wins + games only)
     for (const name of allTeamNames) {
       const isWinner = name === winningTeamName;
       await pool.query(
@@ -238,42 +264,99 @@ export async function persistWin(record: WinRecord): Promise<void> {
   }
 }
 
-interface TopRow {
+interface PlayerTopRow {
+  name: string;
+  total_wins: number;
+  total_games: number;
+  sequences_closed: number;
+  mvp_games: number;
+}
+interface TeamTopRow {
   name: string;
   total_wins: number;
   total_games: number;
 }
 
-async function topFrom(table: "player_stats" | "team_stats", limit: number): Promise<TopRow[]> {
+export async function getTopPlayers(limit: number) {
   if (!pool) return [];
   try {
-    const r = await pool.query<TopRow>(
-      `SELECT name, total_wins, total_games FROM ${table}
+    const r = await pool.query<PlayerTopRow>(
+      `SELECT name, total_wins, total_games, sequences_closed, mvp_games
+       FROM player_stats WHERE total_games > 0
+       ORDER BY total_wins DESC, total_games ASC, name ASC
+       LIMIT $1`,
+      [limit],
+    );
+    return r.rows.map(playerRowToEntry);
+  } catch (e) {
+    console.warn("[db] getTopPlayers failed:", (e as Error).message);
+    return [];
+  }
+}
+
+export async function getTopPlayersBySequences(limit: number) {
+  if (!pool) return [];
+  try {
+    const r = await pool.query<PlayerTopRow>(
+      `SELECT name, total_wins, total_games, sequences_closed, mvp_games
+       FROM player_stats WHERE sequences_closed > 0
+       ORDER BY sequences_closed DESC, total_games ASC, name ASC
+       LIMIT $1`,
+      [limit],
+    );
+    return r.rows.map(playerRowToEntry);
+  } catch (e) {
+    console.warn("[db] getTopPlayersBySequences failed:", (e as Error).message);
+    return [];
+  }
+}
+
+export async function getTopPlayersByMvp(limit: number) {
+  if (!pool) return [];
+  try {
+    const r = await pool.query<PlayerTopRow>(
+      `SELECT name, total_wins, total_games, sequences_closed, mvp_games
+       FROM player_stats WHERE mvp_games > 0
+       ORDER BY mvp_games DESC, total_games ASC, name ASC
+       LIMIT $1`,
+      [limit],
+    );
+    return r.rows.map(playerRowToEntry);
+  } catch (e) {
+    console.warn("[db] getTopPlayersByMvp failed:", (e as Error).message);
+    return [];
+  }
+}
+
+export async function getTopTeams(limit: number) {
+  if (!pool) return [];
+  try {
+    const r = await pool.query<TeamTopRow>(
+      `SELECT name, total_wins, total_games FROM team_stats
        WHERE total_games > 0
        ORDER BY total_wins DESC, total_games ASC, name ASC
        LIMIT $1`,
       [limit],
     );
-    return r.rows;
+    return r.rows.map((row) => ({
+      name: row.name,
+      wins: Number(row.total_wins),
+      games: Number(row.total_games),
+      ratio: row.total_games > 0 ? Number(row.total_wins) / Number(row.total_games) : 0,
+    }));
   } catch (e) {
-    console.warn(`[db] top ${table} failed:`, (e as Error).message);
+    console.warn("[db] getTopTeams failed:", (e as Error).message);
     return [];
   }
 }
 
-export async function getTopPlayers(limit: number) {
-  return rowsToEntries(await topFrom("player_stats", limit));
-}
-
-export async function getTopTeams(limit: number) {
-  return rowsToEntries(await topFrom("team_stats", limit));
-}
-
-function rowsToEntries(rows: TopRow[]) {
-  return rows.map((r) => ({
+function playerRowToEntry(r: PlayerTopRow) {
+  return {
     name: r.name,
     wins: Number(r.total_wins),
     games: Number(r.total_games),
     ratio: r.total_games > 0 ? Number(r.total_wins) / Number(r.total_games) : 0,
-  }));
+    sequencesClosed: Number(r.sequences_closed),
+    mvpGames: Number(r.mvp_games),
+  };
 }

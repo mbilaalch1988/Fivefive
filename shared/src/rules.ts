@@ -115,6 +115,7 @@ function applyPlace(
   removeFromHand(player, cardId);
   state.discardPile.push(card);
   drawForPlayer(state, player);
+  player.stats.chipsPlaced += 1;
 
   // Check for new sequences and update win state.
   const newSeqs = detectSequences(
@@ -127,6 +128,7 @@ function applyPlace(
     state.sequences.push(seq);
     lockSequenceChips(state.lockedChips, seq);
   }
+  player.stats.sequencesClosed += newSeqs.length;
 
   const teamSeqCount = state.sequences.filter((s) => s.team === player.team).length;
   if (teamSeqCount >= state.config.sequencesToWin) {
@@ -163,6 +165,7 @@ function applyRemove(
   removeFromHand(player, cardId);
   state.discardPile.push(card);
   drawForPlayer(state, player);
+  player.stats.chipsRemoved += 1;
 
   endTurn(state);
   return { ok: true, state };

@@ -12,12 +12,19 @@ const ASSET_BASE =
   (import.meta.env.DEV ? "http://localhost:3001" : "");
 
 async function fetchScoreboard(): Promise<ScoreboardResponse> {
+  const fallback: ScoreboardResponse = {
+    topPlayers: [],
+    topTeams: [],
+    topPlayersBySequences: [],
+    topPlayersByMvp: [],
+    persisted: false,
+  };
   try {
     const r = await fetch(`${ASSET_BASE}/api/scoreboard`);
-    if (!r.ok) return { topPlayers: [], topTeams: [], persisted: false };
+    if (!r.ok) return fallback;
     return (await r.json()) as ScoreboardResponse;
   } catch {
-    return { topPlayers: [], topTeams: [], persisted: false };
+    return fallback;
   }
 }
 
@@ -34,11 +41,9 @@ export function Scoreboard({ asDialog, onClose }: Props) {
     };
   }, []);
 
-  const content = (
-    <ScoreboardBody data={data} />
-  );
+  const body = <ScoreboardBody data={data} expanded={!!asDialog} />;
 
-  if (!asDialog) return content;
+  if (!asDialog) return body;
 
   return (
     <div
@@ -51,12 +56,12 @@ export function Scoreboard({ asDialog, onClose }: Props) {
       }}
     >
       <div
-        className="w-full max-w-md rounded-3xl shadow-2xl"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl"
         style={{ background: "var(--md-surface-1)" }}
       >
         <header
-          className="flex items-center justify-between px-5 py-4 border-b"
-          style={{ borderColor: "var(--md-outline)" }}
+          className="sticky top-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur"
+          style={{ borderColor: "var(--md-outline)", background: "var(--md-surface-1)" }}
         >
           <h2 className="text-lg font-medium tracking-tight">Scoreboard</h2>
           <button
@@ -68,13 +73,19 @@ export function Scoreboard({ asDialog, onClose }: Props) {
             Close
           </button>
         </header>
-        <div className="p-5">{content}</div>
+        <div className="p-5">{body}</div>
       </div>
     </div>
   );
 }
 
-function ScoreboardBody({ data }: { data: ScoreboardResponse | null }) {
+function ScoreboardBody({
+  data,
+  expanded,
+}: {
+  data: ScoreboardResponse | null;
+  expanded: boolean;
+}) {
   if (data === null) {
     return (
       <div className="space-y-4">
@@ -90,7 +101,12 @@ function ScoreboardBody({ data }: { data: ScoreboardResponse | null }) {
       </p>
     );
   }
-  if (data.topPlayers.length === 0 && data.topTeams.length === 0) {
+  const empty =
+    data.topPlayers.length === 0 &&
+    data.topTeams.length === 0 &&
+    data.topPlayersBySequences.length === 0 &&
+    data.topPlayersByMvp.length === 0;
+  if (empty) {
     return (
       <p className="text-sm text-center" style={{ color: "var(--md-on-surface-variant)" }}>
         No games completed yet. Be the first to make history.
@@ -99,13 +115,35 @@ function ScoreboardBody({ data }: { data: ScoreboardResponse | null }) {
   }
   return (
     <div className="space-y-5">
-      <LeaderTable title="Top players" rows={data.topPlayers} />
-      <LeaderTable title="Top teams" rows={data.topTeams} />
+      <LeaderTable title="Top players by wins" rows={data.topPlayers} variant="wins" />
+      <LeaderTable title="Top teams by wins" rows={data.topTeams} variant="wins" />
+      {expanded && (
+        <>
+          <LeaderTable
+            title="Top players by sequences closed"
+            rows={data.topPlayersBySequences}
+            variant="sequences"
+          />
+          <LeaderTable
+            title="Top MVPs"
+            rows={data.topPlayersByMvp}
+            variant="mvp"
+          />
+        </>
+      )}
     </div>
   );
 }
 
-function LeaderTable({ title, rows }: { title: string; rows: ScoreboardEntry[] }) {
+function LeaderTable({
+  title,
+  rows,
+  variant,
+}: {
+  title: string;
+  rows: ScoreboardEntry[];
+  variant: "wins" | "sequences" | "mvp";
+}) {
   return (
     <section>
       <h3
@@ -129,31 +167,71 @@ function LeaderTable({ title, rows }: { title: string; rows: ScoreboardEntry[] }
               className="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm"
               style={{ background: "var(--md-surface-2)" }}
             >
-              <span
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  i === 0
-                    ? "bg-amber-400 text-zinc-900"
-                    : i === 1
-                      ? "bg-zinc-300 text-zinc-900"
-                      : i === 2
-                        ? "bg-amber-700 text-amber-50"
-                        : "bg-zinc-700 text-zinc-200"
-                }`}
-              >
-                {i + 1}
-              </span>
+              <RankBadge index={i} />
               <span className="flex-1 truncate font-medium">{r.name}</span>
-              <span className="text-right">
-                <div className="font-semibold">{r.wins}<span className="font-normal text-xs opacity-70"> / {r.games}</span></div>
-                <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
-                  {(r.ratio * 100).toFixed(0)}% win rate
-                </div>
-              </span>
+              <RankValue row={r} variant={variant} />
             </li>
           ))}
         </ol>
       )}
     </section>
+  );
+}
+
+function RankBadge({ index }: { index: number }) {
+  const styles = [
+    "bg-amber-400 text-zinc-900",
+    "bg-zinc-300 text-zinc-900",
+    "bg-amber-700 text-amber-50",
+    "bg-zinc-700 text-zinc-200",
+    "bg-zinc-700 text-zinc-200",
+  ];
+  return (
+    <span
+      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${styles[index] ?? styles[4]}`}
+    >
+      {index + 1}
+    </span>
+  );
+}
+
+function RankValue({
+  row,
+  variant,
+}: {
+  row: ScoreboardEntry;
+  variant: "wins" | "sequences" | "mvp";
+}) {
+  if (variant === "sequences") {
+    return (
+      <span className="text-right">
+        <div className="font-semibold">{row.sequencesClosed ?? 0}</div>
+        <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
+          across {row.games} game{row.games === 1 ? "" : "s"}
+        </div>
+      </span>
+    );
+  }
+  if (variant === "mvp") {
+    return (
+      <span className="text-right">
+        <div className="font-semibold">{row.mvpGames ?? 0}</div>
+        <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
+          {row.games > 0 ? (((row.mvpGames ?? 0) / row.games) * 100).toFixed(0) : 0}% of games
+        </div>
+      </span>
+    );
+  }
+  return (
+    <span className="text-right">
+      <div className="font-semibold">
+        {row.wins}
+        <span className="font-normal text-xs opacity-70"> / {row.games}</span>
+      </div>
+      <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
+        {(row.ratio * 100).toFixed(0)}% win rate
+      </div>
+    </span>
   );
 }
 

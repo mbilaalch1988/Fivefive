@@ -4,12 +4,13 @@ import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 interface Props {
   team: Team;
   teamName: string;
+  mvpNames: string[];
   room: RoomView | null;
   onRematch: () => void;
   onLeave: () => void;
 }
 
-export function WinOverlay({ team, teamName, room, onRematch, onLeave }: Props) {
+export function WinOverlay({ team, teamName, mvpNames, room, onRematch, onLeave }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -34,6 +35,12 @@ export function WinOverlay({ team, teamName, room, onRematch, onLeave }: Props) 
             <h2 className={`text-3xl font-semibold tracking-tight ${TEAM_TEXT[team]}`}>
               {teamName}
             </h2>
+            {mvpNames.length > 0 && (
+              <div className="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium bg-amber-400/15 border border-amber-400/40 text-amber-200">
+                <span className="text-amber-300">★</span>
+                MVP: {mvpNames.join(", ")}
+              </div>
+            )}
           </div>
         </div>
 

@@ -10,6 +10,9 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     handCount: p.hand.length,
     connected: true, // server overlays real connection state where needed
     isCurrentTurn: i === state.turnIdx,
+    chipsPlaced: p.stats.chipsPlaced,
+    chipsRemoved: p.stats.chipsRemoved,
+    sequencesClosed: p.stats.sequencesClosed,
   }));
 
   const viewer = state.players.find((p) => p.id === viewerId);
@@ -36,6 +39,7 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     teamSequenceCounts,
     deck: null, // server overrides with the Room's manifest if any
     teamNames: { red: "Red", blue: "Blue", green: "Green" },
+    mvpNames: [], // server fills this in after recording the win
   };
 }
 

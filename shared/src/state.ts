@@ -53,6 +53,7 @@ export function createInitialState(
     name: s.name,
     team: s.team,
     hand: [],
+    stats: { chipsPlaced: 0, chipsRemoved: 0, sequencesClosed: 0 },
   }));
 
   for (let i = 0; i < handSize; i++) {

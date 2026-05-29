@@ -295,6 +295,7 @@ export function GameScreen({
         <WinOverlay
           team={view.winner}
           teamName={winnerTeamName ?? "Winner"}
+          mvpNames={view.mvpNames}
           room={room}
           onRematch={onRematch}
           onLeave={onStopGame}

@@ -30,11 +30,21 @@ export interface ScoreboardEntry {
   games: number;
   /** 0.0 to 1.0; 0 when games == 0. */
   ratio: number;
+  /** Career sequences personally closed across all games (players only). 0 for teams. */
+  sequencesClosed?: number;
+  /** Career MVP-credit count (players only). 0 for teams. */
+  mvpGames?: number;
 }
 
 export interface ScoreboardResponse {
+  /** Top 5 players by total wins. */
   topPlayers: ScoreboardEntry[];
+  /** Top 5 teams by total wins. */
   topTeams: ScoreboardEntry[];
+  /** Top 5 players by lifetime sequences-closed. */
+  topPlayersBySequences: ScoreboardEntry[];
+  /** Top 5 players by MVP-game count. */
+  topPlayersByMvp: ScoreboardEntry[];
   /** True when the response came from Postgres; false = nothing persisted yet. */
   persisted: boolean;
 }
@@ -78,6 +88,10 @@ export interface PlayerPublic {
   handCount: number;
   connected: boolean;
   isCurrentTurn: boolean;
+  /** Per-player stats for the current game. */
+  chipsPlaced: number;
+  chipsRemoved: number;
+  sequencesClosed: number;
 }
 
 export interface GameView {
@@ -101,6 +115,8 @@ export interface GameView {
   deck: DeckManifest | null;
   /** Display names for each team. */
   teamNames: Record<Team, string>;
+  /** Player names crowned MVP this game. Empty until winner is non-null. */
+  mvpNames: string[];
 }
 
 /* ------------------------------------------------------------------ */

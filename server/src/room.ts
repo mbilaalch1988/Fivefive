@@ -12,7 +12,13 @@ import {
   type SeatInput,
   type Team,
 } from "@sequence/shared";
-import { loadRoomState, persistTeamName, persistWin, type WinRecord } from "./db.js";
+import {
+  loadRoomState,
+  persistTeamName,
+  persistWin,
+  type PlayerGameContribution,
+  type WinRecord,
+} from "./db.js";
 
 interface RoomSeat {
   id: PlayerId;
@@ -31,6 +37,8 @@ export class Room {
   hostId: PlayerId;
   seats: RoomSeat[] = [];
   game: GameState | null = null;
+  /** MVP player names from the most recently-completed game (cleared on next start). */
+  lastMvpNames: string[] = [];
   deck: DeckManifest | null = null;
   teamNames: Record<Team, string> = { red: "Red", blue: "Blue", green: "Green" };
   teamScores: Record<Team, number> = { red: 0, blue: 0, green: 0 };
@@ -184,6 +192,7 @@ export class Room {
       deckId: opts.deckId ?? null,
     });
     this.deck = opts.deck ?? null;
+    this.lastMvpNames = [];
   }
 
   applyAction(playerId: PlayerId, action: Action) {
@@ -196,25 +205,41 @@ export class Room {
     if (!this.game || !this.game.winner) return false;
     const winner = this.game.winner;
     this.teamScores[winner] = (this.teamScores[winner] ?? 0) + 1;
+
+    // MVP: winning-team player(s) with the most sequencesClosed in this game.
+    const winners = this.game.players.filter((p) => p.team === winner);
+    const maxSeqs = winners.reduce((m, p) => Math.max(m, p.stats.sequencesClosed), 0);
+    const mvpNames = maxSeqs > 0
+      ? winners.filter((p) => p.stats.sequencesClosed === maxSeqs).map((p) => p.name)
+      : [];
+    this.lastMvpNames = mvpNames;
+
     const winningNames: string[] = [];
-    const allNames: string[] = [];
     const allTeamNames = new Set<string>();
+    const contributions: PlayerGameContribution[] = [];
     for (const p of this.game.players) {
-      allNames.push(p.name);
       allTeamNames.add(this.teamNames[p.team]);
-      if (p.team === winner) {
+      const isWinner = p.team === winner;
+      if (isWinner) {
         this.playerScores[p.name] = (this.playerScores[p.name] ?? 0) + 1;
         winningNames.push(p.name);
       }
+      contributions.push({
+        name: p.name,
+        chipsPlaced: p.stats.chipsPlaced,
+        sequencesClosed: p.stats.sequencesClosed,
+        isWinner,
+        isMvp: mvpNames.includes(p.name),
+      });
     }
     this.gamesPlayed += 1;
     const record: WinRecord = {
       roomCode: this.code,
       winningTeam: winner,
       winningPlayerNames: winningNames,
-      allPlayerNames: allNames,
       allTeamNames: [...allTeamNames],
       winningTeamName: this.teamNames[winner],
+      contributions,
     };
     void persistWin(record);
     return true;
@@ -253,6 +278,7 @@ export class Room {
     const view = toGameView(this.game, viewerId);
     view.deck = this.deck;
     view.teamNames = { ...this.teamNames };
+    view.mvpNames = [...this.lastMvpNames];
     view.players = view.players.map((p) => {
       const seat = this.seats.find((s) => s.id === p.id);
       return { ...p, connected: seat?.connected ?? false };

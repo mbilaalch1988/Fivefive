@@ -25,12 +25,23 @@ export type Chip = Team | null;
 
 export type PlayerId = string;
 
+export interface PlayerGameStats {
+  /** Number of "place" actions completed (regular card or two-eyed Jack). */
+  chipsPlaced: number;
+  /** Opposing chips removed via one-eyed Jacks. */
+  chipsRemoved: number;
+  /** New sequences personally closed by this player's placements. */
+  sequencesClosed: number;
+}
+
 export interface Player {
   id: PlayerId;
   name: string;
   team: Team;
   /** Cards currently held. Ordered by play order is irrelevant; rendering can sort. */
   hand: Card[];
+  /** Live per-player stats for the current game. Reset to zeros at deal. */
+  stats: PlayerGameStats;
 }
 
 export type Action =
