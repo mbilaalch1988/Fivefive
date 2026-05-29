@@ -164,8 +164,10 @@ export function LobbyScreen({
               onChange={(e) => setSequencesToWin(Number(e.target.value))}
               className="bg-slate-900 border border-slate-700 rounded px-2 py-1"
             >
-              <option value={1}>1</option>
+              <option value={1}>1 (quick game)</option>
               <option value={2}>2 (standard)</option>
+              <option value={3}>3 (long game)</option>
+              <option value={4}>4 (marathon)</option>
             </select>
           </label>
           <button

@@ -82,6 +82,7 @@ export interface ClientToServerEvents {
     payload: { sequencesToWin?: number },
     ack: (res: AckResult<{}>) => void,
   ) => void;
+  stopGame: (ack: (res: AckResult<{}>) => void) => void;
   doAction: (
     payload: Action,
     ack: (res: AckResult<{}>) => void,

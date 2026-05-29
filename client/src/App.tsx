@@ -34,12 +34,16 @@ export default function App() {
     );
   }
 
+  const isHost = g.room.hostId === g.playerId;
+
   return (
     <GameScreen
       view={g.game}
       myPlayerId={g.playerId}
+      isHost={isHost}
       dispatch={g.doAction}
-      onPlayAgain={g.leave}
+      onStopGame={g.stopGame}
+      onPlayAgain={g.stopGame}
     />
   );
 }

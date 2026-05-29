@@ -179,6 +179,24 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("stopGame", (ack) => {
+    const code = socketRoom.get(socket.id);
+    const room = code ? registry.get(code) : undefined;
+    if (!room) return ack({ ok: false, error: "not in a room" });
+    const seat = room.seatBySocketId(socket.id);
+    if (!seat) return ack({ ok: false, error: "no seat" });
+    if (seat.id !== room.hostId) {
+      return ack({ ok: false, error: "only the host can stop the game" });
+    }
+    try {
+      room.stop();
+      ack({ ok: true });
+      broadcastRoom(room);
+    } catch (e) {
+      ack({ ok: false, error: (e as Error).message });
+    }
+  });
+
   socket.on("doAction", (action: Action, ack) => {
     const code = socketRoom.get(socket.id);
     const room = code ? registry.get(code) : undefined;

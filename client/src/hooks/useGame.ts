@@ -52,6 +52,7 @@ export interface UseGame {
   chooseTeam: (team: Team) => Promise<void>;
   setReady: (ready: boolean) => Promise<void>;
   startGame: (opts?: { sequencesToWin?: number }) => Promise<void>;
+  stopGame: () => Promise<void>;
   doAction: (action: Action) => Promise<{ ok: boolean; error?: string }>;
 }
 
@@ -90,7 +91,12 @@ export function useGame(): UseGame {
     };
 
     const onDisconnect = () => setConnected(false);
-    const onRoom = (r: RoomView) => setRoom(r);
+    const onRoom = (r: RoomView) => {
+      setRoom(r);
+      // Server cleared the game (host stopped it, or it ended) — drop our copy
+      // so the App router falls back to the lobby screen.
+      if (!r.inGame) setGame(null);
+    };
     const onGame = (g: GameView) => setGame(g);
     const onErr = (m: string) => setError(m);
 
@@ -204,6 +210,12 @@ export function useGame(): UseGame {
     [handleAck],
   );
 
+  const stopGame = useCallback(async () => {
+    const s = socketRef.current!;
+    const res = (await emit(s, "stopGame")) as { ok: boolean; error?: string };
+    handleAck(res);
+  }, [handleAck]);
+
   const doAction = useCallback(
     async (action: Action) => {
       const s = socketRef.current!;
@@ -234,6 +246,7 @@ export function useGame(): UseGame {
     chooseTeam,
     setReady,
     startGame,
+    stopGame,
     doAction,
   };
 }

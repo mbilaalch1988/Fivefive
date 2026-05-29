@@ -156,6 +156,13 @@ export class Room {
     return result;
   }
 
+  /** End the current game; lobby state is preserved but ready flags clear. */
+  stop(): void {
+    if (!this.game) return;
+    this.game = null;
+    for (const seat of this.seats) seat.ready = false;
+  }
+
   roomView(): RoomView {
     const seats: Seat[] = this.seats.map((s) => ({
       id: s.id,
