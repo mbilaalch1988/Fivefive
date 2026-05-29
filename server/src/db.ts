@@ -21,13 +21,27 @@ export async function initDb(): Promise<void> {
     return;
   }
 
-  pool = new pg.Pool({
-    connectionString: url,
-    // Supabase requires SSL but uses a CA the system might not trust.
-    ssl: { rejectUnauthorized: false },
-    max: 4,
-    idleTimeoutMillis: 30_000,
-  });
+  // Parse the URI manually so usernames containing dots (Supabase pooler:
+  // `postgres.<project-ref>`) and percent-encoded passwords are handled
+  // robustly, regardless of pg-connection-string version quirks.
+  let cfg: pg.PoolConfig;
+  try {
+    const u = new URL(url);
+    cfg = {
+      host: u.hostname,
+      port: u.port ? Number(u.port) : 5432,
+      user: decodeURIComponent(u.username),
+      password: decodeURIComponent(u.password),
+      database: u.pathname.replace(/^\//, "") || "postgres",
+      ssl: { rejectUnauthorized: false },
+      max: 4,
+      idleTimeoutMillis: 30_000,
+    };
+  } catch (e) {
+    console.error("[db] DATABASE_URL is not a valid URI:", (e as Error).message);
+    return;
+  }
+  pool = new pg.Pool(cfg);
 
   pool.on("error", (err) => {
     console.error("[db] idle client error:", err.message);
