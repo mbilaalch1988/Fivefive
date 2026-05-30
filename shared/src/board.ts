@@ -29,12 +29,31 @@ function parseCell(code: string): BoardSquare {
   return { kind: "card", rank, suit };
 }
 
+/** Mirror a square 2D grid across its top-left-to-bottom-right diagonal. */
+function transpose<T>(grid: T[][]): T[][] {
+  const n = grid.length;
+  const out: T[][] = Array.from({ length: n }, () => new Array<T>(n));
+  for (let r = 0; r < n; r++) {
+    const row = grid[r]!;
+    for (let c = 0; c < n; c++) {
+      out[c]![r] = row[c]!;
+    }
+  }
+  return out;
+}
+
 /**
- * Return the official Sequence board. The same board is used every game —
- * deck shuffle (seeded) provides the randomness.
+ * Return the Sequence board to render. The OFFICIAL_LAYOUT above is preserved
+ * as the canonical Jax Ltd. transcription; we transpose it on read so the
+ * diamonds run along the top of the rendered board instead of the left edge.
+ * Game mechanics (each non-Jack appears exactly twice, corners are free) are
+ * invariant under transpose, so the engine + tests are unaffected.
+ *
+ * To revert to the un-transposed layout: replace `transpose(OFFICIAL_LAYOUT)`
+ * with `OFFICIAL_LAYOUT` on the line below.
  */
 export function getOfficialBoard(): BoardSquare[][] {
-  return OFFICIAL_LAYOUT.map((row) => row.map(parseCell));
+  return transpose(OFFICIAL_LAYOUT).map((row) => row.map(parseCell));
 }
 
 /**
