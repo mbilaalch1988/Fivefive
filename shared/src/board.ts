@@ -42,18 +42,25 @@ function transpose<T>(grid: T[][]): T[][] {
   return out;
 }
 
+/** Reverse each row left↔right. Returns a fresh nested array. */
+function flipRowsLeftRight<T>(grid: T[][]): T[][] {
+  return grid.map((row) => row.slice().reverse());
+}
+
 /**
- * Return the Sequence board to render. The OFFICIAL_LAYOUT above is preserved
- * as the canonical Jax Ltd. transcription; we transpose it on read so the
- * diamonds run along the top of the rendered board instead of the left edge.
- * Game mechanics (each non-Jack appears exactly twice, corners are free) are
- * invariant under transpose, so the engine + tests are unaffected.
+ * Return the Sequence board to render. Two transforms applied to the
+ * canonical Jax Ltd. layout (`OFFICIAL_LAYOUT` above, preserved as docs):
+ *   1. transpose      — diamonds end up along the top instead of the left edge
+ *   2. flip each row  — spades along the bottom run 9 → 2 (not 2 → 9)
+ * Net effect is a 90° clockwise rotation of the original. Game mechanics are
+ * invariant under both, so the engine + tests are unaffected.
  *
- * To revert to the un-transposed layout: replace `transpose(OFFICIAL_LAYOUT)`
- * with `OFFICIAL_LAYOUT` on the line below.
+ * To undo a transform, remove the corresponding wrapper call below.
  */
 export function getOfficialBoard(): BoardSquare[][] {
-  return transpose(OFFICIAL_LAYOUT).map((row) => row.map(parseCell));
+  return flipRowsLeftRight(transpose(OFFICIAL_LAYOUT)).map((row) =>
+    row.map(parseCell),
+  );
 }
 
 /**
