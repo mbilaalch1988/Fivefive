@@ -34,6 +34,8 @@ export interface ScoreboardEntry {
   sequencesClosed?: number;
   /** Career MVP-credit count (players only). 0 for teams. */
   mvpGames?: number;
+  /** True when this row is a signed-in user (stats keyed by Supabase user_id). */
+  verified?: boolean;
 }
 
 export interface ScoreboardResponse {
@@ -126,11 +128,11 @@ export interface GameView {
 /** Client → server events with ack payload shape. */
 export interface ClientToServerEvents {
   createRoom: (
-    payload: { playerName: string },
+    payload: { playerName: string; authToken?: string },
     ack: (res: AckResult<{ roomCode: string; playerId: PlayerId; room: RoomView }>) => void,
   ) => void;
   joinRoom: (
-    payload: { roomCode: string; playerName: string },
+    payload: { roomCode: string; playerName: string; authToken?: string },
     ack: (res: AckResult<{ playerId: PlayerId; room: RoomView }>) => void,
   ) => void;
   rejoin: (

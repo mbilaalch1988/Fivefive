@@ -14,12 +14,15 @@ export interface UseAuth {
   displayName: string | null;
   /** Convenience: the avatar URL if the provider returned one. */
   avatarUrl: string | null;
+  /** Current JWT access token, suitable for passing to the server. */
+  accessToken: string | null;
   signIn: (provider: OAuthProvider) => Promise<{ ok: boolean; error?: string }>;
   signOut: () => Promise<void>;
 }
 
 export function useAuth(): UseAuth {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(isAuthConfigured);
 
   useEffect(() => {
@@ -28,10 +31,12 @@ export function useAuth(): UseAuth {
     void supabase.auth.getSession().then(({ data }) => {
       if (cancelled) return;
       setUser(data.session?.user ?? null);
+      setAccessToken(data.session?.access_token ?? null);
       setLoading(false);
     });
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setAccessToken(session?.access_token ?? null);
     });
     return () => {
       cancelled = true;
@@ -69,6 +74,7 @@ export function useAuth(): UseAuth {
         (user.user_metadata?.picture as string | undefined) ??
         null
       : null,
+    accessToken,
     signIn,
     signOut,
   };

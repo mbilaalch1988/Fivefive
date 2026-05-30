@@ -23,6 +23,7 @@ import {
   initDb,
   isPersistenceEnabled,
 } from "./db.js";
+import { verifyToken } from "./jwt.js";
 import { newPlayerId } from "./util.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
@@ -130,12 +131,19 @@ function broadcastGame(room: Room): void {
 io.on("connection", (socket) => {
   console.log(`[io] connect ${socket.id}`);
 
-  socket.on("createRoom", ({ playerName }, ack) => {
+  socket.on("createRoom", ({ playerName, authToken }, ack) => {
     try {
-      const name = (playerName ?? "").trim();
+      const verified = verifyToken(authToken);
+      // If user is signed in, prefer the verified display name when none typed.
+      const name = (playerName ?? verified?.displayName ?? "").trim();
       if (!name) return ack({ ok: false, error: "name required" });
       const playerId = newPlayerId();
-      const room = registry.create({ id: playerId, name, socketId: socket.id });
+      const room = registry.create({
+        id: playerId,
+        name,
+        socketId: socket.id,
+        userId: verified?.userId ?? null,
+      });
       attach(socket, room.code);
       ack({ ok: true, roomCode: room.code, playerId, room: room.roomView() });
       broadcastRoom(room);
@@ -144,17 +152,23 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("joinRoom", ({ roomCode, playerName }, ack) => {
+  socket.on("joinRoom", ({ roomCode, playerName, authToken }, ack) => {
     try {
+      const verified = verifyToken(authToken);
       const code = (roomCode ?? "").trim().toUpperCase();
-      const name = (playerName ?? "").trim();
+      const name = (playerName ?? verified?.displayName ?? "").trim();
       if (!code) return ack({ ok: false, error: "room code required" });
       if (!name) return ack({ ok: false, error: "name required" });
       const room = registry.get(code);
       if (!room) return ack({ ok: false, error: "room not found" });
       if (room.game) return ack({ ok: false, error: "game already in progress" });
       const playerId = newPlayerId();
-      room.addPlayer({ id: playerId, name, socketId: socket.id });
+      room.addPlayer({
+        id: playerId,
+        name,
+        socketId: socket.id,
+        userId: verified?.userId ?? null,
+      });
       attach(socket, room.code);
       ack({ ok: true, playerId, room: room.roomView() });
       broadcastRoom(room);

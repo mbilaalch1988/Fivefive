@@ -27,6 +27,8 @@ interface RoomSeat {
   ready: boolean;
   connected: boolean;
   socketId: string | null;
+  /** Supabase auth.users.id if this player signed in; null = anonymous. */
+  userId: string | null;
 }
 
 const TEAM_ORDER: Team[] = ["red", "blue", "green"];
@@ -45,7 +47,10 @@ export class Room {
   playerScores: Record<string, number> = {};
   gamesPlayed = 0;
 
-  constructor(code: string, host: { id: PlayerId; name: string; socketId: string }) {
+  constructor(
+    code: string,
+    host: { id: PlayerId; name: string; socketId: string; userId: string | null },
+  ) {
     this.code = code;
     this.hostId = host.id;
     this.seats.push({
@@ -55,6 +60,7 @@ export class Room {
       ready: false,
       connected: true,
       socketId: host.socketId,
+      userId: host.userId,
     });
     // Fire-and-forget: if Postgres is connected and this room code was used
     // before (e.g. server restart), rehydrate the scoreboard + team names.
@@ -70,7 +76,12 @@ export class Room {
     this.playerScores = persisted.playerScores;
   }
 
-  addPlayer(p: { id: PlayerId; name: string; socketId: string }): void {
+  addPlayer(p: {
+    id: PlayerId;
+    name: string;
+    socketId: string;
+    userId: string | null;
+  }): void {
     if (this.game) throw new Error("game already started");
     if (this.seats.length >= 12) throw new Error("room is full");
     this.seats.push({
@@ -80,6 +91,7 @@ export class Room {
       ready: false,
       connected: true,
       socketId: p.socketId,
+      userId: p.userId,
     });
   }
 
@@ -224,8 +236,10 @@ export class Room {
         this.playerScores[p.name] = (this.playerScores[p.name] ?? 0) + 1;
         winningNames.push(p.name);
       }
+      const seat = this.seats.find((s) => s.id === p.id);
       contributions.push({
         name: p.name,
+        userId: seat?.userId ?? null,
         chipsPlaced: p.stats.chipsPlaced,
         sequencesClosed: p.stats.sequencesClosed,
         isWinner,

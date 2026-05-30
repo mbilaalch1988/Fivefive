@@ -22,3 +22,7 @@ services:
         sync: false
       - key: VITE_SUPABASE_ANON_KEY
         sync: false
+      # Optional: enables tying signed-in player stats to the Supabase user_id.
+      # Find at Supabase → Settings → API → JWT Secret. Server-only secret.
+      - key: SUPABASE_JWT_SECRET
+        sync: false

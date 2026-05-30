@@ -168,7 +168,18 @@ function LeaderTable({
               style={{ background: "var(--md-surface-2)" }}
             >
               <RankBadge index={i} />
-              <span className="flex-1 truncate font-medium">{r.name}</span>
+              <span className="flex-1 truncate font-medium flex items-center gap-1">
+                {r.name}
+                {r.verified && (
+                  <span
+                    title="Verified account"
+                    className="text-indigo-300 text-xs"
+                    aria-label="verified"
+                  >
+                    ✓
+                  </span>
+                )}
+              </span>
               <RankValue row={r} variant={variant} />
             </li>
           ))}

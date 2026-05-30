@@ -12,7 +12,7 @@ export class RoomRegistry {
     return this.rooms.get(code);
   }
 
-  create(host: { id: string; name: string; socketId: string }): Room {
+  create(host: { id: string; name: string; socketId: string; userId: string | null }): Room {
     let code = newRoomCode();
     let tries = 0;
     while (this.rooms.has(code)) {

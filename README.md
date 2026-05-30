@@ -68,8 +68,11 @@ Without these env vars, the Sign-in section hides and only anonymous (type-a-nam
 |---|---|
 | `VITE_SUPABASE_URL` | Supabase → Settings → API → Project URL (`https://<project-ref>.supabase.co`) |
 | `VITE_SUPABASE_ANON_KEY` | Supabase → Settings → API → Project API keys → **anon / public** (NOT service_role) |
+| `SUPABASE_JWT_SECRET` *(optional but recommended)* | Supabase → Settings → API → **JWT Secret** |
 
-⚠️ Use the **anon** key, not the service_role key. The anon key is designed to be public in client bundles; the service_role key is a server-only secret.
+⚠️ Use the **anon** key in `VITE_SUPABASE_ANON_KEY`, not the service_role key. The anon key is designed to be public in client bundles; the service_role key is a server-only secret.
+
+`SUPABASE_JWT_SECRET` is what lets the server verify access tokens from signed-in players. When set, signed-in player stats are tied to the immutable Supabase `auth.users.id` (so renaming or playing on another device keeps their history). Without it, sign-in still works for name autofill, but stats are still keyed by display name — same as anonymous play.
 
 After saving the env vars, Render redeploys. The "Sign in with Google" button appears on the landing screen; signed-in users get their Google profile name auto-filled.
 

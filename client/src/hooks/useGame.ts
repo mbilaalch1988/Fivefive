@@ -8,6 +8,15 @@ import type {
   Team,
 } from "@sequence/shared";
 import { emit, getSocket, type SequenceSocket } from "../lib/socket";
+import { supabase } from "../lib/supabase";
+
+/** Fetch the current Supabase access token, if signed in. Used as a bearer
+ *  for createRoom / joinRoom so the server can tie scores to user_id. */
+async function currentAuthToken(): Promise<string | undefined> {
+  if (!supabase) return undefined;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? undefined;
+}
 
 export type Phase = "landing" | "lobby" | "game";
 
@@ -145,7 +154,8 @@ export function useGame(): UseGame {
   const createRoom = useCallback(
     async (name: string) => {
       const s = socketRef.current!;
-      const res = (await emit(s, "createRoom", { playerName: name })) as
+      const authToken = await currentAuthToken();
+      const res = (await emit(s, "createRoom", { playerName: name, authToken })) as
         | { ok: true; roomCode: string; playerId: PlayerId; room: RoomView }
         | { ok: false; error: string };
       handleAck(res);
@@ -162,9 +172,11 @@ export function useGame(): UseGame {
   const joinRoom = useCallback(
     async (code: string, name: string) => {
       const s = socketRef.current!;
+      const authToken = await currentAuthToken();
       const res = (await emit(s, "joinRoom", {
         roomCode: code.toUpperCase(),
         playerName: name,
+        authToken,
       })) as
         | { ok: true; playerId: PlayerId; room: RoomView }
         | { ok: false; error: string };
