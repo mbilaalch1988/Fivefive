@@ -133,6 +133,7 @@ function applyPlace(
   const teamSeqCount = state.sequences.filter((s) => s.team === player.team).length;
   if (teamSeqCount >= state.config.sequencesToWin) {
     state.winner = player.team;
+    state.winningSequencePlayerId = player.id;
     return { ok: true, state };
   }
 

@@ -32,13 +32,19 @@ export interface ScoreboardEntry {
   ratio: number;
   /** Career sequences personally closed across all games (players only). 0 for teams. */
   sequencesClosed?: number;
+  /** Career count of "winning sequences" closed (the one that triggered a win). */
+  winningSequencesClosed?: number;
   /** Career MVP-credit count (players only). 0 for teams. */
   mvpGames?: number;
+  /** Career points (sequences × 5 + winning sequences × 5 + MVPs × 10). */
+  points?: number;
   /** True when this row is a signed-in user (stats keyed by Supabase user_id). */
   verified?: boolean;
 }
 
 export interface ScoreboardResponse {
+  /** Top 5 players by career points (the headline ranking). */
+  topPlayersByPoints: ScoreboardEntry[];
   /** Top 5 players by total wins. */
   topPlayers: ScoreboardEntry[];
   /** Top 5 teams by total wins. */

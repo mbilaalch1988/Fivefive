@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { ScoreboardEntry, ScoreboardResponse } from "@sequence/shared";
 
 interface Props {
-  /** When true, render as a full-screen Material dialog with close button. */
   asDialog?: boolean;
   onClose?: () => void;
 }
@@ -13,6 +12,7 @@ const ASSET_BASE =
 
 async function fetchScoreboard(): Promise<ScoreboardResponse> {
   const fallback: ScoreboardResponse = {
+    topPlayersByPoints: [],
     topPlayers: [],
     topTeams: [],
     topPlayersBySequences: [],
@@ -102,10 +102,8 @@ function ScoreboardBody({
     );
   }
   const empty =
-    data.topPlayers.length === 0 &&
-    data.topTeams.length === 0 &&
-    data.topPlayersBySequences.length === 0 &&
-    data.topPlayersByMvp.length === 0;
+    data.topPlayersByPoints.length === 0 &&
+    data.topTeams.length === 0;
   if (empty) {
     return (
       <p className="text-sm text-center" style={{ color: "var(--md-on-surface-variant)" }}>
@@ -115,10 +113,11 @@ function ScoreboardBody({
   }
   return (
     <div className="space-y-5">
-      <LeaderTable title="Top players by wins" rows={data.topPlayers} variant="wins" />
+      <LeaderTable title="Top players by points" rows={data.topPlayersByPoints} variant="points" />
       <LeaderTable title="Top teams by wins" rows={data.topTeams} variant="wins" />
       {expanded && (
         <>
+          <LeaderTable title="Top players by wins" rows={data.topPlayers} variant="wins" />
           <LeaderTable
             title="Top players by sequences closed"
             rows={data.topPlayersBySequences}
@@ -129,6 +128,12 @@ function ScoreboardBody({
             rows={data.topPlayersByMvp}
             variant="mvp"
           />
+          <p
+            className="text-[0.65rem] text-center pt-2"
+            style={{ color: "var(--md-on-surface-variant)" }}
+          >
+            Points = sequences × 5 + winning sequences × 5 + MVPs × 10
+          </p>
         </>
       )}
     </div>
@@ -142,8 +147,12 @@ function LeaderTable({
 }: {
   title: string;
   rows: ScoreboardEntry[];
-  variant: "wins" | "sequences" | "mvp";
+  variant: "points" | "wins" | "sequences" | "mvp";
 }) {
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const expandable = variant !== "wins" || rows[0]?.points !== undefined; // teams not expandable
+  const isTeamTable = !rows.some((r) => r.points !== undefined);
+
   return (
     <section>
       <h3
@@ -161,31 +170,108 @@ function LeaderTable({
         </div>
       ) : (
         <ol className="space-y-1.5">
-          {rows.map((r, i) => (
-            <li
-              key={r.name}
-              className="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm"
-              style={{ background: "var(--md-surface-2)" }}
-            >
-              <RankBadge index={i} />
-              <span className="flex-1 truncate font-medium flex items-center gap-1">
-                {r.name}
-                {r.verified && (
-                  <span
-                    title="Verified account"
-                    className="text-indigo-300 text-xs"
-                    aria-label="verified"
-                  >
-                    ✓
+          {rows.map((r, i) => {
+            const key = `${r.name}-${r.verified ? "v" : "a"}`;
+            const isExpanded = expandedRow === key;
+            const canExpand = expandable && !isTeamTable;
+            return (
+              <li key={key}>
+                <button
+                  type="button"
+                  onClick={canExpand ? () => setExpandedRow(isExpanded ? null : key) : undefined}
+                  disabled={!canExpand}
+                  className={`w-full flex items-center gap-3 rounded-2xl px-3 py-2 text-sm text-left transition-colors ${
+                    canExpand ? "state-layer hover:brightness-110 cursor-pointer" : "cursor-default"
+                  }`}
+                  style={{ background: "var(--md-surface-2)" }}
+                >
+                  <RankBadge index={i} />
+                  <span className="flex-1 truncate font-medium flex items-center gap-1">
+                    {r.name}
+                    {r.verified && (
+                      <span
+                        title="Verified account"
+                        className="text-indigo-300 text-xs"
+                        aria-label="verified"
+                      >
+                        ✓
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-              <RankValue row={r} variant={variant} />
-            </li>
-          ))}
+                  <RankValue row={r} variant={variant} />
+                  {canExpand && (
+                    <span className={`text-zinc-500 transition-transform ${isExpanded ? "rotate-180" : ""}`}>
+                      ▾
+                    </span>
+                  )}
+                </button>
+                {isExpanded && canExpand && <PlayerDetail row={r} />}
+              </li>
+            );
+          })}
         </ol>
       )}
     </section>
+  );
+}
+
+function PlayerDetail({ row }: { row: ScoreboardEntry }) {
+  const seq = row.sequencesClosed ?? 0;
+  const winSeq = row.winningSequencesClosed ?? 0;
+  const mvp = row.mvpGames ?? 0;
+  const total = row.points ?? 0;
+
+  const seqPts = seq * 5;
+  const winPts = winSeq * 5;
+  const mvpPts = mvp * 10;
+
+  return (
+    <div
+      className="mt-1 rounded-2xl px-4 py-3 text-xs space-y-1.5"
+      style={{
+        background: "var(--md-surface-3)",
+        color: "var(--md-on-surface-variant)",
+      }}
+    >
+      <DetailRow
+        label="Wins"
+        value={`${row.wins} of ${row.games} (${(row.ratio * 100).toFixed(0)}%)`}
+      />
+      <DetailRow label="Sequences closed" value={`${seq}`} extra={`+${seqPts} pts`} />
+      <DetailRow
+        label="Game-winning sequences"
+        value={`${winSeq}`}
+        extra={`+${winPts} pts`}
+      />
+      <DetailRow label="MVP games" value={`${mvp}`} extra={`+${mvpPts} pts`} />
+      <div
+        className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold text-zinc-100"
+        style={{ borderColor: "var(--md-outline)" }}
+      >
+        <span>Total points</span>
+        <span className="text-amber-300">{total}</span>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  extra,
+}: {
+  label: string;
+  value: string;
+  extra?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span>{label}</span>
+      <span className="flex items-baseline gap-2">
+        <span className="font-medium text-zinc-200">{value}</span>
+        {extra && <span className="text-amber-300/80 text-[0.7rem]">{extra}</span>}
+      </span>
+    </div>
   );
 }
 
@@ -199,7 +285,7 @@ function RankBadge({ index }: { index: number }) {
   ];
   return (
     <span
-      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${styles[index] ?? styles[4]}`}
+      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${styles[index] ?? styles[4]}`}
     >
       {index + 1}
     </span>
@@ -211,11 +297,21 @@ function RankValue({
   variant,
 }: {
   row: ScoreboardEntry;
-  variant: "wins" | "sequences" | "mvp";
+  variant: "points" | "wins" | "sequences" | "mvp";
 }) {
+  if (variant === "points") {
+    return (
+      <span className="text-right shrink-0">
+        <div className="font-semibold text-amber-300">{row.points ?? 0} pts</div>
+        <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
+          {row.wins}W / {row.games}G
+        </div>
+      </span>
+    );
+  }
   if (variant === "sequences") {
     return (
-      <span className="text-right">
+      <span className="text-right shrink-0">
         <div className="font-semibold">{row.sequencesClosed ?? 0}</div>
         <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
           across {row.games} game{row.games === 1 ? "" : "s"}
@@ -225,7 +321,7 @@ function RankValue({
   }
   if (variant === "mvp") {
     return (
-      <span className="text-right">
+      <span className="text-right shrink-0">
         <div className="font-semibold">{row.mvpGames ?? 0}</div>
         <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
           {row.games > 0 ? (((row.mvpGames ?? 0) / row.games) * 100).toFixed(0) : 0}% of games
@@ -234,7 +330,7 @@ function RankValue({
     );
   }
   return (
-    <span className="text-right">
+    <span className="text-right shrink-0">
       <div className="font-semibold">
         {row.wins}
         <span className="font-normal text-xs opacity-70"> / {row.games}</span>

@@ -226,6 +226,7 @@ export class Room {
       : [];
     this.lastMvpNames = mvpNames;
 
+    const winningPlayerId = this.game.winningSequencePlayerId;
     const winningNames: string[] = [];
     const allTeamNames = new Set<string>();
     const contributions: PlayerGameContribution[] = [];
@@ -244,6 +245,7 @@ export class Room {
         sequencesClosed: p.stats.sequencesClosed,
         isWinner,
         isMvp: mvpNames.includes(p.name),
+        isWinningSequencePlayer: p.id === winningPlayerId,
       });
     }
     this.gamesPlayed += 1;

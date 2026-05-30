@@ -107,9 +107,10 @@ async function runMigration(): Promise<void> {
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS sequences_closed INT NOT NULL DEFAULT 0;
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS mvp_games INT NOT NULL DEFAULT 0;
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS chips_placed INT NOT NULL DEFAULT 0;
+    -- Career count of sequences personally closed that pushed a team to win.
+    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS winning_sequences_closed INT NOT NULL DEFAULT 0;
 
     -- Signed-in user career stats keyed by Supabase auth.users.id.
-    -- display_name is the most recent display name (for showing in leaderboard).
     CREATE TABLE IF NOT EXISTS user_stats (
       user_id UUID PRIMARY KEY,
       display_name TEXT NOT NULL,
@@ -118,8 +119,11 @@ async function runMigration(): Promise<void> {
       sequences_closed INT NOT NULL DEFAULT 0,
       mvp_games INT NOT NULL DEFAULT 0,
       chips_placed INT NOT NULL DEFAULT 0,
+      winning_sequences_closed INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
+    -- Backfill for tables created before the column existed.
+    ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS winning_sequences_closed INT NOT NULL DEFAULT 0;
   `);
 }
 
@@ -194,6 +198,8 @@ export interface PlayerGameContribution {
   sequencesClosed: number;
   isWinner: boolean;
   isMvp: boolean;
+  /** True if this player's placement triggered the win (closes the winning sequence). */
+  isWinningSequencePlayer: boolean;
 }
 
 export interface WinRecord {
@@ -242,12 +248,13 @@ export async function persistWin(record: WinRecord): Promise<void> {
     //   userId set  -> user_stats  (keyed by immutable Supabase UUID)
     //   userId null -> player_stats (keyed by display name, anonymous)
     for (const c of contributions) {
+      const winningSeqInc = c.isWinningSequencePlayer ? 1 : 0;
       if (c.userId) {
         await pool.query(
           `INSERT INTO user_stats (
              user_id, display_name, total_wins, total_games,
-             sequences_closed, mvp_games, chips_placed
-           ) VALUES ($1, $2, $3, 1, $4, $5, $6)
+             sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+           ) VALUES ($1, $2, $3, 1, $4, $5, $6, $7)
            ON CONFLICT (user_id) DO UPDATE SET
              display_name = EXCLUDED.display_name,
              total_wins = user_stats.total_wins + EXCLUDED.total_wins,
@@ -255,6 +262,7 @@ export async function persistWin(record: WinRecord): Promise<void> {
              sequences_closed = user_stats.sequences_closed + EXCLUDED.sequences_closed,
              mvp_games = user_stats.mvp_games + EXCLUDED.mvp_games,
              chips_placed = user_stats.chips_placed + EXCLUDED.chips_placed,
+             winning_sequences_closed = user_stats.winning_sequences_closed + EXCLUDED.winning_sequences_closed,
              updated_at = NOW()`,
           [
             c.userId,
@@ -263,19 +271,21 @@ export async function persistWin(record: WinRecord): Promise<void> {
             c.sequencesClosed,
             c.isMvp ? 1 : 0,
             c.chipsPlaced,
+            winningSeqInc,
           ],
         );
       } else {
         await pool.query(
           `INSERT INTO player_stats (
-             name, total_wins, total_games, sequences_closed, mvp_games, chips_placed
-           ) VALUES ($1, $2, 1, $3, $4, $5)
+             name, total_wins, total_games, sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+           ) VALUES ($1, $2, 1, $3, $4, $5, $6)
            ON CONFLICT (name) DO UPDATE SET
              total_wins = player_stats.total_wins + EXCLUDED.total_wins,
              total_games = player_stats.total_games + 1,
              sequences_closed = player_stats.sequences_closed + EXCLUDED.sequences_closed,
              mvp_games = player_stats.mvp_games + EXCLUDED.mvp_games,
              chips_placed = player_stats.chips_placed + EXCLUDED.chips_placed,
+             winning_sequences_closed = player_stats.winning_sequences_closed + EXCLUDED.winning_sequences_closed,
              updated_at = NOW()`,
           [
             c.name,
@@ -283,6 +293,7 @@ export async function persistWin(record: WinRecord): Promise<void> {
             c.sequencesClosed,
             c.isMvp ? 1 : 0,
             c.chipsPlaced,
+            winningSeqInc,
           ],
         );
       }
@@ -312,6 +323,8 @@ interface PlayerTopRow {
   total_games: number;
   sequences_closed: number;
   mvp_games: number;
+  winning_sequences_closed: number;
+  points: number;
   verified: boolean;
 }
 interface TeamTopRow {
@@ -320,14 +333,41 @@ interface TeamTopRow {
   total_games: number;
 }
 
-/** Combined view: anonymous rows from player_stats + signed-in rows from user_stats. */
+/**
+ * Combined view: anonymous rows from player_stats + signed-in rows from user_stats.
+ * Points are computed inline so we can tune the formula in one place.
+ *   points = sequences_closed × 5 + winning_sequences_closed × 5 + mvp_games × 10
+ */
 const COMBINED_PLAYER_SQL = `
-  SELECT name, total_wins, total_games, sequences_closed, mvp_games, false AS verified
+  SELECT name, total_wins, total_games, sequences_closed, mvp_games,
+    winning_sequences_closed,
+    (sequences_closed * 5 + winning_sequences_closed * 5 + mvp_games * 10) AS points,
+    false AS verified
   FROM player_stats
   UNION ALL
-  SELECT display_name AS name, total_wins, total_games, sequences_closed, mvp_games, true AS verified
+  SELECT display_name AS name, total_wins, total_games, sequences_closed, mvp_games,
+    winning_sequences_closed,
+    (sequences_closed * 5 + winning_sequences_closed * 5 + mvp_games * 10) AS points,
+    true AS verified
   FROM user_stats
 `;
+
+export async function getTopPlayersByPoints(limit: number) {
+  if (!pool) return [];
+  try {
+    const r = await pool.query<PlayerTopRow>(
+      `SELECT * FROM (${COMBINED_PLAYER_SQL}) c
+       WHERE points > 0 OR total_games > 0
+       ORDER BY points DESC, total_wins DESC, total_games ASC, name ASC
+       LIMIT $1`,
+      [limit],
+    );
+    return r.rows.map(playerRowToEntry);
+  } catch (e) {
+    console.warn("[db] getTopPlayersByPoints failed:", (e as Error).message);
+    return [];
+  }
+}
 
 export async function getTopPlayers(limit: number) {
   if (!pool) return [];
@@ -409,7 +449,9 @@ function playerRowToEntry(r: PlayerTopRow) {
     games: Number(r.total_games),
     ratio: r.total_games > 0 ? Number(r.total_wins) / Number(r.total_games) : 0,
     sequencesClosed: Number(r.sequences_closed),
+    winningSequencesClosed: Number(r.winning_sequences_closed),
     mvpGames: Number(r.mvp_games),
+    points: Number(r.points),
     verified: r.verified === true,
   };
 }

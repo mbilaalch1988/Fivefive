@@ -18,6 +18,7 @@ import { DeckRegistry } from "./decks.js";
 import {
   getTopPlayers,
   getTopPlayersByMvp,
+  getTopPlayersByPoints,
   getTopPlayersBySequences,
   getTopTeams,
   initDb,
@@ -58,9 +59,16 @@ app.get("/api/decks", (_req, res) => {
   res.json({ decks: deckRegistry.list() });
 });
 
+// Manual deck-folder rescan. Useful when you add a new deck without redeploying.
+app.post("/api/decks/refresh", (_req, res) => {
+  deckRegistry.reload();
+  res.json({ ok: true, count: deckRegistry.list().length, decks: deckRegistry.list() });
+});
+
 app.get("/api/scoreboard", async (_req, res) => {
   if (!isPersistenceEnabled()) {
     res.json({
+      topPlayersByPoints: [],
       topPlayers: [],
       topTeams: [],
       topPlayersBySequences: [],
@@ -69,14 +77,21 @@ app.get("/api/scoreboard", async (_req, res) => {
     });
     return;
   }
-  const [topPlayers, topTeams, topPlayersBySequences, topPlayersByMvp] =
-    await Promise.all([
-      getTopPlayers(5),
-      getTopTeams(5),
-      getTopPlayersBySequences(5),
-      getTopPlayersByMvp(5),
-    ]);
+  const [
+    topPlayersByPoints,
+    topPlayers,
+    topTeams,
+    topPlayersBySequences,
+    topPlayersByMvp,
+  ] = await Promise.all([
+    getTopPlayersByPoints(5),
+    getTopPlayers(5),
+    getTopTeams(5),
+    getTopPlayersBySequences(5),
+    getTopPlayersByMvp(5),
+  ]);
   res.json({
+    topPlayersByPoints,
     topPlayers,
     topTeams,
     topPlayersBySequences,

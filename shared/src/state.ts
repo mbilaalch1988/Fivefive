@@ -75,6 +75,7 @@ export function createInitialState(
     sequences: [],
     lockedChips: new Set<string>(),
     winner: null,
+    winningSequencePlayerId: null,
     discardedThisTurn: false,
   };
 }

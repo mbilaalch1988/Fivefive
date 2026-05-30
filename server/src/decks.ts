@@ -18,6 +18,13 @@ export class DeckRegistry {
     this.load();
   }
 
+  /** Clear cache and re-scan Card_layout/. Called by POST /api/decks/refresh. */
+  reload(): void {
+    this.byId.clear();
+    this.summaries = [];
+    this.load();
+  }
+
   private load(): void {
     if (!existsSync(this.rootDir)) {
       console.log(`[decks] no Card_layout/ at ${this.rootDir}, deck selection disabled`);

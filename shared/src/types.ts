@@ -82,6 +82,8 @@ export interface GameState {
   /** Chip positions already counted in a sequence; "r,c" keys. */
   lockedChips: Set<string>;
   winner: Team | null;
+  /** Id of the player whose placement triggered the win. Null until winner is set. */
+  winningSequencePlayerId: PlayerId | null;
   /** Becomes true the moment a discardDead is consumed this turn (only one allowed per turn). */
   discardedThisTurn: boolean;
 }
