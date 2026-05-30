@@ -98,19 +98,20 @@ function autoDerive(folderName: string, dir: string): DeckManifest | null {
     }
   }
 
-  if (!back) {
-    console.warn(`[decks] ${folderName}: no back card found (looked for back.*/front.*), skipped`);
-    return null;
-  }
   const cardCount = Object.keys(cards).length;
   if (cardCount < 40) {
     console.warn(`[decks] ${folderName}: only ${cardCount} cards detected, skipped (need ≥40)`);
     return null;
   }
+  if (!back) {
+    console.log(`[decks] ${folderName}: no back.* / front.* found — using default striped back pattern`);
+  }
   return {
     id: folderName,
     name: folderName.replace(/_/g, " "),
-    back,
+    // Empty string signals "no specific back image" → client falls back to
+    // the built-in diagonal-stripe pattern used when no deck is selected.
+    back: back ?? "",
     cards,
   };
 }

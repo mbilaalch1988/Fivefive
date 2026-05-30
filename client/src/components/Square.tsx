@@ -119,7 +119,9 @@ function SquareFront({
 }
 
 function SquareBack({ deck }: { deck: DeckManifest | null }) {
-  if (deck) {
+  // Deck with an explicit back image → use it. Otherwise (no deck OR deck
+  // didn't include a back) use the built-in striped fallback pattern.
+  if (deck && deck.back) {
     return (
       <img
         src={backImageUrl(deck)}
