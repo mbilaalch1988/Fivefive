@@ -7,7 +7,6 @@ interface Props {
   chip: Chip;
   locked: boolean;
   justLocked: boolean;
-  /** Non-null = chip is part of celebrating team's winning sequences; delay ms before glow. */
   celebrateDelayMs: number | null;
   highlight: "none" | "playable" | "removable";
   deck: DeckManifest | null;
@@ -28,11 +27,12 @@ export function Square({
   onClick,
   testId,
 }: Props) {
-  const baseRing =
+  // Strong, attention-grabbing highlight: thick ring + soft colored glow.
+  const highlightClasses =
     highlight === "playable"
-      ? "ring-2 ring-amber-300"
+      ? "ring-4 ring-amber-300 shadow-[0_0_14px_4px_rgba(252,211,77,0.75)] z-10"
       : highlight === "removable"
-        ? "ring-2 ring-rose-400"
+        ? "ring-4 ring-rose-400 shadow-[0_0_14px_4px_rgba(251,113,133,0.75)] z-10"
         : "";
 
   return (
@@ -41,7 +41,7 @@ export function Square({
       onClick={onClick}
       data-testid={testId}
       data-highlight={highlight}
-      className={`relative aspect-[5/7] w-full rounded-md overflow-hidden bg-zinc-950 ${baseRing} ${
+      className={`relative aspect-[5/7] w-full rounded-md overflow-hidden bg-zinc-950 ${highlightClasses} ${
         highlight !== "none" ? "cursor-pointer hover:brightness-110" : "cursor-default"
       }`}
       style={{ perspective: "600px" }}
@@ -100,7 +100,6 @@ function SquareFront({
       );
     }
   }
-  // CSS fallback
   const color = SUIT_COLOR[square.suit];
   return (
     <div className="absolute inset-0 bg-slate-50">
@@ -154,23 +153,35 @@ function ChipDisk({
   celebrateDelayMs: number | null;
 }) {
   const celebrating = celebrateDelayMs !== null;
+  // Outer wrapper fills the cell so we can flex-center the (much smaller) chip.
+  // The chip itself is a perfect circle (aspect-ratio 1) sized as a percent of
+  // the cell — so it stays round regardless of cell aspect — with inset
+  // highlights (bevel) + outer drop shadow for a 3D feel.
   return (
-    <div
-      className={`absolute inset-1 sm:inset-1.5 rounded-full border-2 ${TEAM_CHIP[team]} flex items-center justify-center shadow-md ${
-        justLocked ? "chip-flip" : ""
-      } ${celebrating ? "chip-celebrate" : ""}`}
-      style={celebrating ? { animationDelay: `${celebrateDelayMs}ms` } : undefined}
-    >
-      {locked && (
-        <svg
-          viewBox="0 0 24 24"
-          className={`w-3/5 h-3/5 text-yellow-200 drop-shadow ${justLocked ? "crown-reveal" : ""}`}
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M3 8l3.5 3 2.5-5 3 5 3-5 2.5 5L21 8l-1.6 9H4.6L3 8zm1.7 11h14.6v2H4.7v-2z" />
-        </svg>
-      )}
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div
+        className={`relative rounded-full flex items-center justify-center ${TEAM_CHIP[team]} ${
+          justLocked ? "chip-flip" : ""
+        } ${celebrating ? "chip-celebrate" : ""}`}
+        style={{
+          width: "52%",
+          aspectRatio: "1 / 1",
+          boxShadow:
+            "inset 0 1.5px 3px rgba(255,255,255,0.45), inset 0 -2.5px 4px rgba(0,0,0,0.38), 0 2px 6px rgba(0,0,0,0.55)",
+          ...(celebrating ? { animationDelay: `${celebrateDelayMs}ms` } : {}),
+        }}
+      >
+        {locked && (
+          <svg
+            viewBox="0 0 24 24"
+            className={`w-3/5 h-3/5 text-yellow-200 drop-shadow ${justLocked ? "crown-reveal" : ""}`}
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M3 8l3.5 3 2.5-5 3 5 3-5 2.5 5L21 8l-1.6 9H4.6L3 8zm1.7 11h14.6v2H4.7v-2z" />
+          </svg>
+        )}
+      </div>
     </div>
   );
 }

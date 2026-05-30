@@ -9,37 +9,38 @@ interface Props {
   deck?: DeckManifest | null;
 }
 
+// Responsive size is now ~30% larger than the original (40x56 → 52x72 mobile,
+// 56x80 → 72x104 desktop). Used in Hand and for Last Played.
 const SIZE_CLASSES: Record<NonNullable<Props["size"]>, string> = {
   sm: "w-10 h-14 text-xs",
-  md: "w-14 h-20 text-sm",
-  lg: "w-16 h-24 text-base",
-  responsive: "w-10 h-14 text-[0.65rem] sm:w-14 sm:h-20 sm:text-sm",
+  md: "w-[72px] h-[104px] text-sm",
+  lg: "w-20 h-28 text-base",
+  responsive: "w-[52px] h-[72px] text-[0.7rem] sm:w-[72px] sm:h-[104px] sm:text-sm",
 };
 
 const RANK_TEXT: Record<NonNullable<Props["size"]>, string> = {
   sm: "text-[0.55rem]",
-  md: "text-[0.7rem]",
-  lg: "text-xs",
-  responsive: "text-[0.55rem] sm:text-[0.7rem]",
+  md: "text-[0.85rem]",
+  lg: "text-sm",
+  responsive: "text-[0.7rem] sm:text-[0.85rem]",
 };
 
 const CENTER_TEXT: Record<NonNullable<Props["size"]>, string> = {
   sm: "text-lg",
-  md: "text-2xl",
-  lg: "text-3xl",
-  responsive: "text-lg sm:text-2xl",
+  md: "text-3xl",
+  lg: "text-4xl",
+  responsive: "text-xl sm:text-3xl",
 };
 
 export function CardFace({ card, size = "md", faded = false, deck }: Props) {
   const fadedClass = faded ? "opacity-40" : "";
 
-  // Image rendering when a deck is provided.
   if (deck) {
     const url = cardImageUrl(deck, card.rank, card.suit);
     if (url) {
       return (
         <div
-          className={`relative bg-white border border-slate-300 rounded overflow-hidden ${SIZE_CLASSES[size]} ${fadedClass}`}
+          className={`relative bg-white border border-slate-300 rounded overflow-hidden shadow-sm ${SIZE_CLASSES[size]} ${fadedClass}`}
         >
           <img
             src={url}
@@ -52,13 +53,12 @@ export function CardFace({ card, size = "md", faded = false, deck }: Props) {
     }
   }
 
-  // CSS fallback
   const color = SUIT_COLOR[card.suit];
   const rank = RANK_DISPLAY[card.rank];
   const suit = SUIT_SYMBOL[card.suit];
   return (
     <div
-      className={`relative bg-white border border-slate-300 rounded ${SIZE_CLASSES[size]} ${fadedClass}`}
+      className={`relative bg-white border border-slate-300 rounded shadow-sm ${SIZE_CLASSES[size]} ${fadedClass}`}
     >
       <div
         className={`absolute top-0.5 left-1 leading-none ${color} font-semibold ${RANK_TEXT[size]}`}

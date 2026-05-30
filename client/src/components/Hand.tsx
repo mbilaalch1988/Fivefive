@@ -11,9 +11,11 @@ interface Props {
 }
 
 export function Hand({ hand, selectedCardId, deadCardIds, disabled, deck, onSelect }: Props) {
+  // flex-wrap allows cards to spill onto a second row when they'd overflow
+  // (mobile, where 7 enlarged cards no longer fit on one line).
   return (
     <div
-      className="hand-scroll flex gap-1.5 sm:gap-2 items-end justify-center p-2.5 sm:p-3 rounded-2xl overflow-x-auto"
+      className="flex flex-wrap gap-1.5 sm:gap-2 items-end justify-center p-2.5 sm:p-3 rounded-2xl"
       style={{ background: "var(--md-surface-1)" }}
     >
       {hand.map((card) => {
