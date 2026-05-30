@@ -16,3 +16,9 @@ services:
       # Format: postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres
       - key: DATABASE_URL
         sync: false
+      # Optional: enable Google OAuth sign-in (see README for setup).
+      # Both must be set together. Anon key is public; safe in client bundle.
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
