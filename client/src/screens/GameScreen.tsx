@@ -14,6 +14,7 @@ import {
 import { Board } from "../components/Board";
 import { CardFace } from "../components/CardFace";
 import { Hand } from "../components/Hand";
+import { LastPlayedHistory } from "../components/LastPlayedHistory";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
 
@@ -43,6 +44,7 @@ export function GameScreen({
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingStop, setConfirmingStop] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const me = view.players.find((p) => p.id === myPlayerId) ?? null;
   const myTurn = !!me && me.isCurrentTurn;
@@ -240,12 +242,15 @@ export function GameScreen({
         </div>
       </div>
 
-      {/* Last played card — fixed bottom-right, scales with viewport */}
+      {/* Last played card — fixed bottom-right. Click to open history. */}
       {view.discardPileTop && !view.winner && (
-        <div
-          className="fixed right-2 sm:right-4 z-20 flex flex-col items-end"
+        <button
+          type="button"
+          onClick={() => setHistoryOpen(true)}
+          className="fixed right-2 sm:right-4 z-20 flex flex-col items-end hover:brightness-110 transition"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 70px)" }}
           data-testid="last-played"
+          title="See last 5 played"
         >
           <span
             className="text-[0.6rem] sm:text-xs mb-1 uppercase tracking-widest"
@@ -254,7 +259,15 @@ export function GameScreen({
             Last played
           </span>
           <CardFace card={view.discardPileTop} size="responsive" deck={view.deck} />
-        </div>
+        </button>
+      )}
+
+      {historyOpen && (
+        <LastPlayedHistory
+          actions={view.recentActions}
+          deck={view.deck}
+          onClose={() => setHistoryOpen(false)}
+        />
       )}
 
       {/* Stop game (host only) — fixed bottom-center, above any address bar */}

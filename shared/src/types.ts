@@ -52,6 +52,21 @@ export type Action =
   /** Discard a dead card (both matching board squares already occupied) before playing. */
   | { type: "discardDead"; cardId: number };
 
+/** A single durable record of an action that happened in the game, used to
+ *  render the "last 5 played" popup. For Jack actions, `targetSquare` tells
+ *  the viewer which board card the chip was placed on / removed from. */
+export interface ActionLog {
+  playerId: PlayerId;
+  playerName: string;
+  /** The card the player played from their hand. */
+  card: { rank: Rank; suit: Suit };
+  type: "place" | "remove" | "discardDead";
+  pos?: Pos;
+  /** The card depicted on the board square at `pos`. Always set when `pos`
+   *  is set; for non-Jack placements this equals `card`. */
+  targetSquare?: { rank: Rank; suit: Suit };
+}
+
 export interface Sequence {
   team: Team;
   positions: Pos[]; // exactly 5
@@ -86,6 +101,8 @@ export interface GameState {
   winningSequencePlayerId: PlayerId | null;
   /** Becomes true the moment a discardDead is consumed this turn (only one allowed per turn). */
   discardedThisTurn: boolean;
+  /** Append-only log of recent actions. Most recent at end. Capped at 10. */
+  actionLog: ActionLog[];
 }
 
 export type ActionResult =

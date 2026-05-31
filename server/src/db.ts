@@ -430,16 +430,79 @@ export async function getTopTeams(limit: number) {
        LIMIT $1`,
       [limit],
     );
-    return r.rows.map((row) => ({
-      name: row.name,
-      wins: Number(row.total_wins),
-      games: Number(row.total_games),
-      ratio: row.total_games > 0 ? Number(row.total_wins) / Number(row.total_games) : 0,
-    }));
+    return r.rows.map(teamRowToEntry);
   } catch (e) {
     console.warn("[db] getTopTeams failed:", (e as Error).message);
     return [];
   }
+}
+
+/** Paginated full ranking of players by points. */
+export async function getPagedPlayersByPoints(perPage: number, page: number) {
+  if (!pool) return { rows: [], total: 0, page, perPage };
+  const offset = page * perPage;
+  try {
+    const [data, count] = await Promise.all([
+      pool.query<PlayerTopRow>(
+        `SELECT * FROM (${COMBINED_PLAYER_SQL}) c
+         WHERE points > 0 OR total_games > 0
+         ORDER BY points DESC, total_wins DESC, total_games ASC, name ASC
+         LIMIT $1 OFFSET $2`,
+        [perPage, offset],
+      ),
+      pool.query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM (${COMBINED_PLAYER_SQL}) c
+         WHERE points > 0 OR total_games > 0`,
+      ),
+    ]);
+    return {
+      rows: data.rows.map(playerRowToEntry),
+      total: Number(count.rows[0]?.count ?? 0),
+      page,
+      perPage,
+    };
+  } catch (e) {
+    console.warn("[db] getPagedPlayersByPoints failed:", (e as Error).message);
+    return { rows: [], total: 0, page, perPage };
+  }
+}
+
+/** Paginated full ranking of teams by wins. */
+export async function getPagedTeams(perPage: number, page: number) {
+  if (!pool) return { rows: [], total: 0, page, perPage };
+  const offset = page * perPage;
+  try {
+    const [data, count] = await Promise.all([
+      pool.query<TeamTopRow>(
+        `SELECT name, total_wins, total_games FROM team_stats
+         WHERE total_games > 0
+         ORDER BY total_wins DESC, total_games ASC, name ASC
+         LIMIT $1 OFFSET $2`,
+        [perPage, offset],
+      ),
+      pool.query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM team_stats WHERE total_games > 0`,
+      ),
+    ]);
+    return {
+      rows: data.rows.map(teamRowToEntry),
+      total: Number(count.rows[0]?.count ?? 0),
+      page,
+      perPage,
+    };
+  } catch (e) {
+    console.warn("[db] getPagedTeams failed:", (e as Error).message);
+    return { rows: [], total: 0, page, perPage };
+  }
+}
+
+function teamRowToEntry(row: TeamTopRow) {
+  return {
+    name: row.name,
+    wins: Number(row.total_wins),
+    games: Number(row.total_games),
+    ratio: row.total_games > 0 ? Number(row.total_wins) / Number(row.total_games) : 0,
+  };
 }
 
 function playerRowToEntry(r: PlayerTopRow) {

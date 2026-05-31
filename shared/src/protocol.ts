@@ -1,4 +1,4 @@
-import type { Action, BoardSquare, Card, Chip, Team, PlayerId, Sequence } from "./types.js";
+import type { Action, ActionLog, BoardSquare, Card, Chip, Team, PlayerId, Sequence } from "./types.js";
 
 /* ------------------------------------------------------------------ */
 /* Deck (card-art) manifests                                          */
@@ -18,6 +18,14 @@ export interface DeckManifest {
 export interface DeckSummary {
   id: string;
   name: string;
+}
+
+/** Paginated leaderboard slice. */
+export interface PaginatedScoreboard {
+  rows: ScoreboardEntry[];
+  total: number;
+  page: number;
+  perPage: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -125,6 +133,8 @@ export interface GameView {
   teamNames: Record<Team, string>;
   /** Player names crowned MVP this game. Empty until winner is non-null. */
   mvpNames: string[];
+  /** Last 10 actions (most recent at end). Client renders the last 5 in popup. */
+  recentActions: ActionLog[];
 }
 
 /* ------------------------------------------------------------------ */

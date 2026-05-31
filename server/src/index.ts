@@ -16,6 +16,8 @@ import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { DeckRegistry } from "./decks.js";
 import {
+  getPagedPlayersByPoints,
+  getPagedTeams,
   getTopPlayers,
   getTopPlayersByMvp,
   getTopPlayersByPoints,
@@ -63,6 +65,20 @@ app.get("/api/decks", (_req, res) => {
 app.post("/api/decks/refresh", (_req, res) => {
   deckRegistry.reload();
   res.json({ ok: true, count: deckRegistry.list().length, decks: deckRegistry.list() });
+});
+
+app.get("/api/scoreboard/players", async (req, res) => {
+  const perPage = Math.max(1, Math.min(50, Number(req.query.perPage) || 10));
+  const page = Math.max(0, Number(req.query.page) || 0);
+  const result = await getPagedPlayersByPoints(perPage, page);
+  res.json(result);
+});
+
+app.get("/api/scoreboard/teams", async (req, res) => {
+  const perPage = Math.max(1, Math.min(50, Number(req.query.perPage) || 10));
+  const page = Math.max(0, Number(req.query.page) || 0);
+  const result = await getPagedTeams(perPage, page);
+  res.json(result);
 });
 
 app.get("/api/scoreboard", async (_req, res) => {

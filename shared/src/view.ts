@@ -40,6 +40,7 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     deck: null, // server overrides with the Room's manifest if any
     teamNames: { red: "Red", blue: "Blue", green: "Green" },
     mvpNames: [], // server fills this in after recording the win
+    recentActions: state.actionLog.slice(-5),
   };
 }
 

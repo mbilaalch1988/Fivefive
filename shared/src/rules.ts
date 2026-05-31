@@ -3,6 +3,7 @@ import { cardKey, isOneEyedJack, isTwoEyedJack } from "./cards.js";
 import { detectSequences, lockSequenceChips } from "./sequence.js";
 import type {
   Action,
+  ActionLog,
   ActionResult,
   Card,
   GameState,
@@ -10,6 +11,15 @@ import type {
   PlayerId,
   Pos,
 } from "./types.js";
+
+const ACTION_LOG_CAP = 10;
+
+function logAction(state: GameState, entry: ActionLog): void {
+  state.actionLog.push(entry);
+  if (state.actionLog.length > ACTION_LOG_CAP) {
+    state.actionLog.splice(0, state.actionLog.length - ACTION_LOG_CAP);
+  }
+}
 
 function err(msg: string): ActionResult {
   return { ok: false, error: msg };
@@ -82,6 +92,12 @@ function applyDiscardDead(
   state.discardPile.push(card);
   drawForPlayer(state, player);
   state.discardedThisTurn = true;
+  logAction(state, {
+    playerId: player.id,
+    playerName: player.name,
+    card: { rank: card.rank, suit: card.suit },
+    type: "discardDead",
+  });
   // Discarding doesn't end the turn; player still owes a play.
   return { ok: true, state };
 }
@@ -116,6 +132,15 @@ function applyPlace(
   state.discardPile.push(card);
   drawForPlayer(state, player);
   player.stats.chipsPlaced += 1;
+  logAction(state, {
+    playerId: player.id,
+    playerName: player.name,
+    card: { rank: card.rank, suit: card.suit },
+    type: "place",
+    pos,
+    targetSquare:
+      square.kind === "card" ? { rank: square.rank, suit: square.suit } : undefined,
+  });
 
   // Check for new sequences and update win state.
   const newSeqs = detectSequences(
@@ -167,6 +192,15 @@ function applyRemove(
   state.discardPile.push(card);
   drawForPlayer(state, player);
   player.stats.chipsRemoved += 1;
+  logAction(state, {
+    playerId: player.id,
+    playerName: player.name,
+    card: { rank: card.rank, suit: card.suit },
+    type: "remove",
+    pos,
+    targetSquare:
+      square.kind === "card" ? { rank: square.rank, suit: square.suit } : undefined,
+  });
 
   endTurn(state);
   return { ok: true, state };

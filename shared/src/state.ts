@@ -77,6 +77,7 @@ export function createInitialState(
     winner: null,
     winningSequencePlayerId: null,
     discardedThisTurn: false,
+    actionLog: [],
   };
 }
 
