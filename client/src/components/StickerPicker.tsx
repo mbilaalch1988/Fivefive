@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { STICKERS } from "@sequence/shared";
+import { STICKERS, stickerUrlPath } from "@sequence/shared";
 
 interface Props {
   onSend: (stickerId: string) => void;
 }
 
-const STICKER_URL = (id: string) => `/stickers/${id}.png`;
+const STICKER_URL = (id: string) => stickerUrlPath(id) ?? "";
 
 /**
  * Floating sticker button (bottom-left) → opens a 6×4 grid picker popover.

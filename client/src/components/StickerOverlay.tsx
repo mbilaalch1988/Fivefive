@@ -1,4 +1,5 @@
 import type { StickerBroadcast } from "@sequence/shared";
+import { stickerUrlPath } from "@sequence/shared";
 import { makeNickname } from "../lib/nickname";
 
 interface Props {
@@ -6,7 +7,7 @@ interface Props {
   stickers: StickerBroadcast[];
 }
 
-const STICKER_URL = (id: string) => `/stickers/${id}.png`;
+const STICKER_URL = (id: string) => stickerUrlPath(id) ?? "";
 
 /**
  * Floating overlay that shows incoming stickers from any player. Each sticker
