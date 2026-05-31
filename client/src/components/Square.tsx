@@ -7,6 +7,7 @@ interface Props {
   chip: Chip;
   locked: boolean;
   justLocked: boolean;
+  justPlaced: boolean;
   celebrateDelayMs: number | null;
   highlight: "none" | "playable" | "removable";
   deck: DeckManifest | null;
@@ -20,6 +21,7 @@ export function Square({
   chip,
   locked,
   justLocked,
+  justPlaced,
   celebrateDelayMs,
   highlight,
   deck,
@@ -27,12 +29,13 @@ export function Square({
   onClick,
   testId,
 }: Props) {
-  // Strong, attention-grabbing highlight: thick ring + soft colored glow.
+  // Pulsing glow on selectable cells. Box-shadow is animated via the keyframe
+  // — Tailwind ring stays static for crisp edge color.
   const highlightClasses =
     highlight === "playable"
-      ? "ring-4 ring-amber-300 shadow-[0_0_14px_4px_rgba(252,211,77,0.75)] z-10"
+      ? "ring-4 ring-amber-300 playable-pulse z-10"
       : highlight === "removable"
-        ? "ring-4 ring-rose-400 shadow-[0_0_14px_4px_rgba(251,113,133,0.75)] z-10"
+        ? "ring-4 ring-rose-400 removable-pulse z-10"
         : "";
 
   return (
@@ -65,6 +68,7 @@ export function Square({
           team={chip}
           locked={locked}
           justLocked={justLocked}
+          justPlaced={justPlaced}
           celebrateDelayMs={celebrateDelayMs}
         />
       )}
@@ -147,24 +151,29 @@ function ChipDisk({
   team,
   locked,
   justLocked,
+  justPlaced,
   celebrateDelayMs,
 }: {
   team: Team;
   locked: boolean;
   justLocked: boolean;
+  justPlaced: boolean;
   celebrateDelayMs: number | null;
 }) {
   const celebrating = celebrateDelayMs !== null;
-  // Outer wrapper fills the cell so we can flex-center the (much smaller) chip.
-  // The chip itself is a perfect circle (aspect-ratio 1) sized as a percent of
-  // the cell — so it stays round regardless of cell aspect — with inset
-  // highlights (bevel) + outer drop shadow for a 3D feel.
+  // Animation classes are composable in CSS (.chip-drop.chip-flip chains them
+  // so the bounce-in plays first, then the locked-flip).
+  const animClasses = [
+    justPlaced ? "chip-drop" : "",
+    justLocked ? "chip-flip" : "",
+    celebrating ? "chip-celebrate" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div
-        className={`relative rounded-full flex items-center justify-center ${TEAM_CHIP[team]} ${
-          justLocked ? "chip-flip" : ""
-        } ${celebrating ? "chip-celebrate" : ""}`}
+        className={`relative rounded-full flex items-center justify-center ${TEAM_CHIP[team]} ${animClasses}`}
         style={{
           width: "52%",
           aspectRatio: "1 / 1",

@@ -4,6 +4,7 @@ import { Square } from "./Square";
 interface Props {
   view: GameView;
   justLocked: ReadonlySet<string>;
+  justPlaced: ReadonlySet<string>;
   celebratingTeam: import("@sequence/shared").Team | null;
   highlight: (pos: Pos) => "none" | "playable" | "removable";
   onSquareClick: (pos: Pos) => void;
@@ -11,7 +12,14 @@ interface Props {
 
 const FLIP_STAGGER_MS = 60; // per-cell delay along the anti-diagonal
 
-export function Board({ view, justLocked, celebratingTeam, highlight, onSquareClick }: Props) {
+export function Board({
+  view,
+  justLocked,
+  justPlaced,
+  celebratingTeam,
+  highlight,
+  onSquareClick,
+}: Props) {
   const locked = new Set(view.lockedChips);
   const deck: DeckManifest | null = view.deck ?? null;
 
@@ -48,6 +56,7 @@ export function Board({ view, justLocked, celebratingTeam, highlight, onSquareCl
               chip={chip}
               locked={locked.has(key)}
               justLocked={justLocked.has(key)}
+              justPlaced={justPlaced.has(key)}
               celebrateDelayMs={celebrateDelay.get(key) ?? null}
               highlight={highlight(pos)}
               deck={deck}

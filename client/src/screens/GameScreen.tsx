@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import confetti from "canvas-confetti";
 import {
   buildCardIndex,
   cardKey,
@@ -15,8 +16,16 @@ import { Board } from "../components/Board";
 import { CardFace } from "../components/CardFace";
 import { Hand } from "../components/Hand";
 import { LastPlayedHistory } from "../components/LastPlayedHistory";
+import { SequenceAnnounce } from "../components/SequenceAnnounce";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
+
+/** Team chip colors for confetti palette. */
+const TEAM_CONFETTI: Record<Team, string[]> = {
+  red: ["#f43f5e", "#fb7185", "#fda4af", "#fbbf24"],
+  blue: ["#0ea5e9", "#38bdf8", "#bae6fd", "#fbbf24"],
+  green: ["#10b981", "#34d399", "#a7f3d0", "#fbbf24"],
+};
 
 export type Dispatch = (action: Action) => Promise<{ ok: boolean; error?: string }>;
 
@@ -68,6 +77,7 @@ export function GameScreen({
 
   const prevLockedRef = useRef<Set<string>>(new Set());
   const [justLocked, setJustLocked] = useState<ReadonlySet<string>>(new Set());
+  const [announceTeam, setAnnounceTeam] = useState<Team | null>(null);
   useEffect(() => {
     const current = new Set(view.lockedChips);
     const newly = new Set<string>();
@@ -77,10 +87,67 @@ export function GameScreen({
     prevLockedRef.current = current;
     if (newly.size > 0) {
       setJustLocked(newly);
-      const t = setTimeout(() => setJustLocked(new Set()), 1200);
+      // Fire confetti from each newly-locked chip (skip if no chip placed
+      // at that pos, which can happen for corner-wild positions).
+      requestAnimationFrame(() => {
+        for (const key of newly) {
+          const [r, c] = key.split(",").map(Number);
+          const el = document.querySelector(`[data-testid="sq-${r}-${c}"]`);
+          if (!el) continue;
+          const rect = (el as HTMLElement).getBoundingClientRect();
+          const team = view.chips[r!]![c!];
+          if (!team) continue;
+          confetti({
+            particleCount: 28,
+            spread: 70,
+            startVelocity: 35,
+            origin: {
+              x: (rect.left + rect.width / 2) / window.innerWidth,
+              y: (rect.top + rect.height / 2) / window.innerHeight,
+            },
+            colors: TEAM_CONFETTI[team],
+            disableForReducedMotion: true,
+          });
+        }
+      });
+      // Show the SEQUENCE! wordmark using the most recent sequence's team.
+      const latest = view.sequences[view.sequences.length - 1];
+      if (latest) setAnnounceTeam(latest.team);
+      const tLock = setTimeout(() => setJustLocked(new Set()), 1200);
+      const tAnn = setTimeout(() => setAnnounceTeam(null), 2000);
+      return () => {
+        clearTimeout(tLock);
+        clearTimeout(tAnn);
+      };
+    }
+  }, [view.lockedChips, view.chips, view.sequences]);
+
+  // Track newly-placed chips for the drop-in bounce animation.
+  const prevChipsRef = useRef<string>(""); // serialized snapshot
+  const [justPlaced, setJustPlaced] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    const newly = new Set<string>();
+    const sig: string[] = [];
+    for (let r = 0; r < view.chips.length; r++) {
+      const row = view.chips[r]!;
+      for (let c = 0; c < row.length; c++) {
+        const chip = row[c];
+        if (chip) {
+          const key = `${r},${c}`;
+          sig.push(`${key}:${chip}`);
+          if (!prevChipsRef.current.includes(`${key}:`)) {
+            newly.add(key);
+          }
+        }
+      }
+    }
+    prevChipsRef.current = sig.join("|");
+    if (newly.size > 0) {
+      setJustPlaced(newly);
+      const t = setTimeout(() => setJustPlaced(new Set()), 700);
       return () => clearTimeout(t);
     }
-  }, [view.lockedChips]);
+  }, [view.chips]);
 
   const [winStage, setWinStage] = useState<WinStage>("playing");
   const [celebratingTeam, setCelebratingTeam] = useState<Team | null>(null);
@@ -193,6 +260,7 @@ export function GameScreen({
           <Board
             view={view}
             justLocked={justLocked}
+            justPlaced={justPlaced}
             celebratingTeam={celebratingTeam}
             highlight={highlight}
             onSquareClick={onSquareClick}
@@ -316,6 +384,13 @@ export function GameScreen({
           room={room}
           onRematch={onRematch}
           onLeave={onStopGame}
+        />
+      )}
+
+      {announceTeam && (
+        <SequenceAnnounce
+          team={announceTeam}
+          teamName={view.teamNames[announceTeam]}
         />
       )}
     </>

@@ -74,7 +74,7 @@ function PlayerBadge({
   const nick = makeNickname(name);
   // Visual hierarchy: current > next > others. Implemented via ring color +
   // glow strength + scale. All badges keep their team chip color so identity
-  // stays readable.
+  // stays readable. Smooth transitions on ring + scale create the "turn slide".
   const ring = isCurrent
     ? "ring-4 ring-amber-300 shadow-[0_0_14px_3px_rgba(252,211,77,0.7)] scale-110"
     : isNext
@@ -84,10 +84,10 @@ function PlayerBadge({
   return (
     <div
       title={`${name}${isCurrent ? " (current turn)" : isNext ? " (up next)" : ""}`}
-      className={`relative transition-all ${dim}`}
+      className={`relative transition-opacity duration-500 ease-out ${dim}`}
     >
       <div
-        className={`flex items-center gap-1 rounded-full px-2.5 py-1 ${TEAM_CHIP[team]} ${ring}`}
+        className={`flex items-center gap-1 rounded-full px-2.5 py-1 transition-all duration-500 ease-out ${TEAM_CHIP[team]} ${ring}`}
         style={{
           boxShadow:
             "inset 0 1px 2px rgba(255,255,255,0.35), inset 0 -1.5px 2px rgba(0,0,0,0.25)",
