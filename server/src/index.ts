@@ -7,11 +7,13 @@ import { existsSync } from "node:fs";
 import { Server, type Socket } from "socket.io";
 import {
   SHARED_VERSION,
+  isValidStickerId,
   type Action,
   type ClientToServerEvents,
   type ServerToClientEvents,
   type Team,
 } from "@sequence/shared";
+import { randomUUID } from "node:crypto";
 import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { DeckRegistry } from "./decks.js";
@@ -315,6 +317,24 @@ io.on("connection", (socket) => {
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
     }
+  });
+
+  socket.on("sendSticker", ({ stickerId }, ack) => {
+    const code = socketRoom.get(socket.id);
+    const room = code ? registry.get(code) : undefined;
+    if (!room) return ack({ ok: false, error: "not in a room" });
+    const seat = room.seatBySocketId(socket.id);
+    if (!seat) return ack({ ok: false, error: "no seat" });
+    if (!isValidStickerId(stickerId)) {
+      return ack({ ok: false, error: "unknown sticker" });
+    }
+    ack({ ok: true });
+    io.to(`room:${room.code}`).emit("sticker", {
+      fromPlayerId: seat.id,
+      fromName: seat.name,
+      stickerId,
+      eventId: randomUUID(),
+    });
   });
 
   socket.on("renameTeam", ({ team, name }, ack) => {

@@ -23,3 +23,4 @@ export { applyAction } from "./rules.js";
 export { mulberry32, shuffle } from "./rng.js";
 export * from "./protocol.js";
 export { toGameView } from "./view.js";
+export * from "./stickers.js";

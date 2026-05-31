@@ -172,6 +172,10 @@ export interface ClientToServerEvents {
     payload: { team: Team; name: string },
     ack: (res: AckResult<{}>) => void,
   ) => void;
+  sendSticker: (
+    payload: { stickerId: string },
+    ack: (res: AckResult<{}>) => void,
+  ) => void;
   doAction: (
     payload: Action,
     ack: (res: AckResult<{}>) => void,
@@ -184,6 +188,16 @@ export interface ServerToClientEvents {
   room: (room: RoomView) => void;
   game: (game: GameView) => void;
   errorMsg: (message: string) => void;
+  sticker: (payload: StickerBroadcast) => void;
+}
+
+export interface StickerBroadcast {
+  /** Player who sent it. */
+  fromPlayerId: PlayerId;
+  fromName: string;
+  stickerId: string;
+  /** Server-assigned id, lets client dedupe + key overlay elements. */
+  eventId: string;
 }
 
 export type AckResult<T> =

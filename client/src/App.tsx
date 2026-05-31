@@ -44,7 +44,9 @@ export default function App() {
       room={g.room}
       myPlayerId={g.playerId}
       isHost={isHost}
+      stickers={g.stickers}
       dispatch={g.doAction}
+      onSendSticker={g.sendSticker}
       onStopGame={g.stopGame}
       onRematch={g.stopGame}
     />

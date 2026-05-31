@@ -130,6 +130,18 @@ body {
   50%      { box-shadow: 0 0 18px 6px rgba(251, 113, 133, 0.95); }
 }
 
+/* Sticker pop-in: scale-in + slight bounce, hold, scale+fade out. */
+.sticker-pop {
+  animation: sticker-pop 2.4s ease-out forwards;
+}
+@keyframes sticker-pop {
+  0%   { transform: scale(0.3) translateY(20px); opacity: 0; }
+  15%  { transform: scale(1.15) translateY(0);    opacity: 1; }
+  25%  { transform: scale(1)    translateY(0);    opacity: 1; }
+  80%  { transform: scale(1)    translateY(0);    opacity: 1; }
+  100% { transform: scale(1.1)  translateY(-40px); opacity: 0; }
+}
+
 /* SEQUENCE! wordmark announce: zooms+rotates in, holds, fades out. */
 .sequence-announce-text {
   animation: sequence-announce 1.8s ease-out forwards;

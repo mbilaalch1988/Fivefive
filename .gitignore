@@ -9,3 +9,7 @@ build/
 coverage/
 *.tsbuildinfo
 .claude/
+# Raw sticker composite (kept locally for reslicing; the cropped output lives
+# at client/public/stickers/ and IS tracked).
+/ChatGPT Image*.png
+/sticker-source*.png

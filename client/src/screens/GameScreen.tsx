@@ -17,8 +17,11 @@ import { CardFace } from "../components/CardFace";
 import { Hand } from "../components/Hand";
 import { LastPlayedHistory } from "../components/LastPlayedHistory";
 import { SequenceAnnounce } from "../components/SequenceAnnounce";
+import { StickerOverlay } from "../components/StickerOverlay";
+import { StickerPicker } from "../components/StickerPicker";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
+import type { StickerBroadcast } from "@sequence/shared";
 
 /** Team chip colors for confetti palette. */
 const TEAM_CONFETTI: Record<Team, string[]> = {
@@ -34,7 +37,9 @@ interface Props {
   room: RoomView | null;
   myPlayerId: PlayerId | null;
   isHost: boolean;
+  stickers: StickerBroadcast[];
   dispatch: Dispatch;
+  onSendSticker: (stickerId: string) => Promise<void>;
   onStopGame: () => Promise<void>;
   onRematch: () => Promise<void>;
 }
@@ -46,7 +51,9 @@ export function GameScreen({
   room,
   myPlayerId,
   isHost,
+  stickers,
   dispatch,
+  onSendSticker,
   onStopGame,
   onRematch,
 }: Props) {
@@ -393,6 +400,9 @@ export function GameScreen({
           teamName={view.teamNames[announceTeam]}
         />
       )}
+
+      {!view.winner && <StickerPicker onSend={onSendSticker} />}
+      <StickerOverlay stickers={stickers} />
     </>
   );
 }

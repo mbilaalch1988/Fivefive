@@ -5,6 +5,7 @@ import type {
   GameView,
   PlayerId,
   RoomView,
+  StickerBroadcast,
   Team,
 } from "@sequence/shared";
 import { emit, getSocket, type SequenceSocket } from "../lib/socket";
@@ -65,6 +66,10 @@ export interface UseGame {
   startGame: (opts?: { sequencesToWin?: number; deckId?: string | null }) => Promise<void>;
   stopGame: () => Promise<void>;
   renameTeam: (team: Team, name: string) => Promise<void>;
+  sendSticker: (stickerId: string) => Promise<void>;
+  /** Active sticker broadcasts (most recently received first). */
+  stickers: StickerBroadcast[];
+  dismissSticker: (eventId: string) => void;
   doAction: (action: Action) => Promise<{ ok: boolean; error?: string }>;
 }
 
@@ -77,6 +82,7 @@ export function useGame(): UseGame {
   const [game, setGame] = useState<GameView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [decks, setDecks] = useState<DeckSummary[]>([]);
+  const [stickers, setStickers] = useState<StickerBroadcast[]>([]);
 
   const phase: Phase = game ? "game" : room ? "lobby" : "landing";
 
@@ -123,12 +129,20 @@ export function useGame(): UseGame {
     };
     const onGame = (g: GameView) => setGame(g);
     const onErr = (m: string) => setError(m);
+    const onSticker = (payload: StickerBroadcast) => {
+      setStickers((prev) => [...prev, payload]);
+      // Auto-dismiss after the CSS animation completes (~2.4s).
+      setTimeout(() => {
+        setStickers((prev) => prev.filter((p) => p.eventId !== payload.eventId));
+      }, 2500);
+    };
 
     s.on("connect", onConnect);
     s.on("disconnect", onDisconnect);
     s.on("room", onRoom);
     s.on("game", onGame);
     s.on("errorMsg", onErr);
+    s.on("sticker", onSticker);
 
     // If already connected (Vite HMR re-mounts), run onConnect once.
     if (s.connected) onConnect();
@@ -139,6 +153,7 @@ export function useGame(): UseGame {
       s.off("room", onRoom);
       s.off("game", onGame);
       s.off("errorMsg", onErr);
+      s.off("sticker", onSticker);
     };
   }, []);
 
@@ -255,6 +270,22 @@ export function useGame(): UseGame {
     [handleAck],
   );
 
+  const sendSticker = useCallback(
+    async (stickerId: string) => {
+      const s = socketRef.current!;
+      const res = (await emit(s, "sendSticker", { stickerId })) as {
+        ok: boolean;
+        error?: string;
+      };
+      handleAck(res);
+    },
+    [handleAck],
+  );
+
+  const dismissSticker = useCallback((eventId: string) => {
+    setStickers((prev) => prev.filter((p) => p.eventId !== eventId));
+  }, []);
+
   const doAction = useCallback(
     async (action: Action) => {
       const s = socketRef.current!;
@@ -288,6 +319,9 @@ export function useGame(): UseGame {
     startGame,
     stopGame,
     renameTeam,
+    sendSticker,
+    stickers,
+    dismissSticker,
     doAction,
   };
 }
