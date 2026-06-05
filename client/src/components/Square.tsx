@@ -170,23 +170,29 @@ function ChipDisk({
   ]
     .filter(Boolean)
     .join(" ");
+  // Cartoon look: flat solid fill, no inset highlights/gradients. Thick dark
+  // outline drawn via a 2.5px ring. A small offset shadow keeps the chip
+  // legible against the card art beneath without going 3D.
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div
         className={`relative rounded-full flex items-center justify-center ${TEAM_CHIP[team]} ${animClasses}`}
         style={{
-          width: "52%",
+          width: "56%",
           aspectRatio: "1 / 1",
-          boxShadow:
-            "inset 0 1.5px 3px rgba(255,255,255,0.45), inset 0 -2.5px 4px rgba(0,0,0,0.38), 0 2px 6px rgba(0,0,0,0.55)",
+          border: "2.5px solid #18181b",
+          boxShadow: "1px 1.5px 0 #18181b",
           ...(celebrating ? { animationDelay: `${celebrateDelayMs}ms` } : {}),
         }}
       >
         {locked && (
           <svg
             viewBox="0 0 24 24"
-            className={`w-3/5 h-3/5 text-yellow-200 drop-shadow ${justLocked ? "crown-reveal" : ""}`}
+            className={`w-3/5 h-3/5 text-yellow-300 ${justLocked ? "crown-reveal" : ""}`}
             fill="currentColor"
+            stroke="#18181b"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
             aria-hidden="true"
           >
             <path d="M3 8l3.5 3 2.5-5 3 5 3-5 2.5 5L21 8l-1.6 9H4.6L3 8zm1.7 11h14.6v2H4.7v-2z" />

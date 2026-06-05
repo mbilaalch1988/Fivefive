@@ -19,11 +19,11 @@ export const RANK_DISPLAY: Record<Rank, string> = {
   T: "10", J: "J", Q: "Q", K: "K", A: "A",
 };
 
-/** Team chip pills (filled circle bg + border). */
+/** Team chip flat fill colors (cartoon style). */
 export const TEAM_CHIP: Record<Team, string> = {
-  red: "bg-rose-500 border-rose-700",
-  blue: "bg-sky-500 border-sky-700",
-  green: "bg-emerald-500 border-emerald-700",
+  red: "bg-rose-500",
+  blue: "bg-sky-500",
+  green: "bg-emerald-500",
 };
 
 /** Soft, low-saturation surface for team-tinted containers (Material tonal). */
