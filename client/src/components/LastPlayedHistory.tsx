@@ -93,9 +93,6 @@ function HistoryCard({
   deck: DeckManifest | null;
 }) {
   const isJack = action.card.rank === "J";
-  // For Jack actions, also need to know the target square card (where the
-  // chip landed / was removed from). Non-Jack place: target equals the
-  // played card so there's nothing extra to show.
   const showSlice = isJack && action.targetSquare !== undefined;
 
   return (
@@ -103,40 +100,57 @@ function HistoryCard({
       className="relative bg-white border border-slate-300 rounded overflow-hidden shadow-sm"
       style={{ width: "72px", height: "100px" }}
     >
-      {showSlice && action.targetSquare && (
-        <MiniCardArt
-          rank={action.targetSquare.rank}
-          suit={action.targetSquare.suit}
-          deck={deck}
-          className="absolute inset-0 w-full h-full"
-        />
-      )}
-      {/* Played-card layer. When showSlice is on, this gets a corner clipped
-          so the target card underneath peeks through. */}
-      <div
-        className="absolute inset-0"
-        style={
-          showSlice
-            ? {
-                clipPath: "polygon(0 0, 100% 0, 100% 40%, 40% 100%, 0 100%)",
-              }
-            : undefined
-        }
-      >
+      {showSlice && action.targetSquare ? (
+        <>
+          {/* Lower-right triangle: the affected board-square card. */}
+          <div
+            className="absolute inset-0"
+            style={{ clipPath: "polygon(100% 0, 100% 100%, 0 100%)" }}
+          >
+            <MiniCardArt
+              rank={action.targetSquare.rank}
+              suit={action.targetSquare.suit}
+              deck={deck}
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+          {/* Upper-left triangle: the Jack itself. */}
+          <div
+            className="absolute inset-0"
+            style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}
+          >
+            <MiniCardArt
+              rank={action.card.rank}
+              suit={action.card.suit}
+              deck={deck}
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+          {/* Thin diagonal divider for clarity. */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+          >
+            <line
+              x1="100" y1="0" x2="0" y2="100"
+              stroke="#fbbf24" strokeWidth="1.2" opacity="0.85"
+            />
+          </svg>
+          <span
+            className="absolute top-1 right-1 text-[0.55rem] bg-amber-400 text-zinc-900 px-1 py-0.5 rounded font-bold"
+            aria-hidden="true"
+          >
+            J
+          </span>
+        </>
+      ) : (
         <MiniCardArt
           rank={action.card.rank}
           suit={action.card.suit}
           deck={deck}
           className="absolute inset-0 w-full h-full"
         />
-      </div>
-      {showSlice && (
-        <span
-          className="absolute top-1 right-1 text-[0.55rem] bg-zinc-900/80 text-zinc-100 px-1 py-0.5 rounded font-semibold"
-          aria-hidden="true"
-        >
-          J
-        </span>
       )}
     </div>
   );

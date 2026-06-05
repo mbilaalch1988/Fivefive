@@ -66,15 +66,27 @@ export function LandingScreen({
 
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center p-4"
+      className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden"
       style={{ background: "var(--md-surface)" }}
     >
-      <div className="w-full max-w-sm space-y-6">
+      {/* Drifting colored blobs — purely decorative, sit behind the cards. */}
+      <div className="fixed inset-0 -z-0 pointer-events-none">
+        <span className="blob blob-1" style={{ top: "-8%", left: "-12%", width: "340px", height: "340px", background: "#a855f7" }} />
+        <span className="blob blob-2" style={{ top: "30%", right: "-15%", width: "300px", height: "300px", background: "#ec4899" }} />
+        <span className="blob blob-3" style={{ bottom: "-10%", left: "20%", width: "360px", height: "360px", background: "#f59e0b" }} />
+        <span className="blob blob-1" style={{ top: "55%", left: "-10%", width: "260px", height: "260px", background: "#22d3ee" }} />
+      </div>
+
+      <div className="relative w-full max-w-sm space-y-6">
         <header className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-indigo-500/15 border border-indigo-400/40 mb-2">
-            <span className="text-3xl">🂠</span>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-2 shadow-lg shadow-fuchsia-900/30"
+               style={{
+                 background: "linear-gradient(135deg, rgba(168,85,247,0.25), rgba(236,72,153,0.25), rgba(245,158,11,0.25))",
+                 border: "1px solid rgba(255,255,255,0.15)",
+               }}>
+            <span className="text-4xl">🂠</span>
           </div>
-          <h1 className="text-4xl font-medium tracking-tight">Sequence</h1>
+          <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Sequence</h1>
           <p className="text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
             {connected ? "Connected" : "Connecting…"}
           </p>

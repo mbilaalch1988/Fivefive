@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { DeckSummary, PlayerId, RoomView, Team } from "@sequence/shared";
+import { Scoreboard } from "../components/Scoreboard";
 import { TEAM_CHIP, TEAM_SURFACE, TEAM_TEXT } from "../lib/cards";
 import { FilledButton, TonalButton } from "./LandingScreen";
 
@@ -47,6 +48,7 @@ export function LobbyScreen({
     [...teamCounts.values()].every((n) => n === [...teamCounts.values()][0]);
   const canStart = allReady && teamsBalanced;
   const teamsInPlay: Team[] = ["red", "blue"];
+  const [scoreboardOpen, setScoreboardOpen] = useState(false);
 
   function startRename(team: Team) {
     setRenamingTeam(team);
@@ -338,6 +340,31 @@ export function LobbyScreen({
       >
         Leave room
       </button>
+
+      {/* Global hall-of-fame leaderboard, same component as the landing
+          screen. Shows current top players + teams without leaving the room. */}
+      <section
+        className="w-full max-w-md rounded-3xl p-5 space-y-3 shadow-sm mb-4"
+        style={{ background: "var(--md-surface-1)" }}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
+            Hall of fame
+          </h2>
+          <button
+            type="button"
+            onClick={() => setScoreboardOpen(true)}
+            className="state-layer text-indigo-300 hover:text-indigo-200 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-indigo-400/40"
+          >
+            View all
+          </button>
+        </div>
+        <Scoreboard />
+      </section>
+
+      {scoreboardOpen && (
+        <Scoreboard asDialog onClose={() => setScoreboardOpen(false)} />
+      )}
     </main>
   );
 }

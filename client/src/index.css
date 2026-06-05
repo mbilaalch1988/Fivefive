@@ -130,6 +130,47 @@ body {
   50%      { box-shadow: 0 0 18px 6px rgba(251, 113, 133, 0.95); }
 }
 
+/* Animated colorful gradient blobs for the landing screen. */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+  pointer-events: none;
+  will-change: transform;
+}
+.blob-1 { animation: blob-drift-1 18s ease-in-out infinite; }
+.blob-2 { animation: blob-drift-2 22s ease-in-out infinite; }
+.blob-3 { animation: blob-drift-3 25s ease-in-out infinite; }
+@keyframes blob-drift-1 {
+  0%, 100% { transform: translate(0, 0)        scale(1);   }
+  33%      { transform: translate(40px, -30px) scale(1.1); }
+  66%      { transform: translate(-30px, 40px) scale(0.9); }
+}
+@keyframes blob-drift-2 {
+  0%, 100% { transform: translate(0, 0)         scale(1);   }
+  33%      { transform: translate(-40px, 30px)  scale(1.15);}
+  66%      { transform: translate(30px, -20px)  scale(0.95);}
+}
+@keyframes blob-drift-3 {
+  0%, 100% { transform: translate(0, 0)         scale(1);   }
+  50%      { transform: translate(20px, -40px)  scale(1.2); }
+}
+
+/* Gradient headline text. */
+.gradient-text {
+  background-image: linear-gradient(120deg, #fb7185 0%, #fbbf24 25%, #818cf8 60%, #34d399 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 8s ease-in-out infinite;
+}
+@keyframes gradient-pan {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
 /* Jack-played effect: expanding ring + spinning "J" emblem over the target
    cell. Two color variants — two-eyed Jack (wild placement) glows indigo,
    one-eyed Jack (removal) glows rose. */
