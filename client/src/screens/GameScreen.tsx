@@ -236,8 +236,11 @@ export function GameScreen({
     };
   }, [view.winner]);
 
+  // Highlight is purely local — based on this client's selectedCard state,
+  // never broadcast to other players. So it's safe to show even when it's
+  // not my turn, as a "where could this card go?" preview.
   function highlight(pos: Pos): "none" | "playable" | "removable" {
-    if (!myTurn || !selectedCard || view.winner) return "none";
+    if (!selectedCard || view.winner) return "none";
     const sq = view.board[pos.r]![pos.c]!;
     if (sq.kind === "corner") return "none";
     const chip = view.chips[pos.r]![pos.c];
@@ -358,7 +361,7 @@ export function GameScreen({
                 hand={view.myHand}
                 selectedCardId={selectedCardId}
                 deadCardIds={deadCardIds}
-                disabled={!myTurn || view.winner !== null}
+                disabled={view.winner !== null}
                 deck={view.deck}
                 onSelect={(id) =>
                   setSelectedCardId((prev) => (prev === id ? null : id))
@@ -366,7 +369,9 @@ export function GameScreen({
               />
               {!myTurn && !view.winner && (
                 <p className="text-center text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
-                  Waiting for {view.players[view.turnIdx]?.name ?? "next player"}…
+                  {selectedCard
+                    ? `Preview only — waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`
+                    : `Waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`}
                 </p>
               )}
             </>
