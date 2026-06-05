@@ -13,16 +13,23 @@ import {
   type Team,
 } from "@sequence/shared";
 import { Board } from "../components/Board";
-import { CardFace } from "../components/CardFace";
 import { Hand } from "../components/Hand";
+import { GameMenu } from "../components/GameMenu";
+import { JackEffect } from "../components/JackEffect";
 import { LastPlayedHistory } from "../components/LastPlayedHistory";
 import { SequenceAnnounce } from "../components/SequenceAnnounce";
 import { StickerOverlay } from "../components/StickerOverlay";
 import { StickerPicker } from "../components/StickerPicker";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
-import type { StickerBroadcast } from "@sequence/shared";
+import type { ActionLog, StickerBroadcast } from "@sequence/shared";
 import { notifyMyTurn } from "../lib/notify";
+
+interface JackEffectInstance {
+  id: string;
+  rect: { left: number; top: number; width: number; height: number };
+  variant: "place" | "remove";
+}
 
 /** Team chip colors for confetti palette. */
 const TEAM_CONFETTI: Record<Team, string[]> = {
@@ -62,6 +69,8 @@ export function GameScreen({
   const [error, setError] = useState<string | null>(null);
   const [confirmingStop, setConfirmingStop] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
+  const [jackEffects, setJackEffects] = useState<JackEffectInstance[]>([]);
 
   const me = view.players.find((p) => p.id === myPlayerId) ?? null;
   const myTurn = !!me && me.isCurrentTurn;
@@ -143,6 +152,42 @@ export function GameScreen({
     }
     prevTurnPlayerRef.current = currentPlayerId;
   }, [view.turnIdx, view.players, myPlayerId, view.winner]);
+
+  // Watch recentActions for newly-arrived Jack plays. For each one, locate the
+  // target cell in the DOM and spawn a JackEffect over it. Independent of
+  // sequence completion — confetti still fires on locks, this just announces
+  // which square a special card hit.
+  const prevActionCountRef = useRef<number>(0);
+  useEffect(() => {
+    const total = view.recentActions.length;
+    const prev = prevActionCountRef.current;
+    if (total > prev) {
+      const newOnes = view.recentActions.slice(prev) as ActionLog[];
+      const spawn: JackEffectInstance[] = [];
+      for (const a of newOnes) {
+        if (a.card.rank !== "J" || !a.pos) continue;
+        if (a.type !== "place" && a.type !== "remove") continue;
+        const el = document.querySelector(
+          `[data-testid="sq-${a.pos.r}-${a.pos.c}"]`,
+        );
+        if (!el) continue;
+        const r = (el as HTMLElement).getBoundingClientRect();
+        spawn.push({
+          id: `${Date.now()}-${a.pos.r}-${a.pos.c}-${spawn.length}`,
+          rect: { left: r.left, top: r.top, width: r.width, height: r.height },
+          variant: a.type,
+        });
+      }
+      if (spawn.length > 0) {
+        setJackEffects((prev) => [...prev, ...spawn]);
+        const ids = spawn.map((s) => s.id);
+        setTimeout(() => {
+          setJackEffects((prev) => prev.filter((s) => !ids.includes(s.id)));
+        }, 1300);
+      }
+    }
+    prevActionCountRef.current = total;
+  }, [view.recentActions]);
 
   // Track newly-placed chips for the drop-in bounce animation.
   const prevChipsRef = useRef<string>(""); // serialized snapshot
@@ -333,26 +378,6 @@ export function GameScreen({
         </div>
       </div>
 
-      {/* Last played card — fixed bottom-right. Click to open history. */}
-      {view.discardPileTop && !view.winner && (
-        <button
-          type="button"
-          onClick={() => setHistoryOpen(true)}
-          className="fixed right-2 sm:right-4 z-20 flex flex-col items-end hover:brightness-110 transition"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 70px)" }}
-          data-testid="last-played"
-          title="See last 5 played"
-        >
-          <span
-            className="text-[0.6rem] sm:text-xs mb-1 uppercase tracking-widest"
-            style={{ color: "var(--md-on-surface-variant)" }}
-          >
-            Last played
-          </span>
-          <CardFace card={view.discardPileTop} size="responsive" deck={view.deck} />
-        </button>
-      )}
-
       {historyOpen && (
         <LastPlayedHistory
           actions={view.recentActions}
@@ -417,8 +442,22 @@ export function GameScreen({
         />
       )}
 
-      {!view.winner && <StickerPicker onSend={onSendSticker} />}
+      {!view.winner && (
+        <GameMenu
+          onOpenStickers={() => setStickerPickerOpen(true)}
+          onOpenHistory={() => setHistoryOpen(true)}
+        />
+      )}
+      <StickerPicker
+        open={stickerPickerOpen}
+        onSend={onSendSticker}
+        onClose={() => setStickerPickerOpen(false)}
+      />
       <StickerOverlay stickers={stickers} />
+
+      {jackEffects.map((e) => (
+        <JackEffect key={e.id} rect={e.rect} variant={e.variant} />
+      ))}
     </>
   );
 }

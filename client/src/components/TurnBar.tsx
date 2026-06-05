@@ -1,8 +1,6 @@
-import { useState } from "react";
 import type { GameView, PlayerId, Team } from "@sequence/shared";
 import { TEAM_CHIP } from "../lib/cards";
 import { makeNickname } from "../lib/nickname";
-import { isMuted, setMuted } from "../lib/notify";
 
 interface Props {
   view: GameView;
@@ -12,12 +10,6 @@ interface Props {
 export function TurnBar({ view, myPlayerId }: Props) {
   const teams = Object.keys(view.teamSequenceCounts) as Team[];
   const nextIdx = (view.turnIdx + 1) % view.players.length;
-  const [muted, setMutedState] = useState<boolean>(() => isMuted());
-  function toggleMute() {
-    const next = !muted;
-    setMutedState(next);
-    setMuted(next);
-  }
 
   return (
     <div className="w-full flex flex-col gap-2">
@@ -59,16 +51,6 @@ export function TurnBar({ view, myPlayerId }: Props) {
         <span className="ml-auto" style={{ color: "var(--md-on-surface-variant)" }}>
           Draw: {view.drawPileCount}
         </span>
-        <button
-          type="button"
-          onClick={toggleMute}
-          title={muted ? "Unmute your-turn chime" : "Mute your-turn chime"}
-          aria-pressed={muted}
-          data-testid="mute-toggle"
-          className="state-layer ml-2 w-7 h-7 rounded-full flex items-center justify-center text-base hover:bg-zinc-700/50 transition"
-        >
-          {muted ? "🔕" : "🔔"}
-        </button>
       </div>
     </div>
   );
