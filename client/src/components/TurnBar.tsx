@@ -1,6 +1,8 @@
+import { useState } from "react";
 import type { GameView, PlayerId, Team } from "@sequence/shared";
 import { TEAM_CHIP } from "../lib/cards";
 import { makeNickname } from "../lib/nickname";
+import { isMuted, setMuted } from "../lib/notify";
 
 interface Props {
   view: GameView;
@@ -10,6 +12,12 @@ interface Props {
 export function TurnBar({ view, myPlayerId }: Props) {
   const teams = Object.keys(view.teamSequenceCounts) as Team[];
   const nextIdx = (view.turnIdx + 1) % view.players.length;
+  const [muted, setMutedState] = useState<boolean>(() => isMuted());
+  function toggleMute() {
+    const next = !muted;
+    setMutedState(next);
+    setMuted(next);
+  }
 
   return (
     <div className="w-full flex flex-col gap-2">
@@ -51,6 +59,16 @@ export function TurnBar({ view, myPlayerId }: Props) {
         <span className="ml-auto" style={{ color: "var(--md-on-surface-variant)" }}>
           Draw: {view.drawPileCount}
         </span>
+        <button
+          type="button"
+          onClick={toggleMute}
+          title={muted ? "Unmute your-turn chime" : "Mute your-turn chime"}
+          aria-pressed={muted}
+          data-testid="mute-toggle"
+          className="state-layer ml-2 w-7 h-7 rounded-full flex items-center justify-center text-base hover:bg-zinc-700/50 transition"
+        >
+          {muted ? "🔕" : "🔔"}
+        </button>
       </div>
     </div>
   );
@@ -72,11 +90,11 @@ function PlayerBadge({
   connected: boolean;
 }) {
   const nick = makeNickname(name);
-  // Visual hierarchy: current > next > others. Implemented via ring color +
-  // glow strength + scale. All badges keep their team chip color so identity
-  // stays readable. Smooth transitions on ring + scale create the "turn slide".
+  // Visual hierarchy: current > next > others. Current player uses an animated
+  // gold pulse (.turn-pulse drives the box-shadow keyframe) instead of a flat
+  // ring — much harder to miss than the static highlight before.
   const ring = isCurrent
-    ? "ring-4 ring-amber-300 shadow-[0_0_14px_3px_rgba(252,211,77,0.7)] scale-110"
+    ? "turn-pulse scale-110"
     : isNext
       ? "ring-2 ring-zinc-200/60 shadow-[0_0_8px_1px_rgba(228,228,231,0.35)]"
       : "ring-1 ring-white/10";

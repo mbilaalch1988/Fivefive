@@ -22,6 +22,7 @@ import { StickerPicker } from "../components/StickerPicker";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
 import type { StickerBroadcast } from "@sequence/shared";
+import { notifyMyTurn } from "../lib/notify";
 
 /** Team chip colors for confetti palette. */
 const TEAM_CONFETTI: Record<Team, string[]> = {
@@ -128,6 +129,20 @@ export function GameScreen({
       };
     }
   }, [view.lockedChips, view.chips, view.sequences]);
+
+  // Notify (vibrate + chime) when the turn flips TO this player. Skip the
+  // very first observation so we don't fire when the user lands in-game.
+  const prevTurnPlayerRef = useRef<PlayerId | null>(null);
+  useEffect(() => {
+    const currentPlayerId = view.players[view.turnIdx]?.id ?? null;
+    const wasMe = prevTurnPlayerRef.current === myPlayerId;
+    const isMe = currentPlayerId === myPlayerId;
+    const isFirstObservation = prevTurnPlayerRef.current === null;
+    if (isMe && !wasMe && !isFirstObservation && !view.winner) {
+      notifyMyTurn();
+    }
+    prevTurnPlayerRef.current = currentPlayerId;
+  }, [view.turnIdx, view.players, myPlayerId, view.winner]);
 
   // Track newly-placed chips for the drop-in bounce animation.
   const prevChipsRef = useRef<string>(""); // serialized snapshot
@@ -251,10 +266,11 @@ export function GameScreen({
         </div>
       </header>
 
-      {/* Main scrollable content. Top padding clears the fixed TurnBar, bottom
-          padding clears the fixed Last-Played card + Stop button. */}
+      {/* Main scrollable content. Top padding clears the fixed TurnBar (now
+          compact, just badges + counts row); bottom padding clears the fixed
+          Last-Played card + Stop button. */}
       <div
-        className="min-h-screen flex flex-col items-center p-2 sm:p-4 gap-2.5 sm:gap-3 pt-36 sm:pt-40 pb-36 sm:pb-40"
+        className="min-h-screen flex flex-col items-center p-2 sm:p-4 gap-2 sm:gap-3 pt-24 sm:pt-28 pb-36 sm:pb-40"
         style={{ background: "var(--md-surface)" }}
       >
         {error && (
