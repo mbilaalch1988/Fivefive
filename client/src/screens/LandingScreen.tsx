@@ -10,6 +10,7 @@ interface Props {
   onClearError: () => void;
   onCreate: (name: string) => Promise<void>;
   onJoin: (code: string, name: string) => Promise<void>;
+  onSpectate: (code: string, name: string) => Promise<void>;
 }
 
 export function LandingScreen({
@@ -18,12 +19,14 @@ export function LandingScreen({
   onClearError,
   onCreate,
   onJoin,
+  onSpectate,
 }: Props) {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [scoreboardOpen, setScoreboardOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [showSpectate, setShowSpectate] = useState(false);
 
   const auth = useAuth();
 
@@ -224,6 +227,30 @@ export function LandingScreen({
           >
             Join room
           </TonalButton>
+          <button
+            type="button"
+            onClick={() => setShowSpectate((v) => !v)}
+            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-zinc-200 py-1"
+          >
+            {showSpectate ? "Hide spectate option" : "Just watching? Spectate a game"}
+          </button>
+          {showSpectate && (
+            <button
+              type="button"
+              data-testid="spectate-button"
+              onClick={() =>
+                go(() => onSpectate(code.trim(), name.trim() || "Spectator"))
+              }
+              disabled={!connected || code.trim().length === 0 || busy}
+              className="state-layer w-full py-3 rounded-full font-medium text-amber-100
+                         bg-amber-500/15 border border-amber-400/40 hover:bg-amber-500/25
+                         disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border-zinc-700
+                         disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              <span>👁</span>
+              <span>Spectate room</span>
+            </button>
+          )}
         </section>
 
         {/* Scoreboard preview + full-dialog button */}

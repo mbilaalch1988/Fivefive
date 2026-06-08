@@ -20,13 +20,19 @@ async function currentAuthToken(): Promise<string | undefined> {
   return data.session?.access_token ?? undefined;
 }
 
-export type Phase = "landing" | "lobby" | "game";
+export type Phase = "landing" | "lobby" | "game" | "spectate-lobby" | "spectate-game";
 
 const STORAGE_KEY = "sequence.session";
+const SPECTATE_STORAGE_KEY = "sequence.spectate";
 
 interface StoredSession {
   roomCode: string;
   playerId: PlayerId;
+}
+
+interface StoredSpectate {
+  roomCode: string;
+  name: string;
 }
 
 function loadStored(): StoredSession | null {
@@ -48,6 +54,25 @@ function saveStored(s: StoredSession | null): void {
   }
 }
 
+function loadSpectate(): StoredSpectate | null {
+  try {
+    const raw = localStorage.getItem(SPECTATE_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredSpectate;
+  } catch {
+    return null;
+  }
+}
+
+function saveSpectate(s: StoredSpectate | null): void {
+  try {
+    if (s) localStorage.setItem(SPECTATE_STORAGE_KEY, JSON.stringify(s));
+    else localStorage.removeItem(SPECTATE_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export interface UseGame {
   phase: Phase;
   connected: boolean;
@@ -58,8 +83,11 @@ export interface UseGame {
   error: string | null;
   clearError: () => void;
 
+  /** True when this client joined as read-only watcher (no seat). */
+  isSpectator: boolean;
   createRoom: (name: string) => Promise<void>;
   joinRoom: (code: string, name: string) => Promise<void>;
+  spectateRoom: (code: string, name: string) => Promise<void>;
   leave: () => Promise<void>;
   chooseTeam: (team: Team) => Promise<void>;
   setReady: (ready: boolean) => Promise<void>;
@@ -88,8 +116,11 @@ export function useGame(): UseGame {
   const [decks, setDecks] = useState<DeckSummary[]>([]);
   const [stickers, setStickers] = useState<StickerBroadcast[]>([]);
   const [quickChats, setQuickChats] = useState<QuickChatBroadcast[]>([]);
+  const [isSpectator, setIsSpectator] = useState(false);
 
-  const phase: Phase = game ? "game" : room ? "lobby" : "landing";
+  const phase: Phase = isSpectator
+    ? (game ? "spectate-game" : room ? "spectate-lobby" : "landing")
+    : (game ? "game" : room ? "lobby" : "landing");
 
   // Fetch available decks once on mount.
   useEffect(() => {
@@ -118,8 +149,25 @@ export function useGame(): UseGame {
             setRoomCode(stored.roomCode);
             setRoom(restored.room);
             setGame(restored.game);
+            setIsSpectator(false);
           } else {
             saveStored(null);
+          }
+        });
+        return;
+      }
+      // Otherwise try to restore a spectator session.
+      const spec = loadSpectate();
+      if (spec) {
+        void rejoinSpectate(s, spec).then((restored) => {
+          if (restored) {
+            setRoomCode(spec.roomCode);
+            setRoom(restored.room);
+            setGame(restored.game);
+            setIsSpectator(true);
+            setPlayerId(null);
+          } else {
+            saveSpectate(null);
           }
         });
       }
@@ -219,6 +267,34 @@ export function useGame(): UseGame {
     [handleAck],
   );
 
+  const spectateRoom = useCallback(
+    async (code: string, name: string) => {
+      const s = socketRef.current!;
+      const authToken = await currentAuthToken();
+      const cleanCode = code.toUpperCase();
+      const cleanName = name.trim() || "Spectator";
+      const res = (await emit(s, "joinAsSpectator", {
+        roomCode: cleanCode,
+        spectatorName: cleanName,
+        authToken,
+      })) as
+        | { ok: true; spectatorId: string; room: RoomView; game: GameView | null }
+        | { ok: false; error: string };
+      handleAck(res);
+      if (res.ok) {
+        setRoom(res.room);
+        setGame(res.game);
+        setRoomCode(cleanCode);
+        setIsSpectator(true);
+        setPlayerId(null);
+        saveSpectate({ roomCode: cleanCode, name: cleanName });
+        // Wipe any stale player session so we don't try to rejoin as a seat.
+        saveStored(null);
+      }
+    },
+    [handleAck],
+  );
+
   const leave = useCallback(async () => {
     const s = socketRef.current!;
     await emit(s, "leaveRoom");
@@ -226,7 +302,9 @@ export function useGame(): UseGame {
     setGame(null);
     setPlayerId(null);
     setRoomCode(null);
+    setIsSpectator(false);
     saveStored(null);
+    saveSpectate(null);
   }, []);
 
   const chooseTeam = useCallback(
@@ -335,8 +413,10 @@ export function useGame(): UseGame {
     game,
     error,
     clearError,
+    isSpectator,
     createRoom,
     joinRoom,
+    spectateRoom,
     leave,
     chooseTeam,
     setReady,
@@ -359,6 +439,20 @@ async function rejoinStored(
 ): Promise<{ room: RoomView; game: GameView | null } | null> {
   const res = (await emit(s, "rejoin", stored)) as
     | { ok: true; room: RoomView; game: GameView | null }
+    | { ok: false; error: string };
+  if (!res.ok) return null;
+  return { room: res.room, game: res.game };
+}
+
+async function rejoinSpectate(
+  s: SequenceSocket,
+  spec: StoredSpectate,
+): Promise<{ room: RoomView; game: GameView | null } | null> {
+  const res = (await emit(s, "joinAsSpectator", {
+    roomCode: spec.roomCode,
+    spectatorName: spec.name,
+  })) as
+    | { ok: true; spectatorId: string; room: RoomView; game: GameView | null }
     | { ok: false; error: string };
   if (!res.ok) return null;
   return { room: res.room, game: res.game };

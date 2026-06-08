@@ -91,6 +91,8 @@ export interface RoomView {
   playerScores: Record<string, number>;
   /** Total games completed in this room. */
   gamesPlayed: number;
+  /** Number of read-only spectators currently watching. */
+  spectatorCount: number;
 }
 
 /* ------------------------------------------------------------------ */
@@ -150,6 +152,12 @@ export interface ClientToServerEvents {
   joinRoom: (
     payload: { roomCode: string; playerName: string; authToken?: string },
     ack: (res: AckResult<{ playerId: PlayerId; room: RoomView }>) => void,
+  ) => void;
+  joinAsSpectator: (
+    payload: { roomCode: string; spectatorName: string; authToken?: string },
+    ack: (
+      res: AckResult<{ spectatorId: string; room: RoomView; game: GameView | null }>,
+    ) => void,
   ) => void;
   rejoin: (
     payload: { roomCode: string; playerId: PlayerId },

@@ -3,6 +3,7 @@ import { useGame } from "./hooks/useGame";
 import { GameScreen } from "./screens/GameScreen";
 import { LandingScreen } from "./screens/LandingScreen";
 import { LobbyScreen } from "./screens/LobbyScreen";
+import { SpectateLobby } from "./screens/SpectateLobby";
 import { applyColorBlindClass, onPrefsChange } from "./lib/prefs";
 
 export default function App() {
@@ -14,6 +15,30 @@ export default function App() {
     return onPrefsChange(applyColorBlindClass);
   }, []);
 
+  // Spectator: pre-game lobby view.
+  if (g.isSpectator && g.room && !g.game) {
+    return <SpectateLobby room={g.room} onLeave={g.leave} />;
+  }
+
+  // Spectator: in-game read-only view (no hand, no menu actions affect state).
+  if (g.isSpectator && g.room && g.game) {
+    return (
+      <GameScreen
+        view={g.game}
+        room={g.room}
+        myPlayerId={null}
+        isHost={false}
+        stickers={g.stickers}
+        quickChats={g.quickChats}
+        dispatch={g.doAction}
+        onSendSticker={g.sendSticker}
+        onSendQuickChat={g.sendQuickChat}
+        onStopGame={g.leave}
+        onRematch={g.leave}
+      />
+    );
+  }
+
   if (g.phase === "landing" || !g.room || !g.playerId) {
     return (
       <LandingScreen
@@ -22,6 +47,7 @@ export default function App() {
         onClearError={g.clearError}
         onCreate={g.createRoom}
         onJoin={g.joinRoom}
+        onSpectate={g.spectateRoom}
       />
     );
   }

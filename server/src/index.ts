@@ -160,6 +160,13 @@ function broadcastGame(room: Room): void {
     const view = room.gameView(seat.id);
     if (view) io.to(seat.socketId).emit("game", view);
   }
+  // Spectators get the same view with no hand (viewerId=null).
+  const spectatorView = room.gameView(null);
+  if (spectatorView) {
+    for (const sid of room.spectatorSocketIds()) {
+      io.to(sid).emit("game", spectatorView);
+    }
+  }
 }
 
 io.on("connection", (socket) => {
@@ -205,6 +212,34 @@ io.on("connection", (socket) => {
       });
       attach(socket, room.code);
       ack({ ok: true, playerId, room: room.roomView() });
+      broadcastRoom(room);
+    } catch (e) {
+      ack({ ok: false, error: (e as Error).message });
+    }
+  });
+
+  socket.on("joinAsSpectator", ({ roomCode, spectatorName, authToken }, ack) => {
+    try {
+      const verified = verifyToken(authToken);
+      const code = (roomCode ?? "").trim().toUpperCase();
+      const name = (spectatorName ?? verified?.displayName ?? "Spectator").trim() || "Spectator";
+      if (!code) return ack({ ok: false, error: "room code required" });
+      const room = registry.get(code);
+      if (!room) return ack({ ok: false, error: "room not found" });
+      const spectatorId = randomUUID();
+      room.addSpectator({
+        id: spectatorId,
+        name,
+        socketId: socket.id,
+        userId: verified?.userId ?? null,
+      });
+      attach(socket, room.code);
+      ack({
+        ok: true,
+        spectatorId,
+        room: room.roomView(),
+        game: room.gameView(null),
+      });
       broadcastRoom(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
@@ -324,15 +359,17 @@ io.on("connection", (socket) => {
     const code = socketRoom.get(socket.id);
     const room = code ? registry.get(code) : undefined;
     if (!room) return ack({ ok: false, error: "not in a room" });
+    // Players and spectators can both send stickers.
     const seat = room.seatBySocketId(socket.id);
-    if (!seat) return ack({ ok: false, error: "no seat" });
+    const spec = !seat ? room.spectatorBySocketId(socket.id) : undefined;
+    if (!seat && !spec) return ack({ ok: false, error: "no seat" });
     if (!isValidStickerId(stickerId)) {
       return ack({ ok: false, error: "unknown sticker" });
     }
     ack({ ok: true });
     io.to(`room:${room.code}`).emit("sticker", {
-      fromPlayerId: seat.id,
-      fromName: seat.name,
+      fromPlayerId: seat?.id ?? spec!.id,
+      fromName: seat?.name ?? spec!.name,
       stickerId,
       eventId: randomUUID(),
     });
@@ -343,15 +380,16 @@ io.on("connection", (socket) => {
     const room = code ? registry.get(code) : undefined;
     if (!room) return ack({ ok: false, error: "not in a room" });
     const seat = room.seatBySocketId(socket.id);
-    if (!seat) return ack({ ok: false, error: "no seat" });
+    const spec = !seat ? room.spectatorBySocketId(socket.id) : undefined;
+    if (!seat && !spec) return ack({ ok: false, error: "no seat" });
     if (!isValidQuickChatId(chatId)) {
       return ack({ ok: false, error: "unknown quick chat" });
     }
     ack({ ok: true });
     io.to(`room:${room.code}`).emit("quickChat", {
-      fromPlayerId: seat.id,
-      fromName: seat.name,
-      fromTeam: seat.team,
+      fromPlayerId: seat?.id ?? spec!.id,
+      fromName: seat?.name ?? spec!.name,
+      fromTeam: seat?.team ?? null,
       chatId,
       eventId: randomUUID(),
     });
@@ -380,6 +418,16 @@ io.on("connection", (socket) => {
     const code = socketRoom.get(socket.id);
     const room = code ? registry.get(code) : undefined;
     if (!room) return ack({ ok: false, error: "not in a room" });
+    // Spectator leaving — pop from spectators list.
+    const spec = room.spectatorBySocketId(socket.id);
+    if (spec) {
+      room.removeSpectatorBySocketId(socket.id);
+      detach(socket);
+      ack({ ok: true });
+      if (room.isEmpty()) registry.delete(room.code);
+      else broadcastRoom(room);
+      return;
+    }
     const seat = room.seatBySocketId(socket.id);
     if (!seat) return ack({ ok: false, error: "no seat" });
     try {
@@ -399,8 +447,14 @@ io.on("connection", (socket) => {
     if (code) {
       const room = registry.get(code);
       if (room) {
-        room.markDisconnected(socket.id);
-        broadcastRoom(room);
+        // Spectators are removed entirely on disconnect (no rejoin); seated
+        // players just get marked offline so they can rejoin.
+        const removedSpec = room.removeSpectatorBySocketId(socket.id);
+        if (!removedSpec) {
+          room.markDisconnected(socket.id);
+        }
+        if (room.isEmpty()) registry.delete(room.code);
+        else broadcastRoom(room);
       }
     }
     detach(socket);

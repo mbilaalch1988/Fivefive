@@ -31,6 +31,13 @@ interface RoomSeat {
   userId: string | null;
 }
 
+interface RoomSpectator {
+  id: string;
+  name: string;
+  socketId: string;
+  userId: string | null;
+}
+
 const TEAM_ORDER: Team[] = ["red", "blue", "green"];
 const MAX_TEAM_NAME = 24;
 
@@ -38,6 +45,7 @@ export class Room {
   readonly code: string;
   hostId: PlayerId;
   seats: RoomSeat[] = [];
+  spectators: RoomSpectator[] = [];
   game: GameState | null = null;
   /** MVP player names from the most recently-completed game (cleared on next start). */
   lastMvpNames: string[] = [];
@@ -111,6 +119,31 @@ export class Room {
     return seat;
   }
 
+  addSpectator(s: {
+    id: string;
+    name: string;
+    socketId: string;
+    userId: string | null;
+  }): void {
+    if (this.spectators.length >= 20) throw new Error("too many spectators");
+    this.spectators.push({
+      id: s.id,
+      name: s.name,
+      socketId: s.socketId,
+      userId: s.userId,
+    });
+  }
+
+  removeSpectatorBySocketId(socketId: string): RoomSpectator | null {
+    const idx = this.spectators.findIndex((s) => s.socketId === socketId);
+    if (idx < 0) return null;
+    return this.spectators.splice(idx, 1)[0] ?? null;
+  }
+
+  spectatorBySocketId(socketId: string): RoomSpectator | undefined {
+    return this.spectators.find((s) => s.socketId === socketId);
+  }
+
   removePlayer(playerId: PlayerId): void {
     if (this.game) throw new Error("cannot leave: game in progress");
     const idx = this.seats.findIndex((s) => s.id === playerId);
@@ -122,7 +155,7 @@ export class Room {
   }
 
   isEmpty(): boolean {
-    return this.seats.length === 0;
+    return this.seats.length === 0 && this.spectators.length === 0;
   }
 
   chooseTeam(playerId: PlayerId, team: Team): void {
@@ -286,6 +319,7 @@ export class Room {
       teamScores: { ...this.teamScores },
       playerScores: { ...this.playerScores },
       gamesPlayed: this.gamesPlayed,
+      spectatorCount: this.spectators.length,
     };
   }
 
@@ -306,6 +340,10 @@ export class Room {
     return this.seats
       .filter((s) => s.connected && s.socketId !== null)
       .map((s) => s.socketId!);
+  }
+
+  spectatorSocketIds(): string[] {
+    return this.spectators.map((s) => s.socketId);
   }
 
   seatBySocketId(socketId: string): RoomSeat | undefined {

@@ -330,6 +330,17 @@ export function GameScreen({
       >
         <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
           <TurnBar view={view} myPlayerId={myPlayerId} />
+          {myPlayerId === null && (
+            <div className="flex justify-center mt-1.5">
+              <span
+                className="inline-flex items-center gap-1.5 text-[0.65rem] uppercase tracking-widest font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-400/40 text-amber-200"
+                data-testid="spectating-pill"
+              >
+                <span>👁</span>
+                Spectating
+              </span>
+            </div>
+          )}
         </div>
       </header>
 

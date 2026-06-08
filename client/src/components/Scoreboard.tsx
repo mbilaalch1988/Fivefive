@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import type {
+  AchievementStatus,
   PaginatedScoreboard,
   ScoreboardEntry,
   ScoreboardResponse,
 } from "@sequence/shared";
+import { computeAchievements } from "@sequence/shared";
 
 interface Props {
   asDialog?: boolean;
@@ -354,17 +356,20 @@ function LeaderTable({
                 style={{ background: "var(--md-surface-2)" }}
               >
                 <RankBadge index={rankIndex} />
-                <span className="flex-1 truncate font-medium flex items-center gap-1">
-                  {r.name}
-                  {r.verified && (
-                    <span
-                      title="Verified account"
-                      className="text-indigo-300 text-xs"
-                      aria-label="verified"
-                    >
-                      ✓
-                    </span>
-                  )}
+                <span className="flex-1 min-w-0 font-medium flex flex-col gap-0.5">
+                  <span className="truncate flex items-center gap-1">
+                    {r.name}
+                    {r.verified && (
+                      <span
+                        title="Verified account"
+                        className="text-indigo-300 text-xs"
+                        aria-label="verified"
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </span>
+                  {canExpand && <BadgeStrip row={r} />}
                 </span>
                 <RankValue row={r} variant={variant} />
                 {canExpand && (
@@ -387,26 +392,119 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
   const winSeq = row.winningSequencesClosed ?? 0;
   const mvp = row.mvpGames ?? 0;
   const total = row.points ?? 0;
+  const achievements = computeAchievements(row);
+  const earnedCount = achievements.filter((a) => a.earned).length;
 
   return (
     <div
-      className="mt-1 rounded-2xl px-4 py-3 text-xs space-y-1.5"
+      className="mt-1 rounded-2xl px-4 py-3 text-xs space-y-3"
       style={{
         background: "var(--md-surface-3)",
         color: "var(--md-on-surface-variant)",
       }}
     >
-      <DetailRow label="Wins" value={`${row.wins} of ${row.games} (${(row.ratio * 100).toFixed(0)}%)`} />
-      <DetailRow label="Sequences closed" value={`${seq}`} extra={`+${seq * 5} pts`} />
-      <DetailRow label="Game-winning sequences" value={`${winSeq}`} extra={`+${winSeq * 5} pts`} />
-      <DetailRow label="MVP games" value={`${mvp}`} extra={`+${mvp * 10} pts`} />
-      <div
-        className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold text-zinc-100"
-        style={{ borderColor: "var(--md-outline)" }}
-      >
-        <span>Total points</span>
-        <span className="text-amber-300">{total}</span>
+      <div className="space-y-1.5">
+        <DetailRow label="Wins" value={`${row.wins} of ${row.games} (${(row.ratio * 100).toFixed(0)}%)`} />
+        <DetailRow label="Sequences closed" value={`${seq}`} extra={`+${seq * 5} pts`} />
+        <DetailRow label="Game-winning sequences" value={`${winSeq}`} extra={`+${winSeq * 5} pts`} />
+        <DetailRow label="MVP games" value={`${mvp}`} extra={`+${mvp * 10} pts`} />
+        <div
+          className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold text-zinc-100"
+          style={{ borderColor: "var(--md-outline)" }}
+        >
+          <span>Total points</span>
+          <span className="text-amber-300">{total}</span>
+        </div>
       </div>
+
+      <div className="border-t pt-3" style={{ borderColor: "var(--md-outline)" }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="uppercase tracking-widest font-semibold text-zinc-300">
+            Achievements
+          </span>
+          <span className="text-amber-300/80">
+            {earnedCount} / {achievements.length}
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {achievements.map((a) => (
+            <AchievementCell key={a.info.id} a={a} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ */
+/* Achievement badges                                            */
+/* ------------------------------------------------------------ */
+
+const TIER_RING: Record<"bronze" | "silver" | "gold", string> = {
+  bronze: "border-amber-700/70 bg-amber-900/30",
+  silver: "border-zinc-300/60 bg-zinc-500/20",
+  gold:   "border-amber-300/80 bg-amber-400/20",
+};
+const TIER_TEXT: Record<"bronze" | "silver" | "gold", string> = {
+  bronze: "text-amber-200",
+  silver: "text-zinc-100",
+  gold:   "text-amber-200",
+};
+
+function BadgeStrip({ row }: { row: ScoreboardEntry }) {
+  const earned = computeAchievements(row).filter((a) => a.earned);
+  if (earned.length === 0) return null;
+  // Show up to 4 most-prestigious (gold > silver > bronze).
+  const tierRank = { gold: 0, silver: 1, bronze: 2 } as const;
+  const top = [...earned]
+    .sort((a, b) => tierRank[a.info.tier] - tierRank[b.info.tier])
+    .slice(0, 4);
+  const rest = earned.length - top.length;
+  return (
+    <span className="flex items-center gap-1 flex-wrap">
+      {top.map((a) => (
+        <span
+          key={a.info.id}
+          title={`${a.info.title} — ${a.info.description}`}
+          className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.65rem] border ${TIER_RING[a.info.tier]} ${TIER_TEXT[a.info.tier]}`}
+        >
+          {a.info.icon}
+        </span>
+      ))}
+      {rest > 0 && (
+        <span
+          className="inline-flex items-center justify-center px-1.5 h-5 rounded-full text-[0.55rem] font-semibold bg-zinc-700/70 text-zinc-200"
+          title={`+${rest} more achievement${rest === 1 ? "" : "s"}`}
+        >
+          +{rest}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function AchievementCell({ a }: { a: AchievementStatus }) {
+  const pct = Math.min(100, (a.current / a.info.target) * 100);
+  return (
+    <div
+      title={`${a.info.title} — ${a.info.description}`}
+      className={`relative rounded-xl border p-2 flex flex-col items-center gap-1 text-center
+        ${a.earned ? TIER_RING[a.info.tier] : "border-zinc-700/60 bg-zinc-800/30 opacity-60"}`}
+    >
+      <span className={`text-lg ${a.earned ? "" : "grayscale"}`}>{a.info.icon}</span>
+      <span className={`text-[0.6rem] font-semibold leading-tight ${a.earned ? TIER_TEXT[a.info.tier] : "text-zinc-400"}`}>
+        {a.info.title}
+      </span>
+      {!a.earned && (
+        <div className="w-full mt-0.5">
+          <div className="h-1 rounded-full bg-zinc-700 overflow-hidden">
+            <div className="h-full bg-indigo-400" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="text-[0.55rem] mt-0.5 text-zinc-500">
+            {a.current} / {a.info.target}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
