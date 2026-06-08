@@ -437,7 +437,7 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
         </div>
         {/* Sort: earned first (rarity desc), then locked (progress desc).
             Surfaces accomplishments at a glance and chases at the bottom. */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {[...achievements]
             .sort((a, b) => {
               if (a.earned !== b.earned) return a.earned ? -1 : 1;
@@ -644,9 +644,9 @@ function BadgeStrip({ row }: { row: ScoreboardEntry }) {
 }
 
 /**
- * Single tile in the expanded achievements grid. Bigger, rounded-2xl,
- * with an emerald check on earned tiles and a prominent progress bar on
- * locked ones. The grid is 2 cols on mobile, 3 on sm+.
+ * Single tile in the expanded achievements grid. Natural-height layout —
+ * earned tiles are tight (icon + title), locked tiles add a progress bar.
+ * Grid is 3-cols; tooltip wrapper provides hover/tap description.
  */
 function AchievementCell({ a }: { a: AchievementStatus }) {
   const pct = Math.min(100, Math.round((a.current / a.info.target) * 100));
@@ -654,44 +654,28 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
   return (
     <AchievementTooltip a={a} className="w-full">
       <div
-        className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between gap-2 text-center w-full min-h-[6.5rem] transition-all ${
+        className={`relative rounded-xl border p-2 flex flex-col items-center gap-1 text-center w-full ${
           a.earned
             ? `${s.ring} ${s.bg} ${s.glow}`
-            : "border-zinc-700/50 bg-zinc-800/40"
+            : "border-zinc-700/60 bg-zinc-800/30 opacity-60"
         }`}
       >
-        {a.earned && (
-          <span
-            aria-label="Earned"
-            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[0.65rem] font-bold text-white"
-            style={{ boxShadow: "0 0 0 2px var(--md-surface-3)" }}
-          >
-            ✓
-          </span>
-        )}
-        <span
-          className={`text-2xl leading-none transition-all ${
-            a.earned ? "" : "grayscale opacity-40"
-          }`}
-        >
+        <span className={`text-lg leading-none ${a.earned ? "" : "grayscale"}`}>
           {a.info.icon}
         </span>
         <span
-          className={`text-[0.65rem] font-semibold leading-tight ${
-            a.earned ? s.text : "text-zinc-500"
+          className={`text-[0.6rem] font-semibold leading-tight ${
+            a.earned ? s.text : "text-zinc-400"
           }`}
         >
           {a.info.title}
         </span>
         {!a.earned && (
-          <div className="w-full">
-            <div className="h-1 rounded-full bg-zinc-700/70 overflow-hidden">
-              <div
-                className="h-full bg-indigo-400 transition-all"
-                style={{ width: `${pct}%` }}
-              />
+          <div className="w-full mt-0.5">
+            <div className="h-1 rounded-full bg-zinc-700 overflow-hidden">
+              <div className="h-full bg-indigo-400" style={{ width: `${pct}%` }} />
             </div>
-            <div className="text-[0.55rem] mt-1 text-zinc-500 tabular-nums">
+            <div className="text-[0.55rem] mt-0.5 text-zinc-500 tabular-nums">
               {a.current} / {a.info.target}
             </div>
           </div>
