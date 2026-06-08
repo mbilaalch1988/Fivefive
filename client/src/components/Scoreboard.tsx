@@ -648,11 +648,11 @@ function BadgeStrip({ row }: { row: ScoreboardEntry }) {
 }
 
 /**
- * Single tile in the expanded achievements grid. Fixed h-[5.5rem] so every
- * tile is the same size regardless of earned/locked. Structural rows are
- * identical too (icon on top, title in middle with line-clamp-2, progress
- * bar + status text on the bottom) — earned tiles fill the bar to 100%
- * and show "Earned"; locked tiles show real progress.
+ * Single tile in the expanded achievements grid. Perfect aspect-square
+ * regardless of earned/locked state — icon + title centered, with progress
+ * info accessed via the tooltip wrapper (hover/tap). Locked tiles get an
+ * unobtrusive bottom progress strip (absolutely positioned, doesn't affect
+ * layout) so progress is still glanceable.
  */
 function AchievementCell({ a }: { a: AchievementStatus }) {
   const pct = Math.min(100, Math.round((a.current / a.info.target) * 100));
@@ -660,7 +660,7 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
   return (
     <AchievementTooltip a={a} className="w-full">
       <div
-        className={`relative rounded-xl border p-2 flex flex-col items-center justify-between text-center w-full h-[5.5rem] ${
+        className={`relative rounded-2xl border aspect-square flex flex-col items-center justify-center gap-1 text-center w-full p-2 overflow-hidden ${
           a.earned
             ? `${s.ring} ${s.bg} ${s.glow}`
             : "border-zinc-700/60 bg-zinc-800/30"
@@ -669,7 +669,7 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
         {/* Fixed-size icon container normalizes the visual weight across
             emoji that have different intrinsic dimensions (🎖 vs 💯 vs 💪). */}
         <span
-          className={`h-6 w-6 flex items-center justify-center text-base leading-none ${
+          className={`h-7 w-7 flex items-center justify-center text-xl leading-none ${
             a.earned ? "" : "grayscale opacity-50"
           }`}
           aria-hidden="true"
@@ -677,27 +677,22 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
           {a.info.icon}
         </span>
         <span
-          className={`text-[0.6rem] font-semibold leading-tight line-clamp-2 px-0.5 ${
+          className={`text-[0.55rem] font-semibold leading-tight line-clamp-2 px-0.5 ${
             a.earned ? s.text : "text-zinc-500"
           }`}
         >
           {a.info.title}
         </span>
-        <div className="w-full">
-          <div className="h-1 rounded-full bg-zinc-700/70 overflow-hidden">
+        {/* Bottom progress strip — absolute so it never pushes the layout.
+            Earned tiles don't need it (background tint signals completion). */}
+        {!a.earned && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-700/60">
             <div
-              className={`h-full ${a.earned ? s.barFill : "bg-indigo-400"}`}
-              style={{ width: a.earned ? "100%" : `${pct}%` }}
+              className="h-full bg-indigo-400 transition-all"
+              style={{ width: `${pct}%` }}
             />
           </div>
-          <div
-            className={`text-[0.5rem] mt-0.5 tabular-nums leading-none ${
-              a.earned ? s.text : "text-zinc-500"
-            }`}
-          >
-            {a.earned ? "Earned" : `${a.current} / ${a.info.target}`}
-          </div>
-        </div>
+        )}
       </div>
     </AchievementTooltip>
   );
