@@ -422,14 +422,35 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
           <span className="uppercase tracking-widest font-semibold text-zinc-300">
             Achievements
           </span>
-          <span className="text-amber-300/80">
+          <span className="text-amber-300/90 font-medium tabular-nums">
             {earnedCount} / {achievements.length}
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
-          {achievements.map((a) => (
-            <AchievementCell key={a.info.id} a={a} />
-          ))}
+        {/* Overall progress bar — quick visual read of total completion. */}
+        <div className="h-1.5 rounded-full bg-zinc-800/80 overflow-hidden mb-3">
+          <div
+            className="h-full bg-gradient-to-r from-amber-400 to-amber-200 transition-all"
+            style={{
+              width: `${Math.round((earnedCount / achievements.length) * 100)}%`,
+            }}
+          />
+        </div>
+        {/* Sort: earned first (rarity desc), then locked (progress desc).
+            Surfaces accomplishments at a glance and chases at the bottom. */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {[...achievements]
+            .sort((a, b) => {
+              if (a.earned !== b.earned) return a.earned ? -1 : 1;
+              if (a.earned) {
+                return TIER_RANK[a.info.tier] - TIER_RANK[b.info.tier];
+              }
+              return (
+                b.current / b.info.target - a.current / a.info.target
+              );
+            })
+            .map((a) => (
+              <AchievementCell key={a.info.id} a={a} />
+            ))}
         </div>
       </div>
     </div>
@@ -440,15 +461,49 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
 /* Achievement badges                                            */
 /* ------------------------------------------------------------ */
 
-const TIER_RING: Record<"bronze" | "silver" | "gold", string> = {
-  bronze: "border-amber-700/70 bg-amber-900/30",
-  silver: "border-zinc-300/60 bg-zinc-500/20",
-  gold:   "border-amber-300/80 bg-amber-400/20",
+/**
+ * Tier styling. Each tier gets a distinct gradient + ring color so a
+ * glance at the badge strip immediately conveys rarity:
+ *  - bronze: warm amber-brown
+ *  - silver: cool slate
+ *  - gold:   bright amber with a soft glow
+ */
+type Tier = "bronze" | "silver" | "gold";
+const TIER_STYLES: Record<
+  Tier,
+  { ring: string; bg: string; text: string; glow: string }
+> = {
+  bronze: {
+    ring: "border-amber-700/80",
+    bg: "bg-gradient-to-br from-amber-700/50 to-amber-950/60",
+    text: "text-amber-300",
+    glow: "",
+  },
+  silver: {
+    ring: "border-slate-300/70",
+    bg: "bg-gradient-to-br from-slate-300/30 to-slate-600/40",
+    text: "text-slate-100",
+    glow: "shadow-[0_0_10px_-3px_rgba(203,213,225,0.45)]",
+  },
+  gold: {
+    ring: "border-amber-300/90",
+    bg: "bg-gradient-to-br from-amber-300/40 to-amber-600/35",
+    text: "text-amber-100",
+    glow: "shadow-[0_0_12px_-2px_rgba(252,211,77,0.6)]",
+  },
 };
-const TIER_TEXT: Record<"bronze" | "silver" | "gold", string> = {
-  bronze: "text-amber-200",
-  silver: "text-zinc-100",
-  gold:   "text-amber-200",
+const TIER_RANK: Record<Tier, number> = { gold: 0, silver: 1, bronze: 2 };
+
+// Kept for backwards compat in the popover positioning code below.
+const TIER_RING = {
+  bronze: TIER_STYLES.bronze.ring,
+  silver: TIER_STYLES.silver.ring,
+  gold:   TIER_STYLES.gold.ring,
+};
+const TIER_TEXT = {
+  bronze: TIER_STYLES.bronze.text,
+  silver: TIER_STYLES.silver.text,
+  gold:   TIER_STYLES.gold.text,
 };
 
 /**
@@ -542,29 +597,43 @@ function AchievementTooltip({
   );
 }
 
+/**
+ * Inline cluster of earned badges shown next to a player's name.
+ * Uses an overlapping "stacked medals" layout — the eye reads it as
+ * a single decoration rather than a row of individual icons.
+ */
 function BadgeStrip({ row }: { row: ScoreboardEntry }) {
   const earned = computeAchievements(row).filter((a) => a.earned);
   if (earned.length === 0) return null;
   // Show up to 4 most-prestigious (gold > silver > bronze).
-  const tierRank = { gold: 0, silver: 1, bronze: 2 } as const;
   const top = [...earned]
-    .sort((a, b) => tierRank[a.info.tier] - tierRank[b.info.tier])
+    .sort((a, b) => TIER_RANK[a.info.tier] - TIER_RANK[b.info.tier])
     .slice(0, 4);
   const rest = earned.length - top.length;
+
   return (
-    <span className="flex items-center gap-1 flex-wrap">
-      {top.map((a) => (
-        <AchievementTooltip key={a.info.id} a={a}>
-          <span
-            className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.65rem] border ${TIER_RING[a.info.tier]} ${TIER_TEXT[a.info.tier]}`}
-          >
-            {a.info.icon}
-          </span>
-        </AchievementTooltip>
-      ))}
+    <span className="inline-flex items-center">
+      {/* Stacked tier medallions. Each gets a dark outer ring so they
+          separate visually from the badge behind them. */}
+      <span className="inline-flex items-center -space-x-1.5">
+        {top.map((a) => {
+          const s = TIER_STYLES[a.info.tier];
+          return (
+            <AchievementTooltip key={a.info.id} a={a}>
+              <span
+                className={`relative inline-flex items-center justify-center w-6 h-6 rounded-full border text-[0.7rem] leading-none ${s.ring} ${s.bg} ${s.text} ${s.glow}`}
+                style={{ boxShadow: "0 0 0 2px var(--md-surface-2)" }}
+              >
+                {a.info.icon}
+              </span>
+            </AchievementTooltip>
+          );
+        })}
+      </span>
       {rest > 0 && (
         <span
-          className="inline-flex items-center justify-center px-1.5 h-5 rounded-full text-[0.55rem] font-semibold bg-zinc-700/70 text-zinc-200"
+          className="ml-2 inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-[0.6rem] font-bold bg-zinc-700/80 text-zinc-200 tabular-nums"
+          style={{ boxShadow: "0 0 0 2px var(--md-surface-2)" }}
           title={`+${rest} more achievement${rest === 1 ? "" : "s"}`}
         >
           +{rest}
@@ -574,24 +643,55 @@ function BadgeStrip({ row }: { row: ScoreboardEntry }) {
   );
 }
 
+/**
+ * Single tile in the expanded achievements grid. Bigger, rounded-2xl,
+ * with an emerald check on earned tiles and a prominent progress bar on
+ * locked ones. The grid is 2 cols on mobile, 3 on sm+.
+ */
 function AchievementCell({ a }: { a: AchievementStatus }) {
-  const pct = Math.min(100, (a.current / a.info.target) * 100);
+  const pct = Math.min(100, Math.round((a.current / a.info.target) * 100));
+  const s = TIER_STYLES[a.info.tier];
   return (
     <AchievementTooltip a={a} className="w-full">
       <div
-        className={`relative rounded-xl border p-2 flex flex-col items-center gap-1 text-center w-full
-          ${a.earned ? TIER_RING[a.info.tier] : "border-zinc-700/60 bg-zinc-800/30 opacity-60"}`}
+        className={`relative rounded-2xl border p-3 flex flex-col items-center justify-between gap-2 text-center w-full min-h-[6.5rem] transition-all ${
+          a.earned
+            ? `${s.ring} ${s.bg} ${s.glow}`
+            : "border-zinc-700/50 bg-zinc-800/40"
+        }`}
       >
-        <span className={`text-lg ${a.earned ? "" : "grayscale"}`}>{a.info.icon}</span>
-        <span className={`text-[0.6rem] font-semibold leading-tight ${a.earned ? TIER_TEXT[a.info.tier] : "text-zinc-400"}`}>
+        {a.earned && (
+          <span
+            aria-label="Earned"
+            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-[0.65rem] font-bold text-white"
+            style={{ boxShadow: "0 0 0 2px var(--md-surface-3)" }}
+          >
+            ✓
+          </span>
+        )}
+        <span
+          className={`text-2xl leading-none transition-all ${
+            a.earned ? "" : "grayscale opacity-40"
+          }`}
+        >
+          {a.info.icon}
+        </span>
+        <span
+          className={`text-[0.65rem] font-semibold leading-tight ${
+            a.earned ? s.text : "text-zinc-500"
+          }`}
+        >
           {a.info.title}
         </span>
         {!a.earned && (
-          <div className="w-full mt-0.5">
-            <div className="h-1 rounded-full bg-zinc-700 overflow-hidden">
-              <div className="h-full bg-indigo-400" style={{ width: `${pct}%` }} />
+          <div className="w-full">
+            <div className="h-1 rounded-full bg-zinc-700/70 overflow-hidden">
+              <div
+                className="h-full bg-indigo-400 transition-all"
+                style={{ width: `${pct}%` }}
+              />
             </div>
-            <div className="text-[0.55rem] mt-0.5 text-zinc-500">
+            <div className="text-[0.55rem] mt-1 text-zinc-500 tabular-nums">
               {a.current} / {a.info.target}
             </div>
           </div>
