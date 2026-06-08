@@ -12,8 +12,12 @@ import {
   type SeatInput,
   type Team,
 } from "@sequence/shared";
+import { randomUUID } from "node:crypto";
 import {
   loadRoomState,
+  persistGameAction,
+  persistGameFinish,
+  persistGameStart,
   persistTeamName,
   persistWin,
   type PlayerGameContribution,
@@ -47,6 +51,10 @@ export class Room {
   seats: RoomSeat[] = [];
   spectators: RoomSpectator[] = [];
   game: GameState | null = null;
+  /** UUID assigned at start, used for the replay log. Null while no game running. */
+  gameId: string | null = null;
+  /** How many action-log entries we've persisted for the current game. */
+  private persistedActionCount = 0;
   /** MVP player names from the most recently-completed game (cleared on next start). */
   lastMvpNames: string[] = [];
   deck: DeckManifest | null = null;
@@ -238,17 +246,58 @@ export class Room {
     });
     this.deck = opts.deck ?? null;
     this.lastMvpNames = [];
+
+    // Fire-and-forget: assign a game id and persist the start record so we
+    // can build a replay later. Failures (e.g. no DB) are logged but don't
+    // block gameplay.
+    this.gameId = randomUUID();
+    this.persistedActionCount = 0;
+    void persistGameStart({
+      gameId: this.gameId,
+      roomCode: this.code,
+      deckId: opts.deckId ?? null,
+      sequencesToWin: this.game.config.sequencesToWin,
+      teamNames: { ...this.teamNames },
+      players: seatInputs.map((s) => ({ id: s.id, name: s.name, team: s.team })),
+    });
   }
 
   applyAction(playerId: PlayerId, action: Action) {
     if (!this.game) throw new Error("game not started");
-    return applyAction(this.game, playerId, action);
+    const result = applyAction(this.game, playerId, action);
+    // Persist any newly-logged actions to the replay log. We rely on the
+    // fact that applyAction appends one entry on success; even on the rare
+    // path where actionLog rotates (capped at 10), persistedActionCount
+    // is the global, ever-growing index.
+    if (result.ok && this.gameId) {
+      const total = result.state.actionLog.length;
+      // We know exactly one new action was appended on success.
+      const last = result.state.actionLog[total - 1];
+      if (last) {
+        const player = result.state.players.find((p) => p.id === last.playerId);
+        const team = player?.team ?? "red";
+        const idx = this.persistedActionCount;
+        this.persistedActionCount += 1;
+        void persistGameAction({
+          gameId: this.gameId,
+          index: idx,
+          playerName: last.playerName,
+          team,
+          rank: last.card.rank,
+          suit: last.card.suit,
+          type: last.type,
+          pos: last.pos ?? null,
+        });
+      }
+    }
+    return result;
   }
 
   /** Call after applyAction; if a winner was just declared, record the win. */
   maybeRecordWin(): boolean {
     if (!this.game || !this.game.winner) return false;
     const winner = this.game.winner;
+    if (this.gameId) void persistGameFinish(this.gameId, winner);
     this.teamScores[winner] = (this.teamScores[winner] ?? 0) + 1;
 
     // MVP: winning-team player(s) with the most sequencesClosed in this game.
@@ -296,8 +345,15 @@ export class Room {
 
   stop(): void {
     if (!this.game) return;
+    // Mark abandoned games (no winner) finished so they don't sit open
+    // forever in game_log. winning_team stays NULL to indicate abandonment.
+    if (this.gameId && !this.game.winner) {
+      void persistGameFinish(this.gameId, null);
+    }
     this.game = null;
     this.deck = null;
+    this.gameId = null;
+    this.persistedActionCount = 0;
     for (const seat of this.seats) seat.ready = false;
   }
 

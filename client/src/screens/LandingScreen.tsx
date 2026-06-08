@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { ReplayListDialog } from "../components/ReplayListDialog";
 import { Scoreboard } from "../components/Scoreboard";
+import { ReplayScreen } from "./ReplayScreen";
 import { useAuth } from "../hooks/useAuth";
 
 const NAME_STORAGE_KEY = "sequence.playerName";
@@ -27,6 +29,8 @@ export function LandingScreen({
   const [scoreboardOpen, setScoreboardOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [showSpectate, setShowSpectate] = useState(false);
+  const [replayListOpen, setReplayListOpen] = useState(false);
+  const [openReplayId, setOpenReplayId] = useState<string | null>(null);
 
   const auth = useAuth();
 
@@ -262,14 +266,24 @@ export function LandingScreen({
             <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
               Hall of fame
             </h2>
-            <button
-              type="button"
-              onClick={() => setScoreboardOpen(true)}
-              data-testid="scoreboard-button"
-              className="state-layer text-indigo-300 hover:text-indigo-200 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-indigo-400/40"
-            >
-              View all
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setReplayListOpen(true)}
+                data-testid="replays-button"
+                className="state-layer text-amber-200 hover:text-amber-100 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-amber-400/40"
+              >
+                ▶ Replays
+              </button>
+              <button
+                type="button"
+                onClick={() => setScoreboardOpen(true)}
+                data-testid="scoreboard-button"
+                className="state-layer text-indigo-300 hover:text-indigo-200 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-indigo-400/40"
+              >
+                View all
+              </button>
+            </div>
           </div>
           <Scoreboard />
         </section>
@@ -277,6 +291,22 @@ export function LandingScreen({
 
       {scoreboardOpen && (
         <Scoreboard asDialog onClose={() => setScoreboardOpen(false)} />
+      )}
+
+      {replayListOpen && !openReplayId && (
+        <ReplayListDialog
+          onClose={() => setReplayListOpen(false)}
+          onOpenReplay={(id) => {
+            setReplayListOpen(false);
+            setOpenReplayId(id);
+          }}
+        />
+      )}
+      {openReplayId && (
+        <ReplayScreen
+          gameId={openReplayId}
+          onClose={() => setOpenReplayId(null)}
+        />
       )}
     </main>
   );

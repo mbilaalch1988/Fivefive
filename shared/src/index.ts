@@ -26,3 +26,4 @@ export { toGameView } from "./view.js";
 export * from "./stickers.js";
 export * from "./quickchat.js";
 export * from "./achievements.js";
+export * from "./replay.js";

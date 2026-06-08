@@ -225,3 +225,52 @@ export interface QuickChatBroadcast {
 export type AckResult<T> =
   | ({ ok: true } & T)
   | { ok: false; error: string };
+
+/* ------------------------------------------------------------------ */
+/* Replay API                                                         */
+/* ------------------------------------------------------------------ */
+
+/** Lightweight summary row for the "recent games" list. */
+export interface ReplaySummary {
+  gameId: string;
+  roomCode: string;
+  startedAt: string;
+  finishedAt: string | null;
+  winningTeam: Team | null;
+  /** Display name of the winning team, when known. */
+  winningTeamName: string | null;
+  /** Total action count (proxy for game length). */
+  actionCount: number;
+  /** Player names involved (up to 8). */
+  playerNames: string[];
+}
+
+export interface ReplayPlayer {
+  id: PlayerId;
+  name: string;
+  team: Team;
+}
+
+export interface ReplayAction {
+  index: number;
+  playerName: string;
+  team: Team;
+  rank: import("./types.js").Rank;
+  suit: import("./types.js").Suit;
+  type: "place" | "remove" | "discardDead";
+  /** Board position; null for discardDead. */
+  pos: { r: number; c: number } | null;
+}
+
+export interface ReplayDetail {
+  gameId: string;
+  roomCode: string;
+  deckId: string | null;
+  sequencesToWin: number;
+  teamNames: Record<Team, string>;
+  players: ReplayPlayer[];
+  startedAt: string;
+  finishedAt: string | null;
+  winningTeam: Team | null;
+  actions: ReplayAction[];
+}

@@ -21,6 +21,7 @@ import { DeckRegistry } from "./decks.js";
 import {
   getPagedPlayersByPoints,
   getPagedTeams,
+  getReplay,
   getTopPlayers,
   getTopPlayersByMvp,
   getTopPlayersByPoints,
@@ -28,6 +29,7 @@ import {
   getTopTeams,
   initDb,
   isPersistenceEnabled,
+  listRecentReplays,
 } from "./db.js";
 import { verifyToken } from "./jwt.js";
 import { newPlayerId } from "./util.js";
@@ -64,6 +66,18 @@ app.get("/api/decks", (_req, res) => {
   res.json({ decks: deckRegistry.list() });
 });
 
+// Full manifest for a single deck — used by the replay viewer to render
+// card art on the board. Returns 404 if the deck is gone.
+app.get("/api/decks/:id", (req, res) => {
+  const id = String(req.params.id ?? "");
+  const manifest = deckRegistry.get(id);
+  if (!manifest) {
+    res.status(404).json({ error: "deck not found" });
+    return;
+  }
+  res.json(manifest);
+});
+
 // Manual deck-folder rescan. Useful when you add a new deck without redeploying.
 app.post("/api/decks/refresh", (_req, res) => {
   deckRegistry.reload();
@@ -82,6 +96,26 @@ app.get("/api/scoreboard/teams", async (req, res) => {
   const page = Math.max(0, Number(req.query.page) || 0);
   const result = await getPagedTeams(perPage, page);
   res.json(result);
+});
+
+app.get("/api/replays", async (req, res) => {
+  const limit = Math.max(1, Math.min(50, Number(req.query.limit) || 20));
+  const rows = await listRecentReplays(limit);
+  res.json({ replays: rows });
+});
+
+app.get("/api/replays/:gameId", async (req, res) => {
+  const id = String(req.params.gameId ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) {
+    res.status(400).json({ error: "invalid game id" });
+    return;
+  }
+  const detail = await getReplay(id);
+  if (!detail) {
+    res.status(404).json({ error: "not found" });
+    return;
+  }
+  res.json(detail);
 });
 
 app.get("/api/scoreboard", async (_req, res) => {

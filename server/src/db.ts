@@ -124,7 +124,231 @@ async function runMigration(): Promise<void> {
     );
     -- Backfill for tables created before the column existed.
     ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS winning_sequences_closed INT NOT NULL DEFAULT 0;
+
+    -- ------------------------------------------------------------
+    -- Replay log: every game gets a UUID, every action gets a row.
+    -- Lets us play back any finished (or abandoned) game.
+    -- ------------------------------------------------------------
+    CREATE TABLE IF NOT EXISTS game_log (
+      game_id UUID PRIMARY KEY,
+      room_code TEXT NOT NULL,
+      deck_id TEXT,
+      sequences_to_win INT NOT NULL,
+      team_names JSONB NOT NULL,
+      players JSONB NOT NULL,
+      started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      finished_at TIMESTAMPTZ,
+      winning_team TEXT,
+      action_count INT NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_game_log_finished_at
+      ON game_log (finished_at DESC NULLS LAST);
+
+    CREATE TABLE IF NOT EXISTS game_actions (
+      game_id UUID NOT NULL REFERENCES game_log(game_id) ON DELETE CASCADE,
+      action_index INT NOT NULL,
+      player_name TEXT NOT NULL,
+      team TEXT NOT NULL CHECK (team IN ('red', 'blue', 'green')),
+      card_rank TEXT NOT NULL,
+      card_suit TEXT NOT NULL,
+      action_type TEXT NOT NULL CHECK (action_type IN ('place', 'remove', 'discardDead')),
+      pos_r INT,
+      pos_c INT,
+      PRIMARY KEY (game_id, action_index)
+    );
   `);
+}
+
+/* ------------------------------------------------------------------ */
+/* Replay persistence                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface GameStartRecord {
+  gameId: string;
+  roomCode: string;
+  deckId: string | null;
+  sequencesToWin: number;
+  teamNames: { red: string; blue: string; green: string };
+  players: Array<{ id: string; name: string; team: "red" | "blue" | "green" }>;
+}
+
+export async function persistGameStart(record: GameStartRecord): Promise<void> {
+  if (!pool) return;
+  try {
+    await pool.query(
+      `INSERT INTO game_log (game_id, room_code, deck_id, sequences_to_win, team_names, players)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb)
+       ON CONFLICT (game_id) DO NOTHING`,
+      [
+        record.gameId,
+        record.roomCode,
+        record.deckId,
+        record.sequencesToWin,
+        JSON.stringify(record.teamNames),
+        JSON.stringify(record.players),
+      ],
+    );
+  } catch (e) {
+    console.warn("[db] persistGameStart failed:", (e as Error).message);
+  }
+}
+
+export interface GameActionRecord {
+  gameId: string;
+  index: number;
+  playerName: string;
+  team: "red" | "blue" | "green";
+  rank: string;
+  suit: string;
+  type: "place" | "remove" | "discardDead";
+  pos: { r: number; c: number } | null;
+}
+
+export async function persistGameAction(rec: GameActionRecord): Promise<void> {
+  if (!pool) return;
+  try {
+    await pool.query(
+      `INSERT INTO game_actions (game_id, action_index, player_name, team,
+         card_rank, card_suit, action_type, pos_r, pos_c)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       ON CONFLICT (game_id, action_index) DO NOTHING`,
+      [
+        rec.gameId,
+        rec.index,
+        rec.playerName,
+        rec.team,
+        rec.rank,
+        rec.suit,
+        rec.type,
+        rec.pos?.r ?? null,
+        rec.pos?.c ?? null,
+      ],
+    );
+    await pool.query(
+      `UPDATE game_log SET action_count = $2 WHERE game_id = $1`,
+      [rec.gameId, rec.index + 1],
+    );
+  } catch (e) {
+    console.warn("[db] persistGameAction failed:", (e as Error).message);
+  }
+}
+
+export async function persistGameFinish(
+  gameId: string,
+  winningTeam: "red" | "blue" | "green" | null,
+): Promise<void> {
+  if (!pool) return;
+  try {
+    await pool.query(
+      `UPDATE game_log
+       SET finished_at = NOW(), winning_team = $2
+       WHERE game_id = $1 AND finished_at IS NULL`,
+      [gameId, winningTeam],
+    );
+  } catch (e) {
+    console.warn("[db] persistGameFinish failed:", (e as Error).message);
+  }
+}
+
+interface ReplaySummaryRow {
+  game_id: string;
+  room_code: string;
+  started_at: Date;
+  finished_at: Date | null;
+  winning_team: string | null;
+  action_count: number;
+  team_names: { red: string; blue: string; green: string };
+  players: Array<{ id: string; name: string; team: "red" | "blue" | "green" }>;
+}
+
+export async function listRecentReplays(limit: number) {
+  if (!pool) return [];
+  try {
+    const r = await pool.query<ReplaySummaryRow>(
+      `SELECT game_id, room_code, started_at, finished_at, winning_team,
+              action_count, team_names, players
+       FROM game_log
+       WHERE finished_at IS NOT NULL
+       ORDER BY finished_at DESC NULLS LAST
+       LIMIT $1`,
+      [limit],
+    );
+    return r.rows.map((row) => ({
+      gameId: row.game_id,
+      roomCode: row.room_code,
+      startedAt: row.started_at.toISOString(),
+      finishedAt: row.finished_at ? row.finished_at.toISOString() : null,
+      winningTeam: row.winning_team as "red" | "blue" | "green" | null,
+      winningTeamName: row.winning_team
+        ? (row.team_names[row.winning_team as "red" | "blue" | "green"] ?? null)
+        : null,
+      actionCount: Number(row.action_count),
+      playerNames: row.players.map((p) => p.name),
+    }));
+  } catch (e) {
+    console.warn("[db] listRecentReplays failed:", (e as Error).message);
+    return [];
+  }
+}
+
+interface ReplayActionRow {
+  action_index: number;
+  player_name: string;
+  team: "red" | "blue" | "green";
+  card_rank: string;
+  card_suit: string;
+  action_type: "place" | "remove" | "discardDead";
+  pos_r: number | null;
+  pos_c: number | null;
+}
+
+export async function getReplay(gameId: string) {
+  if (!pool) return null;
+  try {
+    const meta = await pool.query<ReplaySummaryRow & { deck_id: string | null; sequences_to_win: number }>(
+      `SELECT game_id, room_code, deck_id, sequences_to_win,
+              started_at, finished_at, winning_team, action_count,
+              team_names, players
+       FROM game_log
+       WHERE game_id = $1`,
+      [gameId],
+    );
+    if (meta.rows.length === 0) return null;
+    const m = meta.rows[0]!;
+    const acts = await pool.query<ReplayActionRow>(
+      `SELECT action_index, player_name, team, card_rank, card_suit, action_type, pos_r, pos_c
+       FROM game_actions
+       WHERE game_id = $1
+       ORDER BY action_index ASC`,
+      [gameId],
+    );
+    return {
+      gameId: m.game_id,
+      roomCode: m.room_code,
+      deckId: m.deck_id,
+      sequencesToWin: Number(m.sequences_to_win),
+      teamNames: m.team_names,
+      players: m.players,
+      startedAt: m.started_at.toISOString(),
+      finishedAt: m.finished_at ? m.finished_at.toISOString() : null,
+      winningTeam: m.winning_team as "red" | "blue" | "green" | null,
+      actions: acts.rows.map((row) => ({
+        index: row.action_index,
+        playerName: row.player_name,
+        team: row.team,
+        rank: row.card_rank,
+        suit: row.card_suit,
+        type: row.action_type,
+        pos:
+          row.pos_r !== null && row.pos_c !== null
+            ? { r: row.pos_r, c: row.pos_c }
+            : null,
+      })),
+    };
+  } catch (e) {
+    console.warn("[db] getReplay failed:", (e as Error).message);
+    return null;
+  }
 }
 
 export interface PersistedRoomState {
