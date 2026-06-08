@@ -5,10 +5,13 @@ import {
   setChimeMuted,
   setVibrationMuted,
 } from "../lib/notify";
+import { isColorBlindMode, setColorBlindMode } from "../lib/prefs";
 
 interface Props {
   onOpenStickers: () => void;
+  onOpenQuickChat: () => void;
   onOpenHistory: () => void;
+  onOpenRules: () => void;
   /** Host-only entry. When null, the Stop game item is hidden. */
   onStopGame: (() => void) | null;
 }
@@ -18,10 +21,17 @@ interface Props {
  * bottom-right last-played card — collects everything into one drawer so
  * the playfield stays uncluttered.
  */
-export function GameMenu({ onOpenStickers, onOpenHistory, onStopGame }: Props) {
+export function GameMenu({
+  onOpenStickers,
+  onOpenQuickChat,
+  onOpenHistory,
+  onOpenRules,
+  onStopGame,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [chimeMuted, setChimeMutedState]     = useState<boolean>(() => isChimeMuted());
   const [vibrateMuted, setVibrateMutedState] = useState<boolean>(() => isVibrationMuted());
+  const [colorBlind, setColorBlindState]     = useState<boolean>(() => isColorBlindMode());
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   // Close on outside click.
@@ -44,6 +54,11 @@ export function GameMenu({ onOpenStickers, onOpenHistory, onStopGame }: Props) {
     const next = !vibrateMuted;
     setVibrateMutedState(next);
     setVibrationMuted(next);
+  }
+  function toggleColorBlind() {
+    const next = !colorBlind;
+    setColorBlindState(next);
+    setColorBlindMode(next);
   }
 
   return (
@@ -84,10 +99,22 @@ export function GameMenu({ onOpenStickers, onOpenHistory, onStopGame }: Props) {
             testId="menu-stickers"
           />
           <MenuItem
+            icon="💬"
+            label="Quick chat"
+            onClick={() => { setOpen(false); onOpenQuickChat(); }}
+            testId="menu-quickchat"
+          />
+          <MenuItem
             icon="📜"
             label="Last played"
             onClick={() => { setOpen(false); onOpenHistory(); }}
             testId="menu-history"
+          />
+          <MenuItem
+            icon="❓"
+            label="How to play"
+            onClick={() => { setOpen(false); onOpenRules(); }}
+            testId="menu-rules"
           />
           <Divider />
           <ToggleItem
@@ -103,6 +130,13 @@ export function GameMenu({ onOpenStickers, onOpenHistory, onStopGame }: Props) {
             value={vibrateMuted ? "muted" : "on"}
             onClick={toggleVibrate}
             testId="menu-vibrate"
+          />
+          <ToggleItem
+            icon={colorBlind ? "👁️" : "🎨"}
+            label="Color-blind chips"
+            value={colorBlind ? "on" : "off"}
+            onClick={toggleColorBlind}
+            testId="menu-colorblind"
           />
           {onStopGame && (
             <>
@@ -169,21 +203,22 @@ function ToggleItem({
   onClick: () => void;
   testId?: string;
 }) {
-  const isMuted = value === "muted";
+  // "muted" and "off" are both treated as inactive states.
+  const isInactive = value === "muted" || value === "off";
   return (
     <button
       type="button"
       onClick={onClick}
       data-testid={testId}
       role="menuitemcheckbox"
-      aria-checked={!isMuted}
+      aria-checked={!isInactive}
       className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-zinc-700/40 transition-colors"
     >
       <span className="text-base w-5 text-center">{icon}</span>
       <span className="flex-1">{label}</span>
       <span
         className={`text-[0.65rem] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${
-          isMuted
+          isInactive
             ? "bg-zinc-700 text-zinc-400"
             : "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40"
         }`}

@@ -176,7 +176,8 @@ function ChipDisk({
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <div
-        className={`relative rounded-full flex items-center justify-center ${TEAM_CHIP[team]} ${animClasses}`}
+        data-chip-team={team}
+        className={`relative rounded-full flex items-center justify-center cb-chip ${TEAM_CHIP[team]} ${animClasses}`}
         style={{
           width: "56%",
           aspectRatio: "1 / 1",

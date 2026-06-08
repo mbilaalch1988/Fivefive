@@ -33,6 +33,27 @@ export function TurnBar({ view, myPlayerId }: Props) {
         })}
       </div>
 
+      {/* "Waiting for X to reconnect…" — only shown when it's the disconnected
+          player's turn, otherwise the badge dot is enough. */}
+      {(() => {
+        const current = view.players[view.turnIdx];
+        if (!current || current.connected || view.winner) return null;
+        return (
+          <div
+            className="self-center inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border"
+            style={{
+              background: "rgba(244, 63, 94, 0.1)",
+              borderColor: "rgba(244, 63, 94, 0.4)",
+              color: "#fda4af",
+            }}
+            data-testid="reconnect-banner"
+          >
+            <span className="reconnect-dot relative inline-flex w-2 h-2 rounded-full bg-rose-400" />
+            Waiting for {current.name} to reconnect…
+          </div>
+        );
+      })()}
+
       <div
         className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 p-2 sm:p-2.5 rounded-2xl text-xs sm:text-sm"
         style={{ background: "var(--md-surface-1)" }}
@@ -104,11 +125,10 @@ function PlayerBadge({
       </div>
       {!connected && (
         <span
-          className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[0.55rem] uppercase tracking-widest text-rose-400"
-          title="offline"
-        >
-          ✕
-        </span>
+          className="reconnect-dot absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-500 border-2 border-zinc-900"
+          title="reconnecting…"
+          aria-label="reconnecting"
+        />
       )}
     </div>
   );

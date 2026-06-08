@@ -176,6 +176,10 @@ export interface ClientToServerEvents {
     payload: { stickerId: string },
     ack: (res: AckResult<{}>) => void,
   ) => void;
+  sendQuickChat: (
+    payload: { chatId: string },
+    ack: (res: AckResult<{}>) => void,
+  ) => void;
   doAction: (
     payload: Action,
     ack: (res: AckResult<{}>) => void,
@@ -189,6 +193,7 @@ export interface ServerToClientEvents {
   game: (game: GameView) => void;
   errorMsg: (message: string) => void;
   sticker: (payload: StickerBroadcast) => void;
+  quickChat: (payload: QuickChatBroadcast) => void;
 }
 
 export interface StickerBroadcast {
@@ -197,6 +202,15 @@ export interface StickerBroadcast {
   fromName: string;
   stickerId: string;
   /** Server-assigned id, lets client dedupe + key overlay elements. */
+  eventId: string;
+}
+
+export interface QuickChatBroadcast {
+  fromPlayerId: PlayerId;
+  fromName: string;
+  /** Team color of the sender — lets the bubble tint to match. */
+  fromTeam: Team | null;
+  chatId: string;
   eventId: string;
 }
 

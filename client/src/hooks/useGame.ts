@@ -4,6 +4,7 @@ import type {
   DeckSummary,
   GameView,
   PlayerId,
+  QuickChatBroadcast,
   RoomView,
   StickerBroadcast,
   Team,
@@ -70,6 +71,9 @@ export interface UseGame {
   /** Active sticker broadcasts (most recently received first). */
   stickers: StickerBroadcast[];
   dismissSticker: (eventId: string) => void;
+  sendQuickChat: (chatId: string) => Promise<void>;
+  /** Active quick-chat broadcasts. */
+  quickChats: QuickChatBroadcast[];
   doAction: (action: Action) => Promise<{ ok: boolean; error?: string }>;
 }
 
@@ -83,6 +87,7 @@ export function useGame(): UseGame {
   const [error, setError] = useState<string | null>(null);
   const [decks, setDecks] = useState<DeckSummary[]>([]);
   const [stickers, setStickers] = useState<StickerBroadcast[]>([]);
+  const [quickChats, setQuickChats] = useState<QuickChatBroadcast[]>([]);
 
   const phase: Phase = game ? "game" : room ? "lobby" : "landing";
 
@@ -136,6 +141,12 @@ export function useGame(): UseGame {
         setStickers((prev) => prev.filter((p) => p.eventId !== payload.eventId));
       }, 2500);
     };
+    const onQuickChat = (payload: QuickChatBroadcast) => {
+      setQuickChats((prev) => [...prev, payload]);
+      setTimeout(() => {
+        setQuickChats((prev) => prev.filter((p) => p.eventId !== payload.eventId));
+      }, 2500);
+    };
 
     s.on("connect", onConnect);
     s.on("disconnect", onDisconnect);
@@ -143,6 +154,7 @@ export function useGame(): UseGame {
     s.on("game", onGame);
     s.on("errorMsg", onErr);
     s.on("sticker", onSticker);
+    s.on("quickChat", onQuickChat);
 
     // If already connected (Vite HMR re-mounts), run onConnect once.
     if (s.connected) onConnect();
@@ -154,6 +166,7 @@ export function useGame(): UseGame {
       s.off("game", onGame);
       s.off("errorMsg", onErr);
       s.off("sticker", onSticker);
+      s.off("quickChat", onQuickChat);
     };
   }, []);
 
@@ -286,6 +299,18 @@ export function useGame(): UseGame {
     setStickers((prev) => prev.filter((p) => p.eventId !== eventId));
   }, []);
 
+  const sendQuickChat = useCallback(
+    async (chatId: string) => {
+      const s = socketRef.current!;
+      const res = (await emit(s, "sendQuickChat", { chatId })) as {
+        ok: boolean;
+        error?: string;
+      };
+      handleAck(res);
+    },
+    [handleAck],
+  );
+
   const doAction = useCallback(
     async (action: Action) => {
       const s = socketRef.current!;
@@ -322,6 +347,8 @@ export function useGame(): UseGame {
     sendSticker,
     stickers,
     dismissSticker,
+    sendQuickChat,
+    quickChats,
     doAction,
   };
 }

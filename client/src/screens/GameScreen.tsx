@@ -17,12 +17,16 @@ import { Hand } from "../components/Hand";
 import { GameMenu } from "../components/GameMenu";
 import { JackEffect } from "../components/JackEffect";
 import { LastPlayedHistory } from "../components/LastPlayedHistory";
+import { QuickChatOverlay } from "../components/QuickChatOverlay";
+import { QuickChatPicker } from "../components/QuickChatPicker";
+import { RulesSheet } from "../components/RulesSheet";
 import { SequenceAnnounce } from "../components/SequenceAnnounce";
 import { StickerOverlay } from "../components/StickerOverlay";
 import { StickerPicker } from "../components/StickerPicker";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
-import type { ActionLog, StickerBroadcast } from "@sequence/shared";
+import { WinSequenceWalk } from "../components/WinSequenceWalk";
+import type { ActionLog, QuickChatBroadcast, StickerBroadcast } from "@sequence/shared";
 import { notifyMyTurn } from "../lib/notify";
 
 interface JackEffectInstance {
@@ -46,8 +50,10 @@ interface Props {
   myPlayerId: PlayerId | null;
   isHost: boolean;
   stickers: StickerBroadcast[];
+  quickChats: QuickChatBroadcast[];
   dispatch: Dispatch;
   onSendSticker: (stickerId: string) => Promise<void>;
+  onSendQuickChat: (chatId: string) => Promise<void>;
   onStopGame: () => Promise<void>;
   onRematch: () => Promise<void>;
 }
@@ -60,8 +66,10 @@ export function GameScreen({
   myPlayerId,
   isHost,
   stickers,
+  quickChats,
   dispatch,
   onSendSticker,
+  onSendQuickChat,
   onStopGame,
   onRematch,
 }: Props) {
@@ -70,6 +78,8 @@ export function GameScreen({
   const [confirmingStop, setConfirmingStop] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
+  const [quickChatOpen, setQuickChatOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [jackEffects, setJackEffects] = useState<JackEffectInstance[]>([]);
 
   const me = view.players.find((p) => p.id === myPlayerId) ?? null;
@@ -218,6 +228,15 @@ export function GameScreen({
 
   const [winStage, setWinStage] = useState<WinStage>("playing");
   const [celebratingTeam, setCelebratingTeam] = useState<Team | null>(null);
+
+  // Per-sequence celebration window: budget enough time so each winning
+  // sequence's chips can pulse one-at-a-time before the WinOverlay appears.
+  // 700ms gap between sequences × N winning sequences + 1200ms tail.
+  const winningSeqCount = view.winner
+    ? view.sequences.filter((s) => s.team === view.winner).length
+    : 0;
+  const celebrateDurationMs = Math.max(2200, winningSeqCount * 700 + 1200);
+
   useEffect(() => {
     if (!view.winner) {
       setWinStage("playing");
@@ -229,12 +248,12 @@ export function GameScreen({
       setCelebratingTeam(view.winner!);
       setWinStage("celebrating");
     }, 1400);
-    const t2 = setTimeout(() => setWinStage("overlay"), 1400 + 2200);
+    const t2 = setTimeout(() => setWinStage("overlay"), 1400 + celebrateDurationMs);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [view.winner]);
+  }, [view.winner, celebrateDurationMs]);
 
   // Highlight is purely local — based on this client's selectedCard state,
   // never broadcast to other players. So it's safe to show even when it's
@@ -454,7 +473,9 @@ export function GameScreen({
       {!view.winner && (
         <GameMenu
           onOpenStickers={() => setStickerPickerOpen(true)}
+          onOpenQuickChat={() => setQuickChatOpen(true)}
           onOpenHistory={() => setHistoryOpen(true)}
+          onOpenRules={() => setRulesOpen(true)}
           onStopGame={isHost ? () => setConfirmingStop(true) : null}
         />
       )}
@@ -463,7 +484,23 @@ export function GameScreen({
         onSend={onSendSticker}
         onClose={() => setStickerPickerOpen(false)}
       />
+      <QuickChatPicker
+        open={quickChatOpen}
+        onSend={onSendQuickChat}
+        onClose={() => setQuickChatOpen(false)}
+      />
+      <RulesSheet open={rulesOpen} onClose={() => setRulesOpen(false)} />
       <StickerOverlay stickers={stickers} />
+      <QuickChatOverlay chats={quickChats} />
+
+      {winStage === "celebrating" && view.winner && (
+        <WinSequenceWalk
+          team={view.winner}
+          teamName={winnerTeamName ?? "Winner"}
+          sequences={view.sequences}
+          totalDurationMs={celebrateDurationMs}
+        />
+      )}
 
       {jackEffects.map((e) => (
         <JackEffect key={e.id} rect={e.rect} variant={e.variant} />

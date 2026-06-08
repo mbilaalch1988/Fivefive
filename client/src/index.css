@@ -258,6 +258,60 @@ body {
   100% { opacity: 1; transform: scale(1);    }
 }
 
+/* ------------------------------------------------------------ */
+/* Color-blind chip patterns. Activated by body.cb (toggled from */
+/* the GameMenu). Each team gets a distinct pattern overlay on   */
+/* top of its solid color — diagonal stripes for red, dots for   */
+/* blue, horizontal lines for green. Pattern uses an absolutely- */
+/* positioned ::before with mix-blend-mode so it survives chip   */
+/* animations cleanly.                                           */
+/* ------------------------------------------------------------ */
+.cb-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  display: none;
+}
+body.cb .cb-chip::before {
+  display: block;
+  opacity: 0.7;
+  mix-blend-mode: multiply;
+}
+body.cb .cb-chip[data-chip-team="red"]::before {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.55) 0,
+    rgba(0, 0, 0, 0.55) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+}
+body.cb .cb-chip[data-chip-team="blue"]::before {
+  background-image:
+    radial-gradient(rgba(0, 0, 0, 0.6) 1.4px, transparent 1.6px);
+  background-size: 6px 6px;
+}
+body.cb .cb-chip[data-chip-team="green"]::before {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.55) 0,
+    rgba(0, 0, 0, 0.55) 2px,
+    transparent 2px,
+    transparent 6px
+  );
+}
+
+/* Reconnect indicator: pulsing rose dot on the player badge + banner. */
+.reconnect-dot {
+  animation: reconnect-pulse 1s ease-in-out infinite;
+}
+@keyframes reconnect-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1.15); }
+}
+
 /* Material-style ripple-free state layer */
 .state-layer { position: relative; overflow: hidden; }
 .state-layer::after {

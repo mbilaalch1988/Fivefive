@@ -23,20 +23,22 @@ export function Board({
   const locked = new Set(view.lockedChips);
   const deck: DeckManifest | null = view.deck ?? null;
 
-  // Map each celebrating chip position to a staggered glow delay (rises along the chip's sequence path).
+  // Map each celebrating chip position to a staggered glow delay.
+  // Sequences fire ONE AT A TIME with a generous gap between them so the
+  // viewer reads each winning sequence clearly: chips within a sequence
+  // stagger by 80ms, sequences are separated by 700ms.
   const celebrateDelay = new Map<string, number>();
   if (celebratingTeam) {
     const ordered = view.sequences.filter((s) => s.team === celebratingTeam);
-    let i = 0;
-    for (const seq of ordered) {
-      for (const p of seq.positions) {
+    ordered.forEach((seq, seqIdx) => {
+      const start = seqIdx * 700;
+      seq.positions.forEach((p, posIdx) => {
         const k = `${p.r},${p.c}`;
         if (!celebrateDelay.has(k)) {
-          celebrateDelay.set(k, i * 90);
-          i++;
+          celebrateDelay.set(k, start + posIdx * 80);
         }
-      }
-    }
+      });
+    });
   }
 
   return (

@@ -8,6 +8,7 @@ import { Server, type Socket } from "socket.io";
 import {
   SHARED_VERSION,
   isValidStickerId,
+  isValidQuickChatId,
   type Action,
   type ClientToServerEvents,
   type ServerToClientEvents,
@@ -333,6 +334,25 @@ io.on("connection", (socket) => {
       fromPlayerId: seat.id,
       fromName: seat.name,
       stickerId,
+      eventId: randomUUID(),
+    });
+  });
+
+  socket.on("sendQuickChat", ({ chatId }, ack) => {
+    const code = socketRoom.get(socket.id);
+    const room = code ? registry.get(code) : undefined;
+    if (!room) return ack({ ok: false, error: "not in a room" });
+    const seat = room.seatBySocketId(socket.id);
+    if (!seat) return ack({ ok: false, error: "no seat" });
+    if (!isValidQuickChatId(chatId)) {
+      return ack({ ok: false, error: "unknown quick chat" });
+    }
+    ack({ ok: true });
+    io.to(`room:${room.code}`).emit("quickChat", {
+      fromPlayerId: seat.id,
+      fromName: seat.name,
+      fromTeam: seat.team,
+      chatId,
       eventId: randomUUID(),
     });
   });
