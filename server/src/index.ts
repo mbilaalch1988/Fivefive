@@ -20,8 +20,10 @@ import { RoomRegistry } from "./registry.js";
 import { DeckRegistry } from "./decks.js";
 import { botDecide } from "./botAI.js";
 import {
+  deletePushSubscription,
   getPagedPlayersByPoints,
   getPagedTeams,
+  getPushSubscriptions,
   getReplay,
   getTopPlayers,
   getTopPlayersByMvp,
@@ -31,7 +33,15 @@ import {
   initDb,
   isPersistenceEnabled,
   listRecentReplays,
+  savePushSubscription,
 } from "./db.js";
+import {
+  SubscriptionGoneError,
+  getVapidPublicKey,
+  initPush,
+  isPushConfigured,
+  sendPush,
+} from "./push.js";
 import { verifyToken } from "./jwt.js";
 import { newPlayerId } from "./util.js";
 
@@ -50,7 +60,60 @@ app.get("/health", (_req, res) => {
     shared: SHARED_VERSION,
     rooms: registry.size(),
     persistence: isPersistenceEnabled() ? "postgres" : "in-memory",
+    push: isPushConfigured() ? "configured" : "disabled",
   });
+});
+
+app.use(express.json({ limit: "16kb" }));
+
+// Web push: expose VAPID public key so the client can subscribe.
+app.get("/api/push/vapid-key", (_req, res) => {
+  const key = getVapidPublicKey();
+  if (!key) {
+    res.status(503).json({ error: "push not configured" });
+    return;
+  }
+  res.json({ publicKey: key });
+});
+
+// Subscribe — client posts its PushSubscription object plus the room + player it
+// belongs to. Idempotent on endpoint.
+app.post("/api/push/subscribe", async (req, res) => {
+  const body = req.body as {
+    subscription?: { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
+    roomCode?: string;
+    playerId?: string;
+  };
+  const sub = body?.subscription;
+  const roomCode = (body?.roomCode ?? "").trim().toUpperCase();
+  const playerId = (body?.playerId ?? "").trim();
+  if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) {
+    res.status(400).json({ error: "missing subscription fields" });
+    return;
+  }
+  if (!roomCode || !playerId) {
+    res.status(400).json({ error: "missing roomCode/playerId" });
+    return;
+  }
+  await savePushSubscription({
+    endpoint: sub.endpoint,
+    p256dh: sub.keys.p256dh,
+    auth: sub.keys.auth,
+    roomCode,
+    playerId,
+  });
+  res.json({ ok: true });
+});
+
+// Unsubscribe — body: { endpoint }
+app.post("/api/push/unsubscribe", async (req, res) => {
+  const endpoint = (req.body as { endpoint?: string })?.endpoint;
+  if (!endpoint) {
+    res.status(400).json({ error: "missing endpoint" });
+    return;
+  }
+  await deletePushSubscription(endpoint);
+  res.json({ ok: true });
 });
 
 // In production, serve the built React client and fall back to index.html for
@@ -225,6 +288,35 @@ function scheduleBotTurn(room: Room): void {
   }, delayMs);
 }
 
+/**
+ * Send a "your turn" web push to every subscription registered for the
+ * given (room, player) pair. Errors are swallowed; expired subscriptions
+ * are removed from the DB.
+ */
+async function pushTurnNotification(room: Room, playerId: string): Promise<void> {
+  if (!isPushConfigured()) return;
+  const seat = room.seats.find((s) => s.id === playerId);
+  if (!seat || seat.isBot) return;
+  const subs = await getPushSubscriptions(room.code, playerId);
+  if (subs.length === 0) return;
+  for (const sub of subs) {
+    try {
+      await sendPush(sub, {
+        title: "Your turn!",
+        body: `It's your turn in room ${room.code}`,
+        tag: `turn-${room.code}`,
+        roomCode: room.code,
+      });
+    } catch (e) {
+      if (e instanceof SubscriptionGoneError) {
+        await deletePushSubscription(e.endpoint);
+      } else {
+        console.warn("[push] error:", (e as Error).message);
+      }
+    }
+  }
+}
+
 function broadcastGame(room: Room): void {
   // Per-player redacted view: emit individually to each connected socket.
   for (const seat of room.seats) {
@@ -386,6 +478,9 @@ io.on("connection", (socket) => {
       broadcastGame(room);
       // First-turn-may-be-a-bot.
       scheduleBotTurn(room);
+      // Push the opening turn.
+      const firstId = room.game?.players[room.game.turnIdx]?.id ?? null;
+      if (firstId) void pushTurnNotification(room, firstId);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
     }
@@ -416,6 +511,7 @@ io.on("connection", (socket) => {
     const seat = room.seatBySocketId(socket.id);
     if (!seat) return ack({ ok: false, error: "no seat" });
     try {
+      const prevTurnId = room.game?.players[room.game.turnIdx]?.id ?? null;
       const result = room.applyAction(seat.id, action);
       if (!result.ok) return ack({ ok: false, error: result.error });
       // Persist the win if this action ended the game; updated counts ride along
@@ -426,6 +522,11 @@ io.on("connection", (socket) => {
       if (justWon) broadcastRoom(room);
       // If the next player is a bot, schedule its turn.
       if (!justWon) scheduleBotTurn(room);
+      // Push notification on turn flip — fire-and-forget.
+      const newTurnId = room.game?.players[room.game.turnIdx]?.id ?? null;
+      if (!justWon && newTurnId && newTurnId !== prevTurnId) {
+        void pushTurnNotification(room, newTurnId);
+      }
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
     }
@@ -573,6 +674,7 @@ io.on("connection", (socket) => {
   });
 });
 
+initPush();
 void initDb().finally(() => {
   httpServer.listen(PORT, () => {
     console.log(`[server] listening on port ${PORT} (NODE_ENV=${process.env.NODE_ENV ?? "development"})`);

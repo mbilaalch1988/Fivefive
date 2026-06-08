@@ -6,6 +6,12 @@ import {
   setVibrationMuted,
 } from "../lib/notify";
 import { isColorBlindMode, setColorBlindMode } from "../lib/prefs";
+import {
+  disablePush,
+  enablePush,
+  getStoredPushPref,
+  isPushSupported,
+} from "../lib/push";
 
 interface Props {
   onOpenStickers: () => void;
@@ -14,6 +20,9 @@ interface Props {
   onOpenRules: () => void;
   /** Host-only entry. When null, the Stop game item is hidden. */
   onStopGame: (() => void) | null;
+  /** Room code + player id needed to scope push subscriptions. */
+  roomCode: string;
+  myPlayerId: string | null;
 }
 
 /**
@@ -27,11 +36,16 @@ export function GameMenu({
   onOpenHistory,
   onOpenRules,
   onStopGame,
+  roomCode,
+  myPlayerId,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [chimeMuted, setChimeMutedState]     = useState<boolean>(() => isChimeMuted());
   const [vibrateMuted, setVibrateMutedState] = useState<boolean>(() => isVibrationMuted());
   const [colorBlind, setColorBlindState]     = useState<boolean>(() => isColorBlindMode());
+  const [pushEnabled, setPushEnabled]        = useState<boolean>(() => getStoredPushPref());
+  const [pushBusy, setPushBusy]              = useState(false);
+  const pushSupported = isPushSupported();
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   // Close on outside click.
@@ -59,6 +73,21 @@ export function GameMenu({
     const next = !colorBlind;
     setColorBlindState(next);
     setColorBlindMode(next);
+  }
+  async function togglePush() {
+    if (!myPlayerId || pushBusy) return;
+    setPushBusy(true);
+    try {
+      if (pushEnabled) {
+        await disablePush();
+        setPushEnabled(false);
+      } else {
+        const ok = await enablePush(roomCode, myPlayerId);
+        setPushEnabled(ok);
+      }
+    } finally {
+      setPushBusy(false);
+    }
   }
 
   return (
@@ -138,6 +167,15 @@ export function GameMenu({
             onClick={toggleColorBlind}
             testId="menu-colorblind"
           />
+          {pushSupported && myPlayerId && (
+            <ToggleItem
+              icon={pushEnabled ? "🔔" : "🔕"}
+              label="Push when my turn"
+              value={pushBusy ? "…" : pushEnabled ? "on" : "off"}
+              onClick={togglePush}
+              testId="menu-push"
+            />
+          )}
           {onStopGame && (
             <>
               <Divider />

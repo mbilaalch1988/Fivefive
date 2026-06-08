@@ -488,6 +488,8 @@ export function GameScreen({
           onOpenHistory={() => setHistoryOpen(true)}
           onOpenRules={() => setRulesOpen(true)}
           onStopGame={isHost ? () => setConfirmingStop(true) : null}
+          roomCode={room?.code ?? ""}
+          myPlayerId={myPlayerId}
         />
       )}
       <StickerPicker

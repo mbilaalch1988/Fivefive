@@ -144,6 +144,20 @@ async function runMigration(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_game_log_finished_at
       ON game_log (finished_at DESC NULLS LAST);
 
+    -- Web push subscriptions, keyed by endpoint (browser-unique).
+    -- Each subscription is bound to a specific (room, player) pair so we
+    -- only ping the right person.
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      endpoint TEXT PRIMARY KEY,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      room_code TEXT NOT NULL,
+      player_id TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_push_subscriptions_room_player
+      ON push_subscriptions (room_code, player_id);
+
     CREATE TABLE IF NOT EXISTS game_actions (
       game_id UUID NOT NULL REFERENCES game_log(game_id) ON DELETE CASCADE,
       action_index INT NOT NULL,
@@ -300,6 +314,76 @@ interface ReplayActionRow {
   action_type: "place" | "remove" | "discardDead";
   pos_r: number | null;
   pos_c: number | null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Push subscriptions                                                 */
+/* ------------------------------------------------------------------ */
+
+export interface SavedPushSubscription {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  roomCode: string;
+  playerId: string;
+}
+
+export async function savePushSubscription(s: SavedPushSubscription): Promise<void> {
+  if (!pool) return;
+  try {
+    await pool.query(
+      `INSERT INTO push_subscriptions (endpoint, p256dh, auth, room_code, player_id)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (endpoint) DO UPDATE SET
+         p256dh = EXCLUDED.p256dh,
+         auth = EXCLUDED.auth,
+         room_code = EXCLUDED.room_code,
+         player_id = EXCLUDED.player_id`,
+      [s.endpoint, s.p256dh, s.auth, s.roomCode, s.playerId],
+    );
+  } catch (e) {
+    console.warn("[db] savePushSubscription failed:", (e as Error).message);
+  }
+}
+
+export async function deletePushSubscription(endpoint: string): Promise<void> {
+  if (!pool) return;
+  try {
+    await pool.query(`DELETE FROM push_subscriptions WHERE endpoint = $1`, [endpoint]);
+  } catch (e) {
+    console.warn("[db] deletePushSubscription failed:", (e as Error).message);
+  }
+}
+
+export async function getPushSubscriptions(
+  roomCode: string,
+  playerId: string,
+): Promise<SavedPushSubscription[]> {
+  if (!pool) return [];
+  try {
+    const r = await pool.query<{
+      endpoint: string;
+      p256dh: string;
+      auth: string;
+      room_code: string;
+      player_id: string;
+    }>(
+      `SELECT endpoint, p256dh, auth, room_code, player_id
+       FROM push_subscriptions
+       WHERE room_code = $1 AND player_id = $2`,
+      [roomCode, playerId],
+    );
+    return r.rows.map((row) => ({
+      endpoint: row.endpoint,
+      p256dh: row.p256dh,
+      auth: row.auth,
+      roomCode: row.room_code,
+      playerId: row.player_id,
+    }));
+  } catch (e) {
+    console.warn("[db] getPushSubscriptions failed:", (e as Error).message);
+    return [];
+  }
 }
 
 export async function getReplay(gameId: string) {
