@@ -75,7 +75,11 @@ export function LobbyScreen({
       className="min-h-screen flex flex-col items-center p-4 gap-4"
       style={{ background: "var(--md-surface)" }}
     >
-      <header className="w-full max-w-md flex items-center justify-between">
+      {/* Outer wrapper: responsive max-width — narrow on phones, wide on lg+
+          screens so desktop users get a 2-column layout instead of a sliver. */}
+      <div className="w-full max-w-md lg:max-w-5xl space-y-4">
+
+      <header className="w-full flex items-center justify-between">
         <h1 className="text-2xl font-medium tracking-tight">Sequence</h1>
         <span
           className="text-xs uppercase tracking-widest"
@@ -85,9 +89,9 @@ export function LobbyScreen({
         </span>
       </header>
 
-      {/* Room code card */}
+      {/* Room code card — full width at top, prominent. */}
       <section
-        className="w-full max-w-md rounded-3xl p-5 text-center shadow-sm"
+        className="w-full rounded-3xl p-5 text-center shadow-sm"
         style={{ background: "var(--md-surface-1)" }}
       >
         <div
@@ -110,7 +114,7 @@ export function LobbyScreen({
       {error && (
         <div
           role="alert"
-          className="w-full max-w-md bg-rose-500/15 border border-rose-400/40 text-rose-200 rounded-2xl px-4 py-3 text-sm flex items-start justify-between gap-3"
+          className="w-full bg-rose-500/15 border border-rose-400/40 text-rose-200 rounded-2xl px-4 py-3 text-sm flex items-start justify-between gap-3"
         >
           <span>{error}</span>
           <button
@@ -123,8 +127,15 @@ export function LobbyScreen({
         </div>
       )}
 
+      {/* 2-col content. Left = player setup (you control this).
+          Right = host controls + scoreboards (info / one host action). */}
+      <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+
+      {/* ---------- LEFT COLUMN ---------- */}
+      <div className="space-y-4">
+
       {/* Players list */}
-      <section className="w-full max-w-md">
+      <section className="w-full">
         <h2 className="text-xs uppercase tracking-widest mb-2" style={{ color: "var(--md-on-surface-variant)" }}>
           Players ({room.seats.length})
         </h2>
@@ -181,7 +192,7 @@ export function LobbyScreen({
       {/* Bot picker — host only, pre-game only */}
       {isHost && !room.inGame && (
         <section
-          className="w-full max-w-md rounded-3xl p-4 space-y-3 shadow-sm"
+          className="w-full rounded-3xl p-4 space-y-3 shadow-sm"
           style={{ background: "var(--md-surface-1)" }}
         >
           <div className="flex items-center justify-between">
@@ -231,7 +242,7 @@ export function LobbyScreen({
       )}
 
       {/* Team picker with rename */}
-      <section className="w-full max-w-md space-y-2">
+      <section className="w-full space-y-2">
         <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
           Choose your team
         </h2>
@@ -304,7 +315,7 @@ export function LobbyScreen({
       </section>
 
       {/* Ready toggle */}
-      <section className="w-full max-w-md">
+      <section className="w-full">
         {mySeat?.ready ? (
           <TonalButton onClick={() => onSetReady(false)}>Ready ✓ — tap to un-ready</TonalButton>
         ) : (
@@ -314,9 +325,13 @@ export function LobbyScreen({
         )}
       </section>
 
+      </div>
+      {/* ---------- RIGHT COLUMN ---------- */}
+      <div className="space-y-4">
+
       {/* Scoreboard */}
       {(room.gamesPlayed > 0 || room.teamScores.red > 0 || room.teamScores.blue > 0) && (
-        <section className="w-full max-w-md rounded-3xl p-4 space-y-3 shadow-sm" style={{ background: "var(--md-surface-1)" }}>
+        <section className="w-full rounded-3xl p-4 space-y-3 shadow-sm" style={{ background: "var(--md-surface-1)" }}>
           <div className="flex items-baseline justify-between">
             <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
               Scoreboard
@@ -363,7 +378,7 @@ export function LobbyScreen({
 
       {/* Host controls */}
       {isHost && (
-        <section className="w-full max-w-md rounded-3xl p-4 space-y-3 shadow-sm" style={{ background: "var(--md-surface-1)" }}>
+        <section className="w-full rounded-3xl p-4 space-y-3 shadow-sm" style={{ background: "var(--md-surface-1)" }}>
           <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
             Host controls
           </h2>
@@ -403,18 +418,10 @@ export function LobbyScreen({
         </section>
       )}
 
-      <button
-        type="button"
-        onClick={onLeave}
-        className="text-zinc-500 hover:text-rose-300 text-xs uppercase tracking-widest font-medium mt-2"
-      >
-        Leave room
-      </button>
-
       {/* Global hall-of-fame leaderboard, same component as the landing
           screen. Shows current top players + teams without leaving the room. */}
       <section
-        className="w-full max-w-md rounded-3xl p-5 space-y-3 shadow-sm mb-4"
+        className="w-full rounded-3xl p-5 space-y-3 shadow-sm"
         style={{ background: "var(--md-surface-1)" }}
       >
         <div className="flex items-center justify-between">
@@ -431,6 +438,24 @@ export function LobbyScreen({
         </div>
         <Scoreboard />
       </section>
+
+      </div>
+      </div>
+      {/* ---------- /grid ---------- */}
+
+      {/* Leave button, centered below the grid. */}
+      <div className="text-center pt-2 pb-2">
+        <button
+          type="button"
+          onClick={onLeave}
+          className="text-zinc-500 hover:text-rose-300 text-xs uppercase tracking-widest font-medium"
+        >
+          Leave room
+        </button>
+      </div>
+
+      </div>
+      {/* ---------- /outer wrapper ---------- */}
 
       {scoreboardOpen && (
         <Scoreboard asDialog onClose={() => setScoreboardOpen(false)} />
