@@ -391,41 +391,45 @@ export function GameScreen({
         />
       )}
 
-      {/* Stop game (host only) — fixed bottom-center, above any address bar */}
-      {isHost && !view.winner && (
+      {/* Stop-game confirmation: centered modal, triggered from the top-right menu. */}
+      {isHost && !view.winner && confirmingStop && (
         <div
-          className="fixed left-1/2 -translate-x-1/2 z-50"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 overlay-enter"
+          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)" }}
+          role="alertdialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmingStop(false);
+          }}
+          data-testid="stop-game-modal"
         >
-          {confirmingStop ? (
-            <div className="flex items-center gap-2 bg-zinc-900/95 backdrop-blur rounded-full pl-4 pr-2 py-1.5 border border-zinc-700 shadow-lg">
-              <span className="text-sm">Stop game?</span>
-              <button
-                type="button"
-                onClick={onConfirmStop}
-                className="bg-rose-500 hover:bg-rose-400 text-white px-3 py-1 rounded-full text-sm font-semibold"
-                data-testid="stop-confirm"
-              >
-                Yes
-              </button>
+          <div
+            className="w-full max-w-xs rounded-3xl p-5 space-y-4 shadow-2xl text-center"
+            style={{ background: "var(--md-surface-1)" }}
+          >
+            <div className="text-3xl">⏹</div>
+            <h2 className="text-lg font-medium tracking-tight">Stop the game?</h2>
+            <p className="text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
+              Everyone returns to the lobby. Teams are kept, ready flags reset.
+            </p>
+            <div className="flex gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => setConfirmingStop(false)}
-                className="bg-zinc-700 hover:bg-zinc-600 text-zinc-100 px-3 py-1 rounded-full text-sm"
+                className="state-layer flex-1 py-2.5 rounded-full font-medium text-zinc-200 bg-transparent border border-zinc-700 hover:border-zinc-500 transition-colors"
               >
                 Cancel
               </button>
+              <button
+                type="button"
+                onClick={onConfirmStop}
+                data-testid="stop-confirm"
+                className="state-layer flex-1 py-2.5 rounded-full font-medium text-white bg-rose-500 hover:bg-rose-400 shadow-sm shadow-rose-900/40"
+              >
+                Stop game
+              </button>
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmingStop(true)}
-              className="state-layer bg-rose-500/90 hover:bg-rose-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-lg shadow-rose-900/40 backdrop-blur"
-              data-testid="stop-game"
-            >
-              Stop game
-            </button>
-          )}
+          </div>
         </div>
       )}
 
@@ -451,6 +455,7 @@ export function GameScreen({
         <GameMenu
           onOpenStickers={() => setStickerPickerOpen(true)}
           onOpenHistory={() => setHistoryOpen(true)}
+          onStopGame={isHost ? () => setConfirmingStop(true) : null}
         />
       )}
       <StickerPicker

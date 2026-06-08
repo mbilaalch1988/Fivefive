@@ -9,6 +9,8 @@ import {
 interface Props {
   onOpenStickers: () => void;
   onOpenHistory: () => void;
+  /** Host-only entry. When null, the Stop game item is hidden. */
+  onStopGame: (() => void) | null;
 }
 
 /**
@@ -16,7 +18,7 @@ interface Props {
  * bottom-right last-played card — collects everything into one drawer so
  * the playfield stays uncluttered.
  */
-export function GameMenu({ onOpenStickers, onOpenHistory }: Props) {
+export function GameMenu({ onOpenStickers, onOpenHistory, onStopGame }: Props) {
   const [open, setOpen] = useState(false);
   const [chimeMuted, setChimeMutedState]     = useState<boolean>(() => isChimeMuted());
   const [vibrateMuted, setVibrateMutedState] = useState<boolean>(() => isVibrationMuted());
@@ -102,6 +104,22 @@ export function GameMenu({ onOpenStickers, onOpenHistory }: Props) {
             onClick={toggleVibrate}
             testId="menu-vibrate"
           />
+          {onStopGame && (
+            <>
+              <Divider />
+              <button
+                type="button"
+                onClick={() => { setOpen(false); onStopGame(); }}
+                data-testid="menu-stop-game"
+                role="menuitem"
+                className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-rose-300 hover:bg-rose-500/15 transition-colors font-medium"
+              >
+                <span className="text-base w-5 text-center">⏹</span>
+                <span className="flex-1">Stop game</span>
+                <span className="text-rose-400">›</span>
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
