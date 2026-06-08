@@ -64,6 +64,8 @@ export default function App() {
         onChooseTeam={g.chooseTeam}
         onSetReady={g.setReady}
         onRenameTeam={g.renameTeam}
+        onAddBot={g.addBot}
+        onRemoveBot={g.removeBot}
         onStart={(opts) => g.startGame(opts)}
         onLeave={g.leave}
       />

@@ -14,6 +14,8 @@ interface Props {
   onChooseTeam: (team: Team) => Promise<void>;
   onSetReady: (ready: boolean) => Promise<void>;
   onRenameTeam: (team: Team, name: string) => Promise<void>;
+  onAddBot: (team: Team, difficulty: "easy" | "medium") => Promise<void>;
+  onRemoveBot: (playerId: PlayerId) => Promise<void>;
   onStart: (opts: { sequencesToWin: number; deckId: string | null }) => Promise<void>;
   onLeave: () => Promise<void>;
 }
@@ -28,6 +30,8 @@ export function LobbyScreen({
   onChooseTeam,
   onSetReady,
   onRenameTeam,
+  onAddBot,
+  onRemoveBot,
   onStart,
   onLeave,
 }: Props) {
@@ -37,6 +41,7 @@ export function LobbyScreen({
   const [deckId, setDeckId] = useState("");
   const [renamingTeam, setRenamingTeam] = useState<Team | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium">("medium");
 
   const allReady = room.seats.length >= 2 && room.seats.every((s) => s.team && s.ready);
   const teamCounts = new Map<Team, number>();
@@ -135,7 +140,10 @@ export function LobbyScreen({
                   s.team ? TEAM_CHIP[s.team] : "bg-zinc-600 border-zinc-500"
                 }`}
               />
-              <span className="font-medium truncate">{s.name}</span>
+              <span className="font-medium truncate flex items-center gap-1.5">
+                {s.isBot && <span className="text-base leading-none" aria-label="bot">🤖</span>}
+                {s.name}
+              </span>
               {s.isHost && (
                 <span className="text-amber-300 text-[0.65rem] uppercase tracking-wider font-medium">host</span>
               )}
@@ -143,7 +151,7 @@ export function LobbyScreen({
                 <span className="text-indigo-300 text-[0.65rem] uppercase tracking-wider font-medium">you</span>
               )}
               <span className="ml-auto flex items-center gap-2 text-xs">
-                {!s.connected && <span className="text-rose-400">offline</span>}
+                {!s.connected && !s.isBot && <span className="text-rose-400">offline</span>}
                 {s.team && (
                   <span style={{ color: "var(--md-on-surface-variant)" }}>
                     {room.teamNames[s.team]}
@@ -154,11 +162,73 @@ export function LobbyScreen({
                 ) : (
                   <span style={{ color: "var(--md-on-surface-variant)" }}>not ready</span>
                 )}
+                {isHost && s.isBot && (
+                  <button
+                    type="button"
+                    onClick={() => void onRemoveBot(s.id)}
+                    className="text-rose-400/80 hover:text-rose-300 text-xs uppercase tracking-wider font-medium px-1.5 py-0.5 rounded border border-rose-500/30 hover:border-rose-400/60"
+                    title="Remove bot"
+                  >
+                    ✕
+                  </button>
+                )}
               </span>
             </li>
           ))}
         </ul>
       </section>
+
+      {/* Bot picker — host only, pre-game only */}
+      {isHost && !room.inGame && (
+        <section
+          className="w-full max-w-md rounded-3xl p-4 space-y-3 shadow-sm"
+          style={{ background: "var(--md-surface-1)" }}
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
+              Add a bot
+            </h2>
+            <div className="inline-flex rounded-full border border-zinc-700 overflow-hidden text-xs">
+              <button
+                type="button"
+                onClick={() => setBotDifficulty("easy")}
+                className={`px-3 py-1 transition-colors ${
+                  botDifficulty === "easy"
+                    ? "bg-emerald-500/30 text-emerald-100"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Easy
+              </button>
+              <button
+                type="button"
+                onClick={() => setBotDifficulty("medium")}
+                className={`px-3 py-1 transition-colors ${
+                  botDifficulty === "medium"
+                    ? "bg-indigo-500/30 text-indigo-100"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                Medium
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {teamsInPlay.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => void onAddBot(t, botDifficulty)}
+                disabled={room.seats.length >= 12}
+                className={`state-layer flex items-center justify-center gap-2 rounded-2xl py-2.5 text-sm font-medium border-2 ${TEAM_SURFACE[t]} ${TEAM_TEXT[t]} disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <span>🤖</span>
+                <span>Add to {room.teamNames[t]}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Team picker with rename */}
       <section className="w-full max-w-md space-y-2">

@@ -92,6 +92,7 @@ function PlayerBadge({
   isMe: boolean;
   connected: boolean;
 }) {
+  const isBot = /\bbot\b/i.test(name);
   const nick = makeNickname(name);
   // Visual hierarchy: current > next > others. Current player uses an animated
   // gold pulse (.turn-pulse drives the box-shadow keyframe) instead of a flat
@@ -114,6 +115,9 @@ function PlayerBadge({
             "inset 0 1px 2px rgba(255,255,255,0.35), inset 0 -1.5px 2px rgba(0,0,0,0.25)",
         }}
       >
+        {isBot && (
+          <span className="text-white text-[0.65rem] leading-none" aria-label="bot">🤖</span>
+        )}
         <span className="text-white text-xs sm:text-sm font-bold tracking-wide leading-none">
           {nick}
         </span>

@@ -76,6 +76,8 @@ export interface Seat {
   ready: boolean;
   connected: boolean;
   isHost: boolean;
+  /** True for server-side AI seats. */
+  isBot: boolean;
 }
 
 export interface RoomView {
@@ -176,6 +178,14 @@ export interface ClientToServerEvents {
     ack: (res: AckResult<{}>) => void,
   ) => void;
   stopGame: (ack: (res: AckResult<{}>) => void) => void;
+  addBot: (
+    payload: { team: Team; difficulty: "easy" | "medium" },
+    ack: (res: AckResult<{}>) => void,
+  ) => void;
+  removeBot: (
+    payload: { playerId: PlayerId },
+    ack: (res: AckResult<{}>) => void,
+  ) => void;
   renameTeam: (
     payload: { team: Team; name: string },
     ack: (res: AckResult<{}>) => void,

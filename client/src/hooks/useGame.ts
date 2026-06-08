@@ -95,6 +95,8 @@ export interface UseGame {
   startGame: (opts?: { sequencesToWin?: number; deckId?: string | null }) => Promise<void>;
   stopGame: () => Promise<void>;
   renameTeam: (team: Team, name: string) => Promise<void>;
+  addBot: (team: Team, difficulty: "easy" | "medium") => Promise<void>;
+  removeBot: (playerId: PlayerId) => Promise<void>;
   sendSticker: (stickerId: string) => Promise<void>;
   /** Active sticker broadcasts (most recently received first). */
   stickers: StickerBroadcast[];
@@ -361,6 +363,30 @@ export function useGame(): UseGame {
     [handleAck],
   );
 
+  const addBot = useCallback(
+    async (team: Team, difficulty: "easy" | "medium") => {
+      const s = socketRef.current!;
+      const res = (await emit(s, "addBot", { team, difficulty })) as {
+        ok: boolean;
+        error?: string;
+      };
+      handleAck(res);
+    },
+    [handleAck],
+  );
+
+  const removeBot = useCallback(
+    async (playerId: PlayerId) => {
+      const s = socketRef.current!;
+      const res = (await emit(s, "removeBot", { playerId })) as {
+        ok: boolean;
+        error?: string;
+      };
+      handleAck(res);
+    },
+    [handleAck],
+  );
+
   const sendSticker = useCallback(
     async (stickerId: string) => {
       const s = socketRef.current!;
@@ -424,6 +450,8 @@ export function useGame(): UseGame {
     startGame,
     stopGame,
     renameTeam,
+    addBot,
+    removeBot,
     sendSticker,
     stickers,
     dismissSticker,

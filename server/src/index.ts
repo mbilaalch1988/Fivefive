@@ -18,6 +18,7 @@ import { randomUUID } from "node:crypto";
 import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { DeckRegistry } from "./decks.js";
+import { botDecide } from "./botAI.js";
 import {
   getPagedPlayersByPoints,
   getPagedTeams,
@@ -187,6 +188,43 @@ function broadcastRoom(room: Room): void {
   io.to(`room:${room.code}`).emit("room", room.roomView());
 }
 
+/**
+ * If the current player is a bot, schedule its move after a small delay so
+ * humans see what just happened. Re-invokes itself after bot's action since
+ * (a) discardDead doesn't end the turn, and (b) the next seat might also
+ * be a bot. Guarded so a stop/win/disconnect mid-delay is a no-op.
+ */
+function scheduleBotTurn(room: Room): void {
+  const turn = room.isBotTurn();
+  if (!turn) return;
+  const delayMs = 700 + Math.random() * 900;
+  setTimeout(() => {
+    if (!room.game || room.game.winner) return;
+    // Re-check in case the game state advanced (host stop, etc.)
+    const stillTurn = room.isBotTurn();
+    if (!stillTurn || stillTurn.seat.id !== turn.seat.id) return;
+    const action = botDecide(room.game, turn.seat.id, turn.difficulty);
+    if (!action) {
+      console.warn(`[bot] ${turn.seat.name} found no legal action`);
+      return;
+    }
+    try {
+      const result = room.applyAction(turn.seat.id, action);
+      if (!result.ok) {
+        console.warn(`[bot] ${turn.seat.name} action failed: ${result.error}`);
+        return;
+      }
+      const justWon = room.maybeRecordWin();
+      broadcastGame(room);
+      if (justWon) broadcastRoom(room);
+      // Chain into the next bot turn (or stop if turn is human / game over).
+      scheduleBotTurn(room);
+    } catch (e) {
+      console.warn(`[bot] applyAction threw: ${(e as Error).message}`);
+    }
+  }, delayMs);
+}
+
 function broadcastGame(room: Room): void {
   // Per-player redacted view: emit individually to each connected socket.
   for (const seat of room.seats) {
@@ -346,6 +384,8 @@ io.on("connection", (socket) => {
       ack({ ok: true });
       broadcastRoom(room);
       broadcastGame(room);
+      // First-turn-may-be-a-bot.
+      scheduleBotTurn(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
     }
@@ -384,6 +424,44 @@ io.on("connection", (socket) => {
       ack({ ok: true });
       broadcastGame(room);
       if (justWon) broadcastRoom(room);
+      // If the next player is a bot, schedule its turn.
+      if (!justWon) scheduleBotTurn(room);
+    } catch (e) {
+      ack({ ok: false, error: (e as Error).message });
+    }
+  });
+
+  socket.on("addBot", ({ team, difficulty }, ack) => {
+    const code = socketRoom.get(socket.id);
+    const room = code ? registry.get(code) : undefined;
+    if (!room) return ack({ ok: false, error: "not in a room" });
+    const seat = room.seatBySocketId(socket.id);
+    if (!seat) return ack({ ok: false, error: "no seat" });
+    if (seat.id !== room.hostId) {
+      return ack({ ok: false, error: "only the host can add bots" });
+    }
+    try {
+      room.addBot(team, difficulty);
+      ack({ ok: true });
+      broadcastRoom(room);
+    } catch (e) {
+      ack({ ok: false, error: (e as Error).message });
+    }
+  });
+
+  socket.on("removeBot", ({ playerId }, ack) => {
+    const code = socketRoom.get(socket.id);
+    const room = code ? registry.get(code) : undefined;
+    if (!room) return ack({ ok: false, error: "not in a room" });
+    const seat = room.seatBySocketId(socket.id);
+    if (!seat) return ack({ ok: false, error: "no seat" });
+    if (seat.id !== room.hostId) {
+      return ack({ ok: false, error: "only the host can remove bots" });
+    }
+    try {
+      room.removeBot(playerId);
+      ack({ ok: true });
+      broadcastRoom(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
     }

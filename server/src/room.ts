@@ -33,6 +33,10 @@ interface RoomSeat {
   socketId: string | null;
   /** Supabase auth.users.id if this player signed in; null = anonymous. */
   userId: string | null;
+  /** True when this seat is filled by a server-side AI. */
+  isBot: boolean;
+  /** Difficulty hint for the bot decision engine. */
+  botDifficulty: "easy" | "medium" | null;
 }
 
 interface RoomSpectator {
@@ -77,6 +81,8 @@ export class Room {
       connected: true,
       socketId: host.socketId,
       userId: host.userId,
+      isBot: false,
+      botDifficulty: null,
     });
     // Fire-and-forget: if Postgres is connected and this room code was used
     // before (e.g. server restart), rehydrate the scoreboard + team names.
@@ -108,7 +114,38 @@ export class Room {
       connected: true,
       socketId: p.socketId,
       userId: p.userId,
+      isBot: false,
+      botDifficulty: null,
     });
+  }
+
+  /** Add a bot seat. Host-gated upstream. Bots are auto-ready + always
+   *  "connected" so they don't trigger the reconnect indicator. */
+  addBot(team: Team, difficulty: "easy" | "medium"): RoomSeat {
+    if (this.game) throw new Error("game already started");
+    if (this.seats.length >= 12) throw new Error("room is full");
+    const botCount = this.seats.filter((s) => s.isBot).length + 1;
+    const name = `${difficulty === "easy" ? "Easy" : "Medium"} bot ${botCount}`;
+    const seat: RoomSeat = {
+      id: `bot-${this.code}-${botCount}-${Date.now().toString(36)}`,
+      name,
+      team,
+      ready: true,
+      connected: true,
+      socketId: null,
+      userId: null,
+      isBot: true,
+      botDifficulty: difficulty,
+    };
+    this.seats.push(seat);
+    return seat;
+  }
+
+  removeBot(playerId: PlayerId): void {
+    if (this.game) throw new Error("cannot remove bot mid-game");
+    const idx = this.seats.findIndex((s) => s.id === playerId && s.isBot);
+    if (idx < 0) throw new Error("not a bot seat");
+    this.seats.splice(idx, 1);
   }
 
   attachSocket(playerId: PlayerId, socketId: string): boolean {
@@ -196,6 +233,8 @@ export class Room {
     if (this.game) return false;
     if (this.seats.length < 2) return false;
     if (!this.seats.every((s) => s.team !== null && s.ready)) return false;
+    // Need at least one human, otherwise nobody's watching.
+    if (!this.seats.some((s) => !s.isBot)) return false;
     const teams = new Set(this.seats.map((s) => s.team));
     if (teams.size < 2) return false;
     const counts = new Map<Team, number>();
@@ -204,6 +243,16 @@ export class Room {
     }
     const sizes = [...counts.values()];
     return sizes.every((n) => n === sizes[0]);
+  }
+
+  /** True if it's currently a bot's turn. */
+  isBotTurn(): { seat: RoomSeat; difficulty: "easy" | "medium" } | null {
+    if (!this.game || this.game.winner) return null;
+    const currentId = this.game.players[this.game.turnIdx]?.id;
+    if (!currentId) return null;
+    const seat = this.seats.find((s) => s.id === currentId);
+    if (!seat || !seat.isBot || !seat.botDifficulty) return null;
+    return { seat, difficulty: seat.botDifficulty };
   }
 
   start(
@@ -365,6 +414,7 @@ export class Room {
       ready: s.ready,
       connected: s.connected,
       isHost: s.id === this.hostId,
+      isBot: s.isBot,
     }));
     return {
       code: this.code,
