@@ -436,8 +436,9 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
           />
         </div>
         {/* Sort: earned first (rarity desc), then locked (progress desc).
-            Surfaces accomplishments at a glance and chases at the bottom. */}
-        <div className="grid grid-cols-3 gap-1.5">
+            Surfaces accomplishments at a glance and chases at the bottom.
+            4 cols = 20 achievements / 4 = exactly 5 rows, no orphans. */}
+        <div className="grid grid-cols-4 gap-1.5">
           {[...achievements]
             .sort((a, b) => {
               if (a.earned !== b.earned) return a.earned ? -1 : 1;
@@ -471,25 +472,28 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
 type Tier = "bronze" | "silver" | "gold";
 const TIER_STYLES: Record<
   Tier,
-  { ring: string; bg: string; text: string; glow: string }
+  { ring: string; bg: string; text: string; glow: string; barFill: string }
 > = {
   bronze: {
     ring: "border-amber-700/80",
     bg: "bg-gradient-to-br from-amber-700/50 to-amber-950/60",
     text: "text-amber-300",
     glow: "",
+    barFill: "bg-amber-500",
   },
   silver: {
     ring: "border-slate-300/70",
     bg: "bg-gradient-to-br from-slate-300/30 to-slate-600/40",
     text: "text-slate-100",
     glow: "shadow-[0_0_10px_-3px_rgba(203,213,225,0.45)]",
+    barFill: "bg-slate-300",
   },
   gold: {
     ring: "border-amber-300/90",
     bg: "bg-gradient-to-br from-amber-300/40 to-amber-600/35",
     text: "text-amber-100",
     glow: "shadow-[0_0_12px_-2px_rgba(252,211,77,0.6)]",
+    barFill: "bg-amber-300",
   },
 };
 const TIER_RANK: Record<Tier, number> = { gold: 0, silver: 1, bronze: 2 };
@@ -644,9 +648,11 @@ function BadgeStrip({ row }: { row: ScoreboardEntry }) {
 }
 
 /**
- * Single tile in the expanded achievements grid. Natural-height layout —
- * earned tiles are tight (icon + title), locked tiles add a progress bar.
- * Grid is 3-cols; tooltip wrapper provides hover/tap description.
+ * Single tile in the expanded achievements grid. Fixed h-[5.5rem] so every
+ * tile is the same size regardless of earned/locked. Structural rows are
+ * identical too (icon on top, title in middle with line-clamp-2, progress
+ * bar + status text on the bottom) — earned tiles fill the bar to 100%
+ * and show "Earned"; locked tiles show real progress.
  */
 function AchievementCell({ a }: { a: AchievementStatus }) {
   const pct = Math.min(100, Math.round((a.current / a.info.target) * 100));
@@ -654,32 +660,41 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
   return (
     <AchievementTooltip a={a} className="w-full">
       <div
-        className={`relative rounded-xl border p-2 flex flex-col items-center gap-1 text-center w-full ${
+        className={`relative rounded-xl border p-2 flex flex-col items-center justify-between text-center w-full h-[5.5rem] ${
           a.earned
             ? `${s.ring} ${s.bg} ${s.glow}`
-            : "border-zinc-700/60 bg-zinc-800/30 opacity-60"
+            : "border-zinc-700/60 bg-zinc-800/30"
         }`}
       >
-        <span className={`text-lg leading-none ${a.earned ? "" : "grayscale"}`}>
+        <span
+          className={`text-lg leading-none ${
+            a.earned ? "" : "grayscale opacity-50"
+          }`}
+        >
           {a.info.icon}
         </span>
         <span
-          className={`text-[0.6rem] font-semibold leading-tight ${
-            a.earned ? s.text : "text-zinc-400"
+          className={`text-[0.6rem] font-semibold leading-tight line-clamp-2 px-0.5 ${
+            a.earned ? s.text : "text-zinc-500"
           }`}
         >
           {a.info.title}
         </span>
-        {!a.earned && (
-          <div className="w-full mt-0.5">
-            <div className="h-1 rounded-full bg-zinc-700 overflow-hidden">
-              <div className="h-full bg-indigo-400" style={{ width: `${pct}%` }} />
-            </div>
-            <div className="text-[0.55rem] mt-0.5 text-zinc-500 tabular-nums">
-              {a.current} / {a.info.target}
-            </div>
+        <div className="w-full">
+          <div className="h-1 rounded-full bg-zinc-700/70 overflow-hidden">
+            <div
+              className={`h-full ${a.earned ? s.barFill : "bg-indigo-400"}`}
+              style={{ width: a.earned ? "100%" : `${pct}%` }}
+            />
           </div>
-        )}
+          <div
+            className={`text-[0.5rem] mt-0.5 tabular-nums leading-none ${
+              a.earned ? s.text : "text-zinc-500"
+            }`}
+          >
+            {a.earned ? "Earned" : `${a.current} / ${a.info.target}`}
+          </div>
+        </div>
       </div>
     </AchievementTooltip>
   );
