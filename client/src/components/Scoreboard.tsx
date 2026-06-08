@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   AchievementStatus,
   PaginatedScoreboard,
@@ -451,6 +451,97 @@ const TIER_TEXT: Record<"bronze" | "silver" | "gold", string> = {
   gold:   "text-amber-200",
 };
 
+/**
+ * Wraps any achievement element so it shows a popover with the achievement's
+ * title + description on hover (desktop) or tap (mobile). Tap toggles a
+ * "pinned" state so the popover stays visible while reading; tapping outside
+ * or pressing Escape dismisses. stopPropagation keeps a badge tap from
+ * accidentally collapsing/expanding the parent scoreboard row.
+ */
+function AchievementTooltip({
+  a,
+  children,
+  className = "",
+}: {
+  a: AchievementStatus;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const [pinned, setPinned] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!pinned) return;
+    function onDocPointer(e: PointerEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setPinned(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setPinned(false);
+    }
+    document.addEventListener("pointerdown", onDocPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDocPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [pinned]);
+
+  return (
+    <span ref={ref} className={`relative inline-block group ${className}`}>
+      <span
+        tabIndex={0}
+        onClick={(e) => {
+          e.stopPropagation();
+          setPinned((p) => !p);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            setPinned((p) => !p);
+          }
+        }}
+        aria-label={`${a.info.title} — ${a.info.description}`}
+        aria-expanded={pinned}
+        className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 rounded-xl inline-block"
+      >
+        {children}
+      </span>
+      <span
+        role="tooltip"
+        aria-hidden={!pinned}
+        className={`absolute z-40 bottom-full mb-2 left-1/2 -translate-x-1/2 w-48 px-3 py-2 rounded-xl shadow-2xl pointer-events-none text-left transition-opacity duration-150 ${
+          pinned
+            ? "opacity-100 visible"
+            : "opacity-0 invisible group-hover:opacity-100 group-hover:visible"
+        }`}
+        style={{
+          background: "var(--md-surface-3)",
+          border: "1px solid var(--md-outline)",
+        }}
+      >
+        <span className="block text-xs font-semibold text-zinc-100">
+          {a.info.title}
+        </span>
+        <span className="block text-[0.7rem] mt-0.5 text-zinc-300 leading-snug">
+          {a.info.description}
+        </span>
+        {a.earned ? (
+          <span className="block text-[0.65rem] mt-1 text-emerald-300/90">
+            ✓ Earned
+          </span>
+        ) : (
+          <span className="block text-[0.65rem] mt-1 text-amber-300/80">
+            Progress: {a.current} / {a.info.target}
+          </span>
+        )}
+      </span>
+    </span>
+  );
+}
+
 function BadgeStrip({ row }: { row: ScoreboardEntry }) {
   const earned = computeAchievements(row).filter((a) => a.earned);
   if (earned.length === 0) return null;
@@ -463,13 +554,13 @@ function BadgeStrip({ row }: { row: ScoreboardEntry }) {
   return (
     <span className="flex items-center gap-1 flex-wrap">
       {top.map((a) => (
-        <span
-          key={a.info.id}
-          title={`${a.info.title} — ${a.info.description}`}
-          className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.65rem] border ${TIER_RING[a.info.tier]} ${TIER_TEXT[a.info.tier]}`}
-        >
-          {a.info.icon}
-        </span>
+        <AchievementTooltip key={a.info.id} a={a}>
+          <span
+            className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[0.65rem] border ${TIER_RING[a.info.tier]} ${TIER_TEXT[a.info.tier]}`}
+          >
+            {a.info.icon}
+          </span>
+        </AchievementTooltip>
       ))}
       {rest > 0 && (
         <span
@@ -486,26 +577,27 @@ function BadgeStrip({ row }: { row: ScoreboardEntry }) {
 function AchievementCell({ a }: { a: AchievementStatus }) {
   const pct = Math.min(100, (a.current / a.info.target) * 100);
   return (
-    <div
-      title={`${a.info.title} — ${a.info.description}`}
-      className={`relative rounded-xl border p-2 flex flex-col items-center gap-1 text-center
-        ${a.earned ? TIER_RING[a.info.tier] : "border-zinc-700/60 bg-zinc-800/30 opacity-60"}`}
-    >
-      <span className={`text-lg ${a.earned ? "" : "grayscale"}`}>{a.info.icon}</span>
-      <span className={`text-[0.6rem] font-semibold leading-tight ${a.earned ? TIER_TEXT[a.info.tier] : "text-zinc-400"}`}>
-        {a.info.title}
-      </span>
-      {!a.earned && (
-        <div className="w-full mt-0.5">
-          <div className="h-1 rounded-full bg-zinc-700 overflow-hidden">
-            <div className="h-full bg-indigo-400" style={{ width: `${pct}%` }} />
+    <AchievementTooltip a={a} className="w-full">
+      <div
+        className={`relative rounded-xl border p-2 flex flex-col items-center gap-1 text-center w-full
+          ${a.earned ? TIER_RING[a.info.tier] : "border-zinc-700/60 bg-zinc-800/30 opacity-60"}`}
+      >
+        <span className={`text-lg ${a.earned ? "" : "grayscale"}`}>{a.info.icon}</span>
+        <span className={`text-[0.6rem] font-semibold leading-tight ${a.earned ? TIER_TEXT[a.info.tier] : "text-zinc-400"}`}>
+          {a.info.title}
+        </span>
+        {!a.earned && (
+          <div className="w-full mt-0.5">
+            <div className="h-1 rounded-full bg-zinc-700 overflow-hidden">
+              <div className="h-full bg-indigo-400" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="text-[0.55rem] mt-0.5 text-zinc-500">
+              {a.current} / {a.info.target}
+            </div>
           </div>
-          <div className="text-[0.55rem] mt-0.5 text-zinc-500">
-            {a.current} / {a.info.target}
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </AchievementTooltip>
   );
 }
 
