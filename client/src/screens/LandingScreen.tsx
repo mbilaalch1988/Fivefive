@@ -84,7 +84,7 @@ export function LandingScreen({
         <span className="blob blob-1" style={{ top: "55%", left: "-10%", width: "260px", height: "260px", background: "#22d3ee" }} />
       </div>
 
-      <div className="relative w-full max-w-sm space-y-6">
+      <div className="relative w-full max-w-sm lg:max-w-5xl space-y-6">
         <header className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-2 shadow-lg shadow-fuchsia-900/30"
                style={{
@@ -118,6 +118,10 @@ export function LandingScreen({
           </div>
         )}
 
+        {/* On lg+ screens, split into 2 columns so wide viewports stop wasting
+            real estate: left has auth + create/join, right has Hall of Fame. */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
+        <div className="space-y-6">
         {/* Auth section — only rendered when Supabase is configured */}
         {auth.configured && (
           <section
@@ -256,7 +260,10 @@ export function LandingScreen({
             </button>
           )}
         </section>
+        </div>
 
+        {/* Right column on lg+: Hall of Fame card. */}
+        <div className="space-y-6">
         {/* Scoreboard preview + full-dialog button */}
         <section
           className="rounded-3xl p-5 space-y-3 shadow-sm"
@@ -287,6 +294,8 @@ export function LandingScreen({
           </div>
           <Scoreboard />
         </section>
+        </div>
+        </div>
       </div>
 
       {scoreboardOpen && (

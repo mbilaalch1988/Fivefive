@@ -666,10 +666,13 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
             : "border-zinc-700/60 bg-zinc-800/30"
         }`}
       >
+        {/* Fixed-size icon container normalizes the visual weight across
+            emoji that have different intrinsic dimensions (🎖 vs 💯 vs 💪). */}
         <span
-          className={`text-lg leading-none ${
+          className={`h-6 w-6 flex items-center justify-center text-base leading-none ${
             a.earned ? "" : "grayscale opacity-50"
           }`}
+          aria-hidden="true"
         >
           {a.info.icon}
         </span>
