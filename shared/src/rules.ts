@@ -1,5 +1,6 @@
 import { buildCardIndex, isCornerPos, posKey } from "./board.js";
 import { cardKey, isOneEyedJack, isTwoEyedJack } from "./cards.js";
+import { mulberry32, shuffle } from "./rng.js";
 import { detectSequences, lockSequenceChips } from "./sequence.js";
 import type {
   Action,
@@ -10,6 +11,7 @@ import type {
   Player,
   PlayerId,
   Pos,
+  Team,
 } from "./types.js";
 
 const ACTION_LOG_CAP = 10;
@@ -37,16 +39,104 @@ function removeFromHand(player: Player, cardId: number): Card {
 }
 
 function drawForPlayer(state: GameState, player: Player): void {
-  // Per official rules: if the draw pile is empty, the discard is reshuffled.
-  // We treat discard as "unused"; for MVP, simply skip the draw if both empty.
+  // Per official rules: if the draw pile is empty, the discard is reshuffled
+  // back into the draw pile. Deterministic via the existing config seed
+  // mixed with the action-log length so the same game state always produces
+  // the same shuffle (important for replay / rejoin parity).
+  if (state.drawPile.length === 0 && state.discardPile.length > 0) {
+    const rand = mulberry32((state.config.seed ^ 0xdeadbeef) + state.actionLog.length);
+    state.drawPile = shuffle(state.discardPile, rand);
+    state.discardPile = [];
+  }
   if (state.drawPile.length === 0) return;
   const card = state.drawPile.pop()!;
   player.hand.push(card);
 }
 
+/** True if `player` has at least one card they could legally play right now. */
+function playerHasLegalMove(state: GameState, player: Player): boolean {
+  if (player.hand.length === 0) return false;
+  const idx = buildCardIndex(state.board);
+  for (const card of player.hand) {
+    if (isTwoEyedJack(card)) {
+      // Wild — any empty non-corner square is playable.
+      for (let r = 0; r < state.board.length; r++) {
+        const row = state.board[r]!;
+        for (let c = 0; c < row.length; c++) {
+          if (row[c]!.kind === "card" && state.chips[r]![c] === null) return true;
+        }
+      }
+      continue;
+    }
+    if (isOneEyedJack(card)) {
+      // Remover — any opponent chip that isn't part of a sequence.
+      for (let r = 0; r < state.board.length; r++) {
+        const row = state.board[r]!;
+        for (let c = 0; c < row.length; c++) {
+          if (row[c]!.kind !== "card") continue;
+          const chip = state.chips[r]![c];
+          if (chip !== null && chip !== player.team && !state.lockedChips.has(`${r},${c}`)) {
+            return true;
+          }
+        }
+      }
+      continue;
+    }
+    const positions = idx.get(cardKey(card.rank, card.suit)) ?? [];
+    for (const p of positions) {
+      if (state.chips[p.r]![p.c] === null) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * After a turn ends, detect whether the game has hit a deadlock — nobody
+ * can play AND the draw pile is empty. If so, declare a winner: team with
+ * the most completed sequences; tie-breaker is total chips placed on the
+ * board (most chips = most contribution).
+ */
+function maybeEndOnDeadlock(state: GameState): void {
+  if (state.winner) return;
+  if (state.drawPile.length > 0) return;
+  // If anyone can still play, no deadlock.
+  for (const p of state.players) {
+    if (playerHasLegalMove(state, p)) return;
+  }
+
+  const seqCount: Record<Team, number> = { red: 0, blue: 0, green: 0 };
+  for (const seq of state.sequences) seqCount[seq.team] += 1;
+  const chipCount: Record<Team, number> = { red: 0, blue: 0, green: 0 };
+  for (let r = 0; r < state.chips.length; r++) {
+    const row = state.chips[r]!;
+    for (let c = 0; c < row.length; c++) {
+      const chip = row[c];
+      if (chip) chipCount[chip] += 1;
+    }
+  }
+
+  // Only consider teams that actually have at least one seated player.
+  const teamsInPlay = new Set<Team>(state.players.map((p) => p.team));
+  let winner: Team | null = null;
+  let bestSeqs = -1;
+  let bestChips = -1;
+  for (const team of teamsInPlay) {
+    const seqs = seqCount[team];
+    const chips = chipCount[team];
+    if (seqs > bestSeqs || (seqs === bestSeqs && chips > bestChips)) {
+      winner = team;
+      bestSeqs = seqs;
+      bestChips = chips;
+    }
+  }
+  state.winner = winner;
+  // winningSequencePlayerId stays null — no chip closed a winning sequence.
+}
+
 function endTurn(state: GameState): void {
   state.turnIdx = (state.turnIdx + 1) % state.players.length;
   state.discardedThisTurn = false;
+  maybeEndOnDeadlock(state);
 }
 
 function isDeadCard(state: GameState, card: Card): boolean {

@@ -3,13 +3,13 @@ import { createDeck } from "./cards.js";
 import { mulberry32, shuffle } from "./rng.js";
 import type { Card, Chip, GameConfig, GameState, Player, Team } from "./types.js";
 
-/** Standard Sequence hand sizes by player count. */
+/** Hand sizes by player count — one card below the official Sequence
+ *  rule book at each bracket. Smaller hands speed up turns and reduce
+ *  dead-card buildup, which matters on phones.
+ *  ≤4 players → 6 cards · 5-7 players → 5 · 8+ players → 4. */
 export function defaultHandSize(playerCount: number): number {
-  if (playerCount <= 2) return 7;
-  if (playerCount <= 3) return 6;
-  if (playerCount <= 4) return 7;
-  if (playerCount <= 6) return 6;
-  if (playerCount <= 8) return 5;
+  if (playerCount <= 4) return 6;
+  if (playerCount <= 7) return 5;
   return 4;
 }
 

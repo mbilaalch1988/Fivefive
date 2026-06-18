@@ -37,15 +37,15 @@ function findPlayableNonJack(
 }
 
 describe("setup", () => {
-  it("deals 7 cards to each of 2 players", () => {
+  it("deals 6 cards to each of 2 players", () => {
     const s = setup();
-    expect(s.players[0]!.hand).toHaveLength(7);
-    expect(s.players[1]!.hand).toHaveLength(7);
+    expect(s.players[0]!.hand).toHaveLength(6);
+    expect(s.players[1]!.hand).toHaveLength(6);
   });
 
-  it("draw pile holds the remaining 90 cards (104 - 14 dealt)", () => {
+  it("draw pile holds the remaining 92 cards (104 - 12 dealt)", () => {
     const s = setup();
-    expect(s.drawPile).toHaveLength(104 - 14);
+    expect(s.drawPile).toHaveLength(104 - 12);
   });
 });
 
