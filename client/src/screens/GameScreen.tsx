@@ -494,6 +494,7 @@ export function GameScreen({
           teamName={winnerTeamName ?? "Winner"}
           mvpNames={view.mvpNames}
           room={room}
+          myPlayerId={myPlayerId}
           onRematch={onRematch}
           onLeave={onStopGame}
         />

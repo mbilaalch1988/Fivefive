@@ -1,16 +1,23 @@
+import { useState } from "react";
 import type { RoomView, Team } from "@sequence/shared";
 import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
+import { FaiziAnalysis } from "./FaiziAnalysis";
 
 interface Props {
   team: Team;
   teamName: string;
   mvpNames: string[];
   room: RoomView | null;
+  /** Set when Faizi analysis should be offered (current viewer's player id). */
+  myPlayerId: string | null;
   onRematch: () => void;
   onLeave: () => void;
 }
 
-export function WinOverlay({ team, teamName, mvpNames, room, onRematch, onLeave }: Props) {
+export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRematch, onLeave }: Props) {
+  const [faiziOpen, setFaiziOpen] = useState(false);
+  const canShowFaizi = !!(room?.gameId && myPlayerId);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -79,6 +86,20 @@ export function WinOverlay({ team, teamName, mvpNames, room, onRematch, onLeave 
           </section>
         )}
 
+        {canShowFaizi && (
+          <button
+            type="button"
+            onClick={() => setFaiziOpen(true)}
+            data-testid="faizi-open"
+            className="state-layer w-full py-2.5 rounded-full font-medium text-indigo-100
+                       bg-indigo-500/15 border border-indigo-400/40 hover:bg-indigo-500/25
+                       transition-colors flex items-center justify-center gap-2"
+          >
+            <span>📊</span>
+            <span>See Faizi's analysis of your moves</span>
+          </button>
+        )}
+
         <div className="flex gap-3">
           <button
             type="button"
@@ -101,6 +122,14 @@ export function WinOverlay({ team, teamName, mvpNames, room, onRematch, onLeave 
           </button>
         </div>
       </div>
+
+      {faiziOpen && room?.gameId && myPlayerId && (
+        <FaiziAnalysis
+          gameId={room.gameId}
+          playerId={myPlayerId}
+          onClose={() => setFaiziOpen(false)}
+        />
+      )}
     </div>
   );
 }

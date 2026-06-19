@@ -329,6 +329,7 @@ export class Room {
       sequencesToWin: this.game.config.sequencesToWin,
       teamNames: { ...this.teamNames },
       players: seatInputs.map((s) => ({ id: s.id, name: s.name, team: s.team })),
+      initialSeed: this.game.config.seed,
     });
   }
 
@@ -450,6 +451,7 @@ export class Room {
       gamesPlayed: this.gamesPlayed,
       spectatorCount: this.spectators.length,
       autoStartAt: this.autoStartAt,
+      gameId: this.gameId,
     };
   }
 

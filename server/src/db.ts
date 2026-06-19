@@ -143,6 +143,10 @@ async function runMigration(): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS idx_game_log_finished_at
       ON game_log (finished_at DESC NULLS LAST);
+    -- Initial RNG seed — enables hand reconstruction for the Faizi
+    -- analysis bot. Older rows (pre-Faizi) get NULL; those games can't
+    -- be analyzed, only games from now on.
+    ALTER TABLE game_log ADD COLUMN IF NOT EXISTS initial_seed BIGINT;
 
     -- Web push subscriptions, keyed by endpoint (browser-unique).
     -- Each subscription is bound to a specific (room, player) pair so we
@@ -184,14 +188,16 @@ export interface GameStartRecord {
   sequencesToWin: number;
   teamNames: { red: string; blue: string; green: string };
   players: Array<{ id: string; name: string; team: "red" | "blue" | "green" }>;
+  /** RNG seed used by createInitialState — lets Faizi rebuild hands later. */
+  initialSeed: number;
 }
 
 export async function persistGameStart(record: GameStartRecord): Promise<void> {
   if (!pool) return;
   try {
     await pool.query(
-      `INSERT INTO game_log (game_id, room_code, deck_id, sequences_to_win, team_names, players)
-       VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb)
+      `INSERT INTO game_log (game_id, room_code, deck_id, sequences_to_win, team_names, players, initial_seed)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7)
        ON CONFLICT (game_id) DO NOTHING`,
       [
         record.gameId,
@@ -200,10 +206,30 @@ export async function persistGameStart(record: GameStartRecord): Promise<void> {
         record.sequencesToWin,
         JSON.stringify(record.teamNames),
         JSON.stringify(record.players),
+        record.initialSeed,
       ],
     );
   } catch (e) {
     console.warn("[db] persistGameStart failed:", (e as Error).message);
+  }
+}
+
+/**
+ * Fetch the persisted initial-RNG seed for a game. null when the row is
+ * pre-Faizi (no seed recorded). Used by /api/replays/:id/faizi to
+ * reconstruct hands.
+ */
+export async function getGameInitialSeed(gameId: string): Promise<number | null> {
+  if (!pool) return null;
+  try {
+    const r = await pool.query<{ initial_seed: string | null }>(
+      `SELECT initial_seed FROM game_log WHERE game_id = $1`,
+      [gameId],
+    );
+    const raw = r.rows[0]?.initial_seed ?? null;
+    return raw === null ? null : Number(raw);
+  } catch {
+    return null;
   }
 }
 

@@ -19,9 +19,17 @@ import { randomUUID } from "node:crypto";
 import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
 import { DeckRegistry } from "./decks.js";
-import { botDecide } from "./botAI.js";
+import { botDecide, scoredCandidates } from "./botAI.js";
+import {
+  analyzeForPlayer,
+  buildCheckpointsForPlayer,
+  summarizeFaiziMoves,
+  type FaiziAnalysis,
+  type SeatInput,
+} from "@sequence/shared";
 import {
   deletePushSubscription,
+  getGameInitialSeed,
   getPagedPlayersByPoints,
   getPagedTeams,
   getPushSubscriptions,
@@ -181,6 +189,109 @@ app.get("/api/replays/:gameId", async (req, res) => {
     return;
   }
   res.json(detail);
+});
+
+/**
+ * Faizi analysis: scoped to a specific player in a finished game. Replays
+ * the game deterministically from the persisted RNG seed, then scores each
+ * of that player's moves against the Hard-bot's preferred action at that
+ * exact game state.
+ */
+app.get("/api/replays/:gameId/faizi", async (req, res) => {
+  const id = String(req.params.gameId ?? "");
+  const playerId = String(req.query.playerId ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) {
+    res.status(400).json({ error: "invalid game id" });
+    return;
+  }
+  if (!playerId) {
+    res.status(400).json({ error: "playerId required" });
+    return;
+  }
+  const detail = await getReplay(id);
+  if (!detail) {
+    res.status(404).json({ error: "not found" });
+    return;
+  }
+  const seed = await getGameInitialSeed(id);
+  if (seed === null) {
+    const empty: FaiziAnalysis = {
+      available: false,
+      notes: "This game predates the analysis system (no RNG seed stored). New games starting now will be analyzable.",
+      moves: [],
+      summary: { best: 0, solid: 0, missed: 0, mistake: 0 },
+    };
+    res.json(empty);
+    return;
+  }
+  const player = detail.players.find((p) => p.id === playerId);
+  if (!player) {
+    res.status(404).json({ error: "player not in this game" });
+    return;
+  }
+  if (detail.actions.length < 10) {
+    const empty: FaiziAnalysis = {
+      available: false,
+      notes: "Not enough moves to analyze — Faizi needs at least 10 actions in the game.",
+      moves: [],
+      summary: { best: 0, solid: 0, missed: 0, mistake: 0 },
+    };
+    res.json(empty);
+    return;
+  }
+
+  const seats: SeatInput[] = detail.players.map((p) => ({
+    id: p.id,
+    name: p.name,
+    team: p.team,
+  }));
+
+  try {
+    const checkpoints = buildCheckpointsForPlayer(
+      seed,
+      seats,
+      detail.sequencesToWin,
+      detail.deckId,
+      // DB returns rank/suit as plain string; cast to the shared union.
+      detail.actions as Parameters<typeof buildCheckpointsForPlayer>[4],
+      playerId,
+    );
+    const moves = analyzeForPlayer(checkpoints, playerId, (state, pid) => {
+      const candidates = scoredCandidates(state, pid);
+      if (candidates.length === 0) {
+        return { best: null, userScore: () => 0 };
+      }
+      const best = candidates[0]!;
+      return {
+        best: { action: best.action, score: best.score },
+        userScore: (action) => {
+          for (const c of candidates) {
+            if (
+              c.action.type === action.type &&
+              c.action.cardId === action.cardId &&
+              ("pos" in c.action && "pos" in action
+                ? c.action.pos.r === action.pos.r && c.action.pos.c === action.pos.c
+                : true)
+            ) {
+              return c.score;
+            }
+          }
+          // User's chosen action wasn't in the candidate set — e.g. discard.
+          return 0;
+        },
+      };
+    });
+
+    const out: FaiziAnalysis = {
+      available: true,
+      moves,
+      summary: summarizeFaiziMoves(moves),
+    };
+    res.json(out);
+  } catch (e) {
+    console.warn("[faizi] failed:", (e as Error).message);
+    res.status(500).json({ error: "analysis failed" });
+  }
 });
 
 app.get("/api/scoreboard", async (_req, res) => {

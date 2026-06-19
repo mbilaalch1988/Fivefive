@@ -97,6 +97,9 @@ export interface RoomView {
   spectatorCount: number;
   /** Epoch ms when the game will auto-start (everyone ready), or null. */
   autoStartAt: number | null;
+  /** UUID of the currently-running (or just-finished) game. Lets the
+   *  win-overlay open Faizi analysis. Null until first game starts. */
+  gameId: string | null;
 }
 
 /* ------------------------------------------------------------------ */

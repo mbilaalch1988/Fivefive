@@ -26,6 +26,61 @@ interface ScoredAction {
   score: number;
 }
 
+/**
+ * Build all scored candidate actions for a player at a given state. Same
+ * scoring logic the bot uses internally. Exposed for Faizi analysis — it
+ * needs to compare the user's actual move against the best alternative.
+ */
+export function scoredCandidates(
+  state: GameState,
+  playerId: PlayerId,
+): ScoredAction[] {
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player || state.winner) return [];
+  const candidates: ScoredAction[] = [];
+  const board = state.board;
+  const chips = state.chips;
+  const idx = buildCardIndex(state.board);
+  for (const card of player.hand) {
+    if (isOneEyedJack(card)) {
+      for (let r = 0; r < chips.length; r++) {
+        const row = chips[r]!;
+        for (let c = 0; c < row.length; c++) {
+          const chip = row[c];
+          if (!chip || chip === player.team) continue;
+          if (state.lockedChips.has(`${r},${c}`)) continue;
+          const danger = maxRunThroughPos(chips, board, { r, c }, chip as Team);
+          const score = danger >= 4 ? 600 : danger >= 3 ? 90 : danger >= 2 ? 25 : 8;
+          candidates.push({ action: { type: "remove", cardId: card.id, pos: { r, c } }, score });
+        }
+      }
+    } else if (isTwoEyedJack(card)) {
+      for (let r = 0; r < board.length; r++) {
+        const row = board[r]!;
+        for (let c = 0; c < row.length; c++) {
+          const sq = row[c]!;
+          if (sq.kind === "corner") continue;
+          if (chips[r]![c] !== null) continue;
+          const placeScore = scorePlace(chips, board, { r, c }, player.team);
+          candidates.push({
+            action: { type: "place", cardId: card.id, pos: { r, c } },
+            score: placeScore - 12,
+          });
+        }
+      }
+    } else {
+      const positions = idx.get(cardKey(card.rank, card.suit)) ?? [];
+      for (const pos of positions) {
+        if (chips[pos.r]![pos.c] !== null) continue;
+        const score = scorePlace(chips, board, pos, player.team);
+        candidates.push({ action: { type: "place", cardId: card.id, pos }, score });
+      }
+    }
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates;
+}
+
 export function botDecide(
   state: GameState,
   playerId: PlayerId,
