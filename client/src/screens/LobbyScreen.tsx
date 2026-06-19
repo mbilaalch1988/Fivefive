@@ -17,7 +17,7 @@ interface Props {
   onRenameTeam: (team: Team, name: string) => Promise<void>;
   onAddBot: (team: Team, difficulty: "easy" | "medium" | "hard") => Promise<void>;
   onRemoveBot: (playerId: PlayerId) => Promise<void>;
-  onStart: (opts: { sequencesToWin: number; deckId: string | null }) => Promise<void>;
+  onStart: (opts: { sequencesToWin: number; deckId: string | null; turnTimerSec: number | null }) => Promise<void>;
   onLeave: () => Promise<void>;
 }
 
@@ -40,6 +40,7 @@ export function LobbyScreen({
   const isHost = mySeat?.isHost ?? false;
   const [sequencesToWin, setSequencesToWin] = useState(2);
   const [deckId, setDeckId] = useState("");
+  const [turnTimerSec, setTurnTimerSec] = useState<number | null>(null);
   const [renamingTeam, setRenamingTeam] = useState<Team | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
@@ -415,10 +416,27 @@ export function LobbyScreen({
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </SelectRow>
+          <SelectRow
+            label="Turn timer"
+            value={turnTimerSec === null ? "off" : String(turnTimerSec)}
+            onChange={(v) => setTurnTimerSec(v === "off" ? null : Number(v))}
+            testId="turn-timer-select"
+          >
+            <option value="off">Off (no limit)</option>
+            <option value="30">30 seconds</option>
+            <option value="60">60 seconds</option>
+            <option value="90">90 seconds</option>
+          </SelectRow>
 
           <FilledButton
             disabled={!canStart}
-            onClick={() => onStart({ sequencesToWin, deckId: deckId || null })}
+            onClick={() =>
+              onStart({
+                sequencesToWin,
+                deckId: deckId || null,
+                turnTimerSec,
+              })
+            }
           >
             Start game
           </FilledButton>

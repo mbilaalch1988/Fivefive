@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { GameView, PlayerId, Team } from "@sequence/shared";
 import { TEAM_CHIP } from "../lib/cards";
 import { makeNickname } from "../lib/nickname";
@@ -73,6 +74,64 @@ export function TurnBar({ view, myPlayerId }: Props) {
           Draw: {view.drawPileCount}
         </span>
       </div>
+
+      {view.turnTimerSec !== null && view.turnExpiresAt !== null && !view.winner && (
+        <TurnCountdown
+          expiresAt={view.turnExpiresAt}
+          totalSec={view.turnTimerSec}
+          currentPlayerName={view.players[view.turnIdx]?.name ?? "Player"}
+          isMyTurn={view.players[view.turnIdx]?.id === myPlayerId}
+        />
+      )}
+    </div>
+  );
+}
+
+function TurnCountdown({
+  expiresAt,
+  totalSec,
+  currentPlayerName,
+  isMyTurn,
+}: {
+  expiresAt: number;
+  totalSec: number;
+  currentPlayerName: string;
+  isMyTurn: boolean;
+}) {
+  const [remaining, setRemaining] = useState<number>(() =>
+    Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)),
+  );
+  useEffect(() => {
+    function tick() {
+      setRemaining(Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)));
+    }
+    tick();
+    const h = window.setInterval(tick, 250);
+    return () => window.clearInterval(h);
+  }, [expiresAt]);
+
+  const pct = Math.max(0, Math.min(100, (remaining / totalSec) * 100));
+  const urgent = remaining <= 10;
+  const fillColor = urgent ? "bg-rose-500" : remaining <= 20 ? "bg-amber-400" : "bg-emerald-400";
+
+  return (
+    <div
+      className="w-full flex items-center gap-2 px-2 py-1 rounded-2xl text-xs"
+      style={{ background: "var(--md-surface-1)" }}
+      data-testid="turn-countdown"
+    >
+      <span className={`shrink-0 font-semibold tabular-nums ${urgent ? "text-rose-300" : "text-zinc-200"}`}>
+        ⏱ {remaining}s
+      </span>
+      <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+        <div
+          className={`h-full ${fillColor} transition-all duration-200`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <span className="shrink-0 truncate max-w-[8rem]" style={{ color: "var(--md-on-surface-variant)" }}>
+        {isMyTurn ? "your turn" : currentPlayerName}
+      </span>
     </div>
   );
 }

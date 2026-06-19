@@ -19,7 +19,7 @@ export {
   defaultSequencesToWin,
 } from "./state.js";
 export type { SeatInput } from "./state.js";
-export { applyAction } from "./rules.js";
+export { applyAction, pickRandomLegalAction } from "./rules.js";
 export { mulberry32, shuffle } from "./rng.js";
 export * from "./protocol.js";
 export { toGameView } from "./view.js";

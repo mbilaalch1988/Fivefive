@@ -53,6 +53,71 @@ function drawForPlayer(state: GameState, player: Player): void {
   player.hand.push(card);
 }
 
+/**
+ * Pick one legal Action for the player whose turn it is, sampled uniformly
+ * at random across all (card × valid-target) options. Used by the per-turn
+ * timer auto-play. Falls back to discardDead if a dead card is in hand and
+ * we haven't discarded yet. Returns null when the player is completely
+ * stuck (the deadlock detector will end the game).
+ */
+export function pickRandomLegalAction(
+  state: GameState,
+  playerId: PlayerId,
+): Action | null {
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player || state.winner) return null;
+  if (state.players[state.turnIdx]?.id !== playerId) return null;
+
+  const candidates: Action[] = [];
+  const idx = buildCardIndex(state.board);
+  for (const card of player.hand) {
+    if (isTwoEyedJack(card)) {
+      for (let r = 0; r < state.board.length; r++) {
+        const row = state.board[r]!;
+        for (let c = 0; c < row.length; c++) {
+          if (row[c]!.kind === "card" && state.chips[r]![c] === null) {
+            candidates.push({ type: "place", cardId: card.id, pos: { r, c } });
+          }
+        }
+      }
+      continue;
+    }
+    if (isOneEyedJack(card)) {
+      for (let r = 0; r < state.board.length; r++) {
+        const row = state.board[r]!;
+        for (let c = 0; c < row.length; c++) {
+          if (row[c]!.kind !== "card") continue;
+          const chip = state.chips[r]![c];
+          if (chip !== null && chip !== player.team && !state.lockedChips.has(`${r},${c}`)) {
+            candidates.push({ type: "remove", cardId: card.id, pos: { r, c } });
+          }
+        }
+      }
+      continue;
+    }
+    const positions = idx.get(cardKey(card.rank, card.suit)) ?? [];
+    for (const p of positions) {
+      if (state.chips[p.r]![p.c] === null) {
+        candidates.push({ type: "place", cardId: card.id, pos: p });
+      }
+    }
+  }
+  if (candidates.length > 0) {
+    return candidates[Math.floor(Math.random() * candidates.length)]!;
+  }
+  // No legal placement — try discardDead.
+  if (!state.discardedThisTurn) {
+    for (const card of player.hand) {
+      if (card.rank === "J") continue;
+      const positions = idx.get(cardKey(card.rank, card.suit)) ?? [];
+      if (positions.length > 0 && positions.every((p) => state.chips[p.r]![p.c] !== null)) {
+        return { type: "discardDead", cardId: card.id };
+      }
+    }
+  }
+  return null;
+}
+
 /** True if `player` has at least one card they could legally play right now. */
 function playerHasLegalMove(state: GameState, player: Player): boolean {
   if (player.hand.length === 0) return false;

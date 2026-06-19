@@ -41,6 +41,8 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     teamNames: { red: "Red", blue: "Blue", green: "Green" },
     mvpNames: [], // server fills this in after recording the win
     recentActions: state.actionLog.slice(-5),
+    turnTimerSec: null,   // server overlays from Room config
+    turnExpiresAt: null,  // server overlays from Room scheduling state
   };
 }
 

@@ -162,6 +162,8 @@ export function ReplayScreen({ gameId, onClose }: Props) {
       teamNames: replay.teamNames,
       mvpNames: [],
       recentActions: [],
+      turnTimerSec: null,
+      turnExpiresAt: null,
     };
   }, [replay, boardState, board, deck, step]);
 

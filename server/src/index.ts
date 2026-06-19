@@ -9,6 +9,7 @@ import {
   SHARED_VERSION,
   isValidStickerId,
   isValidQuickChatId,
+  pickRandomLegalAction,
   type Action,
   type ClientToServerEvents,
   type ServerToClientEvents,
@@ -335,6 +336,9 @@ function scheduleBotTurn(room: Room): void {
       if (justWon) broadcastRoom(room);
       // Chain into the next bot turn (or stop if turn is human / game over).
       scheduleBotTurn(room);
+      // Re-arm the human turn timer if the next seat is a player.
+      if (!justWon) scheduleTurnTimer(room);
+      else cancelTurnTimer(room);
     } catch (e) {
       console.warn(`[bot] applyAction threw: ${(e as Error).message}`);
     }
@@ -368,6 +372,72 @@ async function pushTurnNotification(room: Room, playerId: string): Promise<void>
       }
     }
   }
+}
+
+/* ------------------------------------------------------------ */
+/* Per-turn timer: auto-play a random legal action on expiry    */
+/* ------------------------------------------------------------ */
+const turnTimers = new Map<string, NodeJS.Timeout>();
+
+function cancelTurnTimer(room: Room): void {
+  const t = turnTimers.get(room.code);
+  if (t) clearTimeout(t);
+  turnTimers.delete(room.code);
+}
+
+/**
+ * Schedule the next per-turn auto-play. Bots use scheduleBotTurn already,
+ * so the turn timer only fires for HUMAN seats. Called after every
+ * broadcastGame so the timer always reflects the current turn.
+ */
+function scheduleTurnTimer(room: Room): void {
+  cancelTurnTimer(room);
+  if (!room.game) return;
+  if (room.game.winner) return;
+  if (!room.turnTimerSec) return;
+
+  const current = room.game.players[room.game.turnIdx];
+  if (!current) return;
+  const seat = room.seats.find((s) => s.id === current.id);
+  if (!seat || seat.isBot) {
+    room.turnExpiresAt = null;
+    return;
+  }
+  const ms = room.turnTimerSec * 1000;
+  room.turnExpiresAt = Date.now() + ms;
+
+  const timer = setTimeout(() => {
+    turnTimers.delete(room.code);
+    if (!room.game || room.game.winner) return;
+    const stillCurrent = room.game.players[room.game.turnIdx];
+    if (!stillCurrent || stillCurrent.id !== current.id) return;
+
+    const action = pickRandomLegalAction(room.game, current.id);
+    if (!action) {
+      // Truly stuck — deadlock detector inside applyAction won't fire
+      // without a successful action, so force-advance by clearing
+      // the timer and letting the next setReady cycle handle it.
+      console.warn(`[turn-timer] ${current.name} stuck, no action available`);
+      return;
+    }
+    try {
+      const result = room.applyAction(current.id, action);
+      if (!result.ok) {
+        console.warn(`[turn-timer] applyAction failed: ${result.error}`);
+        return;
+      }
+      const justWon = room.maybeRecordWin();
+      broadcastGame(room);
+      if (justWon) broadcastRoom(room);
+      if (!justWon) {
+        scheduleBotTurn(room);
+        scheduleTurnTimer(room);
+      }
+    } catch (e) {
+      console.warn(`[turn-timer] applyAction threw: ${(e as Error).message}`);
+    }
+  }, ms);
+  turnTimers.set(room.code, timer);
 }
 
 function broadcastGame(room: Room): void {
@@ -513,7 +583,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("startGame", ({ sequencesToWin, deckId }, ack) => {
+  socket.on("startGame", ({ sequencesToWin, deckId, turnTimerSec }, ack) => {
     const code = socketRoom.get(socket.id);
     const room = code ? registry.get(code) : undefined;
     if (!room) return ack({ ok: false, error: "not in a room" });
@@ -526,14 +596,23 @@ io.on("connection", (socket) => {
     if (deckId && !deck) {
       return ack({ ok: false, error: `unknown deck "${deckId}"` });
     }
+    const validatedTimer =
+      turnTimerSec && [30, 60, 90].includes(turnTimerSec) ? turnTimerSec : null;
     try {
       cancelAutoStart(room);
-      room.start({ sequencesToWin, deckId: deck?.id ?? null, deck });
+      room.start({
+        sequencesToWin,
+        deckId: deck?.id ?? null,
+        deck,
+        turnTimerSec: validatedTimer,
+      });
       ack({ ok: true });
       broadcastRoom(room);
       broadcastGame(room);
       // First-turn-may-be-a-bot.
       scheduleBotTurn(room);
+      // Or kick off the turn timer if first player is human.
+      scheduleTurnTimer(room);
       // Push the opening turn.
       const firstId = room.game?.players[room.game.turnIdx]?.id ?? null;
       if (firstId) void pushTurnNotification(room, firstId);
@@ -552,6 +631,7 @@ io.on("connection", (socket) => {
       return ack({ ok: false, error: "only the host can stop the game" });
     }
     try {
+      cancelTurnTimer(room);
       room.stop();
       ack({ ok: true });
       broadcastRoom(room);
@@ -577,7 +657,12 @@ io.on("connection", (socket) => {
       broadcastGame(room);
       if (justWon) broadcastRoom(room);
       // If the next player is a bot, schedule its turn.
-      if (!justWon) scheduleBotTurn(room);
+      if (!justWon) {
+        scheduleBotTurn(room);
+        scheduleTurnTimer(room);
+      } else {
+        cancelTurnTimer(room);
+      }
       // Push notification on turn flip — fire-and-forget.
       const newTurnId = room.game?.players[room.game.turnIdx]?.id ?? null;
       if (!justWon && newTurnId && newTurnId !== prevTurnId) {

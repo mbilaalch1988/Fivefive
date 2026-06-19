@@ -141,6 +141,10 @@ export interface GameView {
   mvpNames: string[];
   /** Last 10 actions (most recent at end). Client renders the last 5 in popup. */
   recentActions: ActionLog[];
+  /** Per-turn timer setting (seconds). null = no timer. */
+  turnTimerSec: number | null;
+  /** Epoch ms when the current turn auto-plays; null if no timer or before start. */
+  turnExpiresAt: number | null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -176,7 +180,12 @@ export interface ClientToServerEvents {
     ack: (res: AckResult<{}>) => void,
   ) => void;
   startGame: (
-    payload: { sequencesToWin?: number; deckId?: string | null },
+    payload: {
+      sequencesToWin?: number;
+      deckId?: string | null;
+      /** 0 / null = off, otherwise 30/60/90 second per-turn auto-play timer. */
+      turnTimerSec?: number | null;
+    },
     ack: (res: AckResult<{}>) => void,
   ) => void;
   stopGame: (ack: (res: AckResult<{}>) => void) => void;

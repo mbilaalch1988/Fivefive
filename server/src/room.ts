@@ -61,6 +61,10 @@ export class Room {
   private persistedActionCount = 0;
   /** Epoch ms when the lobby will auto-start; null when nobody-ready or already running. */
   autoStartAt: number | null = null;
+  /** Per-turn timer setting (seconds). null = off, chosen by host at startGame. */
+  turnTimerSec: number | null = null;
+  /** Epoch ms when the current player's turn will auto-play. Null when no timer or game over. */
+  turnExpiresAt: number | null = null;
   /** MVP player names from the most recently-completed game (cleared on next start). */
   lastMvpNames: string[] = [];
   deck: DeckManifest | null = null;
@@ -272,6 +276,8 @@ export class Room {
       seed?: number;
       deckId?: string | null;
       deck?: DeckManifest | null;
+      /** Per-turn timer in seconds. null = off (default). */
+      turnTimerSec?: number | null;
     } = {},
   ): void {
     if (!this.canStart()) throw new Error("cannot start: lobby not ready");
@@ -308,6 +314,8 @@ export class Room {
     this.game.turnIdx = Math.floor(Math.random() * this.game.players.length);
     this.deck = opts.deck ?? null;
     this.lastMvpNames = [];
+    this.turnTimerSec = opts.turnTimerSec ?? null;
+    this.turnExpiresAt = null;
 
     // Fire-and-forget: assign a game id and persist the start record so we
     // can build a replay later. Failures (e.g. no DB) are logged but don't
@@ -416,6 +424,8 @@ export class Room {
     this.deck = null;
     this.gameId = null;
     this.persistedActionCount = 0;
+    this.turnTimerSec = null;
+    this.turnExpiresAt = null;
     for (const seat of this.seats) seat.ready = false;
   }
 
@@ -453,6 +463,8 @@ export class Room {
       const seat = this.seats.find((s) => s.id === p.id);
       return { ...p, connected: seat?.connected ?? false };
     });
+    view.turnTimerSec = this.turnTimerSec;
+    view.turnExpiresAt = this.turnExpiresAt;
     return view;
   }
 
