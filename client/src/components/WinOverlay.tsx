@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { RoomView, Team } from "@sequence/shared";
 import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 import { FaiziAnalysis } from "./FaiziAnalysis";
+import { FaiziRoast } from "./FaiziRoast";
 
 interface Props {
   team: Team;
@@ -16,7 +17,9 @@ interface Props {
 
 export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRematch, onLeave }: Props) {
   const [faiziOpen, setFaiziOpen] = useState(false);
+  const [roastOpen, setRoastOpen] = useState(false);
   const canShowFaizi = !!(room?.gameId && myPlayerId);
+  const canShowRoast = !!room?.gameId;
 
   return (
     <div
@@ -86,18 +89,35 @@ export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRemat
           </section>
         )}
 
-        {canShowFaizi && (
-          <button
-            type="button"
-            onClick={() => setFaiziOpen(true)}
-            data-testid="faizi-open"
-            className="state-layer w-full py-2.5 rounded-full font-medium text-indigo-100
-                       bg-indigo-500/15 border border-indigo-400/40 hover:bg-indigo-500/25
-                       transition-colors flex items-center justify-center gap-2"
-          >
-            <span>📊</span>
-            <span>See Faizi's analysis of your moves</span>
-          </button>
+        {(canShowFaizi || canShowRoast) && (
+          <div className="space-y-2">
+            {canShowFaizi && (
+              <button
+                type="button"
+                onClick={() => setFaiziOpen(true)}
+                data-testid="faizi-open"
+                className="state-layer w-full py-2.5 rounded-full font-medium text-indigo-100
+                           bg-indigo-500/15 border border-indigo-400/40 hover:bg-indigo-500/25
+                           transition-colors flex items-center justify-center gap-2"
+              >
+                <span>📊</span>
+                <span>See Faizi's analysis of your moves</span>
+              </button>
+            )}
+            {canShowRoast && (
+              <button
+                type="button"
+                onClick={() => setRoastOpen(true)}
+                data-testid="faizi-roast-open"
+                className="state-layer w-full py-2.5 rounded-full font-medium text-fuchsia-100
+                           bg-fuchsia-500/15 border border-fuchsia-400/40 hover:bg-fuchsia-500/25
+                           transition-colors flex items-center justify-center gap-2"
+              >
+                <span>🎤</span>
+                <span>Faizi roasts the table</span>
+              </button>
+            )}
+          </div>
         )}
 
         <div className="flex gap-3">
@@ -128,6 +148,12 @@ export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRemat
           gameId={room.gameId}
           playerId={myPlayerId}
           onClose={() => setFaiziOpen(false)}
+        />
+      )}
+      {roastOpen && room?.gameId && (
+        <FaiziRoast
+          gameId={room.gameId}
+          onClose={() => setRoastOpen(false)}
         />
       )}
     </div>

@@ -23,8 +23,10 @@ import { botDecide, scoredCandidates } from "./botAI.js";
 import {
   analyzeForPlayer,
   buildCheckpointsForPlayer,
+  buildFaiziRoast,
   summarizeFaiziMoves,
   type FaiziAnalysis,
+  type FaiziRoast,
   type SeatInput,
 } from "@sequence/shared";
 import {
@@ -291,6 +293,100 @@ app.get("/api/replays/:gameId/faizi", async (req, res) => {
   } catch (e) {
     console.warn("[faizi] failed:", (e as Error).message);
     res.status(500).json({ error: "analysis failed" });
+  }
+});
+
+/**
+ * Faizi Roast: same analysis engine but run for EVERY player in the game.
+ * Returns satirical titles and an awards roster — meant for the post-game
+ * group-laugh modal rather than serious self-improvement.
+ */
+app.get("/api/replays/:gameId/faizi/roast", async (req, res) => {
+  const id = String(req.params.gameId ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) {
+    res.status(400).json({ error: "invalid game id" });
+    return;
+  }
+  const detail = await getReplay(id);
+  if (!detail) {
+    res.status(404).json({ error: "not found" });
+    return;
+  }
+  const seed = await getGameInitialSeed(id);
+  if (seed === null) {
+    const empty: FaiziRoast = {
+      available: false,
+      notes: "This game predates the analysis system. New games starting now will be roastable.",
+      players: [],
+      awards: [],
+      headline: "",
+    };
+    res.json(empty);
+    return;
+  }
+  if (detail.actions.length < 10) {
+    const empty: FaiziRoast = {
+      available: false,
+      notes: "Not enough moves to roast — Faizi needs at least 10 actions in the game.",
+      players: [],
+      awards: [],
+      headline: "",
+    };
+    res.json(empty);
+    return;
+  }
+
+  const seats: SeatInput[] = detail.players.map((p) => ({
+    id: p.id,
+    name: p.name,
+    team: p.team,
+  }));
+
+  try {
+    // Per-player analysis — same engine as /faizi, just run for each seat.
+    const perPlayer = detail.players.map((p) => {
+      const checkpoints = buildCheckpointsForPlayer(
+        seed,
+        seats,
+        detail.sequencesToWin,
+        detail.deckId,
+        detail.actions as Parameters<typeof buildCheckpointsForPlayer>[4],
+        p.id,
+      );
+      const moves = analyzeForPlayer(checkpoints, p.id, (state, pid) => {
+        const candidates = scoredCandidates(state, pid);
+        if (candidates.length === 0) {
+          return { best: null, userScore: () => 0 };
+        }
+        const best = candidates[0]!;
+        return {
+          best: { action: best.action, score: best.score },
+          userScore: (action) => {
+            for (const c of candidates) {
+              if (
+                c.action.type === action.type &&
+                c.action.cardId === action.cardId &&
+                ("pos" in c.action && "pos" in action
+                  ? c.action.pos.r === action.pos.r &&
+                    c.action.pos.c === action.pos.c
+                  : true)
+              ) {
+                return c.score;
+              }
+            }
+            return 0;
+          },
+        };
+      });
+      return { playerId: p.id, name: p.name, team: p.team, moves };
+    });
+
+    const { players, awards, headline } = buildFaiziRoast(perPlayer);
+    const out: FaiziRoast = { available: true, players, awards, headline };
+    res.json(out);
+  } catch (e) {
+    console.warn("[faizi-roast] failed:", (e as Error).message);
+    res.status(500).json({ error: "roast failed" });
   }
 });
 
