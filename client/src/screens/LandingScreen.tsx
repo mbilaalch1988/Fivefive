@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { InstallPrompt } from "../components/InstallPrompt";
 import { ReplayListDialog } from "../components/ReplayListDialog";
 import { Scoreboard } from "../components/Scoreboard";
 import { ReplayScreen } from "./ReplayScreen";
@@ -294,6 +295,9 @@ export function LandingScreen({
           </div>
           <Scoreboard />
         </section>
+
+        {/* PWA install prompt — auto-hides if already installed/dismissed. */}
+        <InstallPrompt />
         </div>
         </div>
       </div>
