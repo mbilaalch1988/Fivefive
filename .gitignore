@@ -13,3 +13,7 @@ coverage/
 # at client/public/stickers/ and IS tracked).
 /ChatGPT Image*.png
 /sticker-source*.png
+
+# Workspace scratch — unrelated projects that happen to live in this folder.
+/flora-fauna-trading/
+/skills-lock.json
