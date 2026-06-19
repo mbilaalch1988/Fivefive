@@ -171,41 +171,142 @@ body {
   50%      { background-position: 100% 50%; }
 }
 
-/* Jack-played effect: expanding ring + spinning "J" emblem over the target
-   cell. Two color variants — two-eyed Jack (wild placement) glows indigo,
-   one-eyed Jack (removal) glows rose. */
-.jack-effect {
-  pointer-events: none;
-}
-.jack-effect-ring {
+/* ============================================================== */
+/* Jack effects                                                    */
+/* ============================================================== */
+
+/* --- Two-eyed Jack: magical sparkle burst over the placed cell. */
+.jack2-glow {
   position: absolute;
-  inset: -40%;
+  inset: -60%;
   border-radius: 50%;
-  border: 3px solid currentColor;
-  animation: jack-ring 1.2s ease-out forwards;
+  background: radial-gradient(circle, rgba(252, 211, 77, 0.65), rgba(165, 180, 252, 0.25) 50%, transparent 70%);
+  animation: jack2-glow 1.2s ease-out forwards;
 }
-@keyframes jack-ring {
-  0%   { transform: scale(0.3); opacity: 0;    border-width: 5px; }
-  20%  { transform: scale(0.6); opacity: 1;    border-width: 4px; }
-  100% { transform: scale(2.4); opacity: 0;    border-width: 1px; }
+@keyframes jack2-glow {
+  0%   { opacity: 0; transform: scale(0.2); }
+  25%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.6); }
 }
-.jack-effect-glyph {
+.jack2-burst {
+  position: absolute;
+  inset: -25%;
+  background:
+    conic-gradient(from 0deg,
+      rgba(252, 211, 77, 0.85) 0deg, transparent 18deg,
+      rgba(252, 211, 77, 0.85) 45deg, transparent 63deg,
+      rgba(252, 211, 77, 0.85) 90deg, transparent 108deg,
+      rgba(252, 211, 77, 0.85) 135deg, transparent 153deg,
+      rgba(252, 211, 77, 0.85) 180deg, transparent 198deg,
+      rgba(252, 211, 77, 0.85) 225deg, transparent 243deg,
+      rgba(252, 211, 77, 0.85) 270deg, transparent 288deg,
+      rgba(252, 211, 77, 0.85) 315deg, transparent 333deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 25%, black 35%, black 65%, transparent 75%);
+          mask-image: radial-gradient(circle, transparent 25%, black 35%, black 65%, transparent 75%);
+  animation: jack2-burst 1.2s ease-out forwards;
+}
+@keyframes jack2-burst {
+  0%   { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  35%  { opacity: 1; transform: scale(1.2) rotate(60deg); }
+  100% { opacity: 0; transform: scale(2)   rotate(180deg); }
+}
+.jack2-star {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 1.5em;
   font-weight: 900;
-  font-size: 1.6em;
-  color: currentColor;
-  animation: jack-glyph 1.2s ease-out forwards;
-  text-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+  color: #fef3c7;
+  text-shadow: 0 0 10px #fbbf24, 0 0 18px #818cf8;
+  animation: jack2-star 1.2s ease-out forwards;
 }
-@keyframes jack-glyph {
-  0%   { transform: scale(0)   rotate(-90deg); opacity: 0; }
-  30%  { transform: scale(1.3) rotate(10deg);  opacity: 1; }
-  60%  { transform: scale(1)   rotate(0deg);   opacity: 1; }
-  100% { transform: scale(1.5) rotate(0deg);   opacity: 0; }
+@keyframes jack2-star {
+  0%   { opacity: 0; transform: scale(0) rotate(-180deg); }
+  35%  { opacity: 1; transform: scale(1.3) rotate(0deg); }
+  60%  { opacity: 1; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.4) rotate(120deg); }
+}
+.jack2-sparkle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin: -0.4em 0 0 -0.4em;
+  font-size: 0.85em;
+  color: #fef3c7;
+  text-shadow: 0 0 6px #fbbf24;
+  transform-origin: center;
+  animation: jack2-sparkle 1.05s ease-out forwards;
+}
+@keyframes jack2-sparkle {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* --- One-eyed Jack: electric zap + shockwave over removed cell. */
+.jack1-flash {
+  position: absolute;
+  inset: -30%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(254, 226, 226, 0.95) 0%, rgba(251, 113, 133, 0.55) 35%, transparent 70%);
+  animation: jack1-flash 0.55s ease-out forwards;
+}
+@keyframes jack1-flash {
+  0%   { opacity: 0; transform: scale(0.2); }
+  20%  { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+.jack1-shock {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #fda4af;
+  animation: jack1-shock 1.0s ease-out forwards;
+  box-shadow: 0 0 14px rgba(251, 113, 133, 0.85);
+}
+@keyframes jack1-shock {
+  0%   { opacity: 0; transform: scale(0.4); border-width: 6px; }
+  25%  { opacity: 1; transform: scale(1);   border-width: 4px; }
+  100% { opacity: 0; transform: scale(2.6); border-width: 1px; }
+}
+.jack1-bolt {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 65%;
+  height: 8%;
+  background: linear-gradient(90deg, transparent 0%, #fef2f2 30%, #fda4af 70%, transparent 100%);
+  transform-origin: left center;
+  filter: drop-shadow(0 0 6px #fb7185);
+  animation: jack1-bolt 0.7s ease-out forwards;
+  opacity: 0;
+}
+@keyframes jack1-bolt {
+  0%   { opacity: 0; transform-origin: left center; transform: rotate(var(--a, 0)) scaleX(0.1); }
+  30%  { opacity: 1; transform: rotate(var(--a, 0)) scaleX(1); }
+  100% { opacity: 0; transform: rotate(var(--a, 0)) scaleX(1.05); }
+}
+.jack1-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  font-weight: 900;
+  color: #fecaca;
+  text-shadow: 0 0 10px #fb7185, 0 0 18px #ef4444;
+  animation: jack1-glyph 0.9s ease-out forwards;
+}
+@keyframes jack1-glyph {
+  0%   { opacity: 0; transform: scale(2.2) rotate(-20deg); }
+  25%  { opacity: 1; transform: scale(0.85) rotate(5deg); }
+  45%  { opacity: 1; transform: scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: scale(1.3) rotate(0deg); }
 }
 
 /* Current player's badge: continuous gentle gold pulse so the eye locks on. */
