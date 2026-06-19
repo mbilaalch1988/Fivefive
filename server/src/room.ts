@@ -59,6 +59,8 @@ export class Room {
   gameId: string | null = null;
   /** How many action-log entries we've persisted for the current game. */
   private persistedActionCount = 0;
+  /** Epoch ms when the lobby will auto-start; null when nobody-ready or already running. */
+  autoStartAt: number | null = null;
   /** MVP player names from the most recently-completed game (cleared on next start). */
   lastMvpNames: string[] = [];
   deck: DeckManifest | null = null;
@@ -232,7 +234,16 @@ export class Room {
   canStart(): boolean {
     if (this.game) return false;
     if (this.seats.length < 2) return false;
-    if (!this.seats.every((s) => s.team !== null && s.ready)) return false;
+    // Every seat must have picked a team, be ready, and be reachable
+    // (bots count as connected). A disconnected player blocks auto-start
+    // until they rejoin or are removed.
+    if (
+      !this.seats.every(
+        (s) => s.team !== null && s.ready && (s.connected || s.isBot),
+      )
+    ) {
+      return false;
+    }
     // Need at least one human, otherwise nobody's watching.
     if (!this.seats.some((s) => !s.isBot)) return false;
     const teams = new Set(this.seats.map((s) => s.team));
@@ -293,6 +304,8 @@ export class Room {
       seed: opts.seed,
       deckId: opts.deckId ?? null,
     });
+    // Randomize who goes first so the host doesn't always have the advantage.
+    this.game.turnIdx = Math.floor(Math.random() * this.game.players.length);
     this.deck = opts.deck ?? null;
     this.lastMvpNames = [];
 
@@ -426,6 +439,7 @@ export class Room {
       playerScores: { ...this.playerScores },
       gamesPlayed: this.gamesPlayed,
       spectatorCount: this.spectators.length,
+      autoStartAt: this.autoStartAt,
     };
   }
 

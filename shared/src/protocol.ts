@@ -95,6 +95,8 @@ export interface RoomView {
   gamesPlayed: number;
   /** Number of read-only spectators currently watching. */
   spectatorCount: number;
+  /** Epoch ms when the game will auto-start (everyone ready), or null. */
+  autoStartAt: number | null;
 }
 
 /* ------------------------------------------------------------------ */

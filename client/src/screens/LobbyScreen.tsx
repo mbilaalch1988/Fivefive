@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { DeckSummary, PlayerId, RoomView, Team } from "@sequence/shared";
+import { AutoStartBanner } from "../components/AutoStartBanner";
 import { Scoreboard } from "../components/Scoreboard";
 import { TEAM_CHIP, TEAM_SURFACE, TEAM_TEXT } from "../lib/cards";
 import { FilledButton, TonalButton } from "./LandingScreen";
@@ -126,6 +127,9 @@ export function LobbyScreen({
           </button>
         </div>
       )}
+
+      {/* Everyone-ready auto-start banner (server-driven). */}
+      <AutoStartBanner autoStartAt={room.autoStartAt} />
 
       {/* 2-col content. Left = player setup (you control this).
           Right = host controls + scoreboards (info / one host action). */}

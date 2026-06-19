@@ -251,6 +251,59 @@ function broadcastRoom(room: Room): void {
   io.to(`room:${room.code}`).emit("room", room.roomView());
 }
 
+/* ------------------------------------------------------------ */
+/* Auto-start: 5s timer when everyone is ready                  */
+/* ------------------------------------------------------------ */
+const AUTO_START_MS = 5000;
+const autoStartTimers = new Map<string, NodeJS.Timeout>();
+
+function cancelAutoStart(room: Room): void {
+  const t = autoStartTimers.get(room.code);
+  if (t) clearTimeout(t);
+  autoStartTimers.delete(room.code);
+  room.autoStartAt = null;
+}
+
+/**
+ * Call after any lobby state change (chooseTeam, setReady, addBot, removeBot,
+ * leaveRoom). If the lobby is now in a canStart() state, schedule auto-start
+ * after 5s; if it isn't, cancel any pending auto-start. Always re-broadcasts
+ * so clients see the autoStartAt timestamp update.
+ */
+function refreshAutoStart(room: Room): void {
+  if (room.game) {
+    cancelAutoStart(room);
+    return;
+  }
+  if (!room.canStart()) {
+    cancelAutoStart(room);
+    return;
+  }
+  // Already scheduled? Don't reset the timer.
+  if (autoStartTimers.has(room.code)) return;
+
+  room.autoStartAt = Date.now() + AUTO_START_MS;
+  const timer = setTimeout(() => {
+    autoStartTimers.delete(room.code);
+    room.autoStartAt = null;
+    if (!room.canStart()) {
+      broadcastRoom(room);
+      return;
+    }
+    try {
+      // Auto-start with the host's last-saved settings (or defaults if none).
+      room.start({});
+      broadcastRoom(room);
+      broadcastGame(room);
+      scheduleBotTurn(room);
+    } catch (e) {
+      console.warn(`[auto-start] ${room.code} failed: ${(e as Error).message}`);
+      broadcastRoom(room);
+    }
+  }, AUTO_START_MS);
+  autoStartTimers.set(room.code, timer);
+}
+
 /**
  * If the current player is a bot, schedule its move after a small delay so
  * humans see what just happened. Re-invokes itself after bot's action since
@@ -437,6 +490,7 @@ io.on("connection", (socket) => {
     try {
       room.chooseTeam(seat.id, team as Team);
       ack({ ok: true });
+      refreshAutoStart(room);
       broadcastRoom(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
@@ -452,6 +506,7 @@ io.on("connection", (socket) => {
     try {
       room.setReady(seat.id, ready);
       ack({ ok: true });
+      refreshAutoStart(room);
       broadcastRoom(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
@@ -472,6 +527,7 @@ io.on("connection", (socket) => {
       return ack({ ok: false, error: `unknown deck "${deckId}"` });
     }
     try {
+      cancelAutoStart(room);
       room.start({ sequencesToWin, deckId: deck?.id ?? null, deck });
       ack({ ok: true });
       broadcastRoom(room);
@@ -544,6 +600,7 @@ io.on("connection", (socket) => {
     try {
       room.addBot(team, difficulty);
       ack({ ok: true });
+      refreshAutoStart(room);
       broadcastRoom(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
@@ -562,6 +619,7 @@ io.on("connection", (socket) => {
     try {
       room.removeBot(playerId);
       ack({ ok: true });
+      refreshAutoStart(room);
       broadcastRoom(room);
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
@@ -647,8 +705,13 @@ io.on("connection", (socket) => {
       room.removePlayer(seat.id);
       detach(socket);
       ack({ ok: true });
-      if (room.isEmpty()) registry.delete(room.code);
-      else broadcastRoom(room);
+      if (room.isEmpty()) {
+        cancelAutoStart(room);
+        registry.delete(room.code);
+      } else {
+        refreshAutoStart(room);
+        broadcastRoom(room);
+      }
     } catch (e) {
       ack({ ok: false, error: (e as Error).message });
     }
@@ -666,8 +729,15 @@ io.on("connection", (socket) => {
         if (!removedSpec) {
           room.markDisconnected(socket.id);
         }
-        if (room.isEmpty()) registry.delete(room.code);
-        else broadcastRoom(room);
+        if (room.isEmpty()) {
+          cancelAutoStart(room);
+          registry.delete(room.code);
+        } else {
+          // A disconnected player can no longer be "ready" in practice;
+          // re-evaluate auto-start.
+          refreshAutoStart(room);
+          broadcastRoom(room);
+        }
       }
     }
     detach(socket);

@@ -17,6 +17,7 @@ import { Hand } from "../components/Hand";
 import { GameMenu } from "../components/GameMenu";
 import { JackEffect } from "../components/JackEffect";
 import { LastPlayedHistory } from "../components/LastPlayedHistory";
+import { PreGameCountdown } from "../components/PreGameCountdown";
 import { QuickChatOverlay } from "../components/QuickChatOverlay";
 import { QuickChatPicker } from "../components/QuickChatPicker";
 import { RulesSheet } from "../components/RulesSheet";
@@ -88,6 +89,11 @@ export function GameScreen({
   const [quickChatOpen, setQuickChatOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [jackEffects, setJackEffects] = useState<JackEffectInstance[]>([]);
+  // Show 3-2-1-GO once per game, only when we land in at action-count 0
+  // (fresh start, not a mid-game rejoin).
+  const [showIntro, setShowIntro] = useState<boolean>(
+    () => view.recentActions.length === 0 && !view.winner,
+  );
 
   const me = view.players.find((p) => p.id === myPlayerId) ?? null;
   const myTurn = !!me && me.isCurrentTurn;
@@ -497,6 +503,14 @@ export function GameScreen({
         <SequenceAnnounce
           team={announceTeam}
           teamName={view.teamNames[announceTeam]}
+        />
+      )}
+
+      {showIntro && view.players.length > 0 && !view.winner && (
+        <PreGameCountdown
+          firstPlayerName={view.players[view.turnIdx]?.name ?? "Player"}
+          firstPlayerTeam={view.players[view.turnIdx]?.team ?? "red"}
+          onDone={() => setShowIntro(false)}
         />
       )}
 
