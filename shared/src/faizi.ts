@@ -167,14 +167,43 @@ function cloneState(state: GameState): GameState {
  * Plug in your own scorer (server passes in a function that calls into the
  * Hard-bot logic) and Faizi tells you how the user did vs. the best move.
  *
- * `scorer(state, playerId)` should return an Action plus its numeric score
- * AND every candidate's score so we can find where the user's choice ranked.
+ * Returns the rank (1-indexed) and score of the user's chosen action within
+ * the sorted candidate list, plus the bot's best move. Faizi uses BOTH the
+ * rank AND the absolute gap (best.score − userScore) so a player who picks
+ * a "reasonable but not optimal" move when the bot found a +1000 sequence
+ * doesn't get scored as 9% closeness → mistake.
  */
 export interface MoveScorer {
   (state: GameState, playerId: PlayerId): {
     best: { action: Action; score: number } | null;
-    userScore: (action: Action) => number;
+    /** Look up the user's rank (1 = best) + score in the sorted candidates. */
+    userRankAndScore: (action: Action) => {
+      rank: number;
+      score: number;
+      totalCandidates: number;
+    };
   };
+}
+
+/**
+ * Rank- and gap-based rating. Gap fallback exists so that when many moves
+ * score similarly, "I picked the 2nd-best out of 12" reads as best (not a
+ * mistake). Numbers tuned against typical scorePlace() ranges:
+ *   sequence completion ≈ 1000
+ *   4-in-a-row extension ≈ 90
+ *   normal placement ≈ 10–35
+ *   defensive block ≈ 60–200
+ */
+function rateMove(
+  rank: number,
+  userScore: number,
+  bestScore: number,
+): FaiziRating {
+  const gap = Math.max(0, bestScore - userScore);
+  if (rank === 1 || gap <= 50) return "best";
+  if (rank <= 3 || gap <= 150) return "solid";
+  if (rank <= 8 || gap <= 400) return "missed";
+  return "mistake";
 }
 
 export function analyzeForPlayer(
@@ -189,15 +218,14 @@ export function analyzeForPlayer(
 
     const out = scorer(cp.preState, playerId);
     if (!out.best) continue;
-    const bestScore = out.best.score || 1;
-    const userScore = out.userScore(cp.action);
-    const closeness = Math.max(0, Math.min(1, userScore / bestScore));
-
-    let rating: FaiziRating;
-    if (closeness >= 0.92) rating = "best";
-    else if (closeness >= 0.7) rating = "solid";
-    else if (closeness >= 0.4) rating = "missed";
-    else rating = "mistake";
+    const bestScore = out.best.score;
+    const { rank, score: userScore } = out.userRankAndScore(cp.action);
+    const rating = rateMove(rank, userScore, bestScore);
+    // Keep closeness as a presentational metric (the % bar in the UI) even
+    // though it no longer drives the tier directly.
+    const closeness = bestScore > 0
+      ? Math.max(0, Math.min(1, userScore / bestScore))
+      : 1;
 
     const played = formatAction(cp.preState, playerId, cp.action);
     const recommended = rating === "best"
@@ -208,7 +236,7 @@ export function analyzeForPlayer(
     if (rating === "best") {
       summary = "Sharp — that was the strongest move available.";
     } else if (rating === "solid") {
-      summary = "Reasonable choice. A slightly stronger option existed.";
+      summary = `Reasonable. ${recommended || "Bot's top pick"} was slightly stronger.`;
     } else if (rating === "missed") {
       summary = `Missed opportunity — ${recommended} would have scored better.`;
     } else {

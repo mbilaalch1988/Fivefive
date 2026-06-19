@@ -258,31 +258,7 @@ app.get("/api/replays/:gameId/faizi", async (req, res) => {
       detail.actions as Parameters<typeof buildCheckpointsForPlayer>[4],
       playerId,
     );
-    const moves = analyzeForPlayer(checkpoints, playerId, (state, pid) => {
-      const candidates = scoredCandidates(state, pid);
-      if (candidates.length === 0) {
-        return { best: null, userScore: () => 0 };
-      }
-      const best = candidates[0]!;
-      return {
-        best: { action: best.action, score: best.score },
-        userScore: (action) => {
-          for (const c of candidates) {
-            if (
-              c.action.type === action.type &&
-              c.action.cardId === action.cardId &&
-              ("pos" in c.action && "pos" in action
-                ? c.action.pos.r === action.pos.r && c.action.pos.c === action.pos.c
-                : true)
-            ) {
-              return c.score;
-            }
-          }
-          // User's chosen action wasn't in the candidate set — e.g. discard.
-          return 0;
-        },
-      };
-    });
+    const moves = analyzeForPlayer(checkpoints, playerId, faiziScorer);
 
     const out: FaiziAnalysis = {
       available: true,
@@ -353,31 +329,7 @@ app.get("/api/replays/:gameId/faizi/roast", async (req, res) => {
         detail.actions as Parameters<typeof buildCheckpointsForPlayer>[4],
         p.id,
       );
-      const moves = analyzeForPlayer(checkpoints, p.id, (state, pid) => {
-        const candidates = scoredCandidates(state, pid);
-        if (candidates.length === 0) {
-          return { best: null, userScore: () => 0 };
-        }
-        const best = candidates[0]!;
-        return {
-          best: { action: best.action, score: best.score },
-          userScore: (action) => {
-            for (const c of candidates) {
-              if (
-                c.action.type === action.type &&
-                c.action.cardId === action.cardId &&
-                ("pos" in c.action && "pos" in action
-                  ? c.action.pos.r === action.pos.r &&
-                    c.action.pos.c === action.pos.c
-                  : true)
-              ) {
-                return c.score;
-              }
-            }
-            return 0;
-          },
-        };
-      });
+      const moves = analyzeForPlayer(checkpoints, p.id, faiziScorer);
       return { playerId: p.id, name: p.name, team: p.team, moves };
     });
 
@@ -580,6 +532,47 @@ async function pushTurnNotification(room: Room, playerId: string): Promise<void>
     }
   }
 }
+
+/**
+ * Shared Faizi scorer used by both the personal-analysis endpoint and the
+ * group-roast endpoint. Wraps the bot's heuristic scorer to expose rank +
+ * score, which the rank-based rater uses to avoid the "9% closeness =
+ * mistake" trap when the bot finds a +1000 sequence completion.
+ */
+const faiziScorer: Parameters<typeof analyzeForPlayer>[2] = (state, pid) => {
+  const candidates = scoredCandidates(state, pid);
+  if (candidates.length === 0) {
+    return {
+      best: null,
+      userRankAndScore: () => ({ rank: 999, score: 0, totalCandidates: 0 }),
+    };
+  }
+  const best = candidates[0]!;
+  return {
+    best: { action: best.action, score: best.score },
+    userRankAndScore: (action) => {
+      for (let i = 0; i < candidates.length; i++) {
+        const c = candidates[i]!;
+        const sameAction =
+          c.action.type === action.type &&
+          c.action.cardId === action.cardId &&
+          ("pos" in c.action && "pos" in action
+            ? c.action.pos.r === action.pos.r &&
+              c.action.pos.c === action.pos.c
+            : true);
+        if (sameAction) {
+          return {
+            rank: i + 1,
+            score: c.score,
+            totalCandidates: candidates.length,
+          };
+        }
+      }
+      // Action wasn't in the candidate list (shouldn't happen for valid plays).
+      return { rank: candidates.length + 1, score: 0, totalCandidates: candidates.length };
+    },
+  };
+};
 
 /* ------------------------------------------------------------ */
 /* Per-turn timer: auto-play a random legal action on expiry    */
