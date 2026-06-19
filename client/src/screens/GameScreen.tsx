@@ -27,7 +27,14 @@ import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
 import { WinSequenceWalk } from "../components/WinSequenceWalk";
 import type { ActionLog, QuickChatBroadcast, StickerBroadcast } from "@sequence/shared";
-import { notifyMyTurn } from "../lib/notify";
+import {
+  notifyMyTurn,
+  playChipDrop,
+  playOneEyedJack,
+  playSequenceDing,
+  playTwoEyedJack,
+  playWinFlourish,
+} from "../lib/notify";
 
 interface JackEffectInstance {
   id: string;
@@ -114,6 +121,8 @@ export function GameScreen({
     prevLockedRef.current = current;
     if (newly.size > 0) {
       setJustLocked(newly);
+      // Triple-bell ding to mark every sequence completion (not just wins).
+      playSequenceDing();
       // Fire confetti from each newly-locked chip (skip if no chip placed
       // at that pos, which can happen for corner-wild positions).
       requestAnimationFrame(() => {
@@ -190,6 +199,11 @@ export function GameScreen({
       }
       if (spawn.length > 0) {
         setJackEffects((prev) => [...prev, ...spawn]);
+        // Play the distinct two-eyed / one-eyed sound for each effect.
+        for (const e of spawn) {
+          if (e.variant === "place") playTwoEyedJack();
+          else playOneEyedJack();
+        }
         const ids = spawn.map((s) => s.id);
         setTimeout(() => {
           setJackEffects((prev) => prev.filter((s) => !ids.includes(s.id)));
@@ -221,6 +235,9 @@ export function GameScreen({
     prevChipsRef.current = sig.join("|");
     if (newly.size > 0) {
       setJustPlaced(newly);
+      // Soft thunk for every chip drop. One sound regardless of how many
+      // chips arrived simultaneously (avoids overlap on initial deal).
+      playChipDrop();
       const t = setTimeout(() => setJustPlaced(new Set()), 700);
       return () => clearTimeout(t);
     }
@@ -244,6 +261,8 @@ export function GameScreen({
       return;
     }
     setWinStage("playing");
+    // Ascending C-E-G-C-E fanfare on game win.
+    playWinFlourish();
     const t1 = setTimeout(() => {
       setCelebratingTeam(view.winner!);
       setWinStage("celebrating");
