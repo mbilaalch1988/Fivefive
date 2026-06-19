@@ -36,7 +36,7 @@ interface RoomSeat {
   /** True when this seat is filled by a server-side AI. */
   isBot: boolean;
   /** Difficulty hint for the bot decision engine. */
-  botDifficulty: "easy" | "medium" | null;
+  botDifficulty: "easy" | "medium" | "hard" | null;
 }
 
 interface RoomSpectator {
@@ -123,11 +123,11 @@ export class Room {
 
   /** Add a bot seat. Host-gated upstream. Bots are auto-ready + always
    *  "connected" so they don't trigger the reconnect indicator. */
-  addBot(team: Team, difficulty: "easy" | "medium"): RoomSeat {
+  addBot(team: Team, difficulty: "easy" | "medium" | "hard"): RoomSeat {
     if (this.game) throw new Error("game already started");
     if (this.seats.length >= 12) throw new Error("room is full");
     const botCount = this.seats.filter((s) => s.isBot).length + 1;
-    const name = `${difficulty === "easy" ? "Easy" : "Medium"} bot ${botCount}`;
+    const name = `${difficulty === "easy" ? "Easy" : difficulty === "medium" ? "Medium" : "Hard"} bot ${botCount}`;
     const seat: RoomSeat = {
       id: `bot-${this.code}-${botCount}-${Date.now().toString(36)}`,
       name,
@@ -257,7 +257,7 @@ export class Room {
   }
 
   /** True if it's currently a bot's turn. */
-  isBotTurn(): { seat: RoomSeat; difficulty: "easy" | "medium" } | null {
+  isBotTurn(): { seat: RoomSeat; difficulty: "easy" | "medium" | "hard" } | null {
     if (!this.game || this.game.winner) return null;
     const currentId = this.game.players[this.game.turnIdx]?.id;
     if (!currentId) return null;

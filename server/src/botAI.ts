@@ -19,7 +19,7 @@ import {
   type Team,
 } from "@sequence/shared";
 
-export type BotDifficulty = "easy" | "medium";
+export type BotDifficulty = "easy" | "medium" | "hard";
 
 interface ScoredAction {
   action: Action;
@@ -115,7 +115,84 @@ export function botDecide(
   }
 
   candidates.sort((a, b) => b.score - a.score);
+
+  if (difficulty === "hard") {
+    return decideHard(state, player.team, candidates);
+  }
   return candidates[0]!.action;
+}
+
+/**
+ * Hard difficulty: 1-ply lookahead. For each of the top-N immediate
+ * candidates, simulate the move on a working copy of the chips grid,
+ * then compute the best score any opponent could achieve next turn.
+ * Pick the move that maximizes (my score − opponent's best response).
+ *
+ * Capped at the top 10 candidates so a bot in a wide-open midgame doesn't
+ * spend 100ms enumerating every wild placement.
+ */
+function decideHard(
+  state: GameState,
+  myTeam: Team,
+  candidates: ScoredAction[],
+): Action {
+  const TOP_N = 10;
+  const top = candidates.slice(0, TOP_N);
+  const chipsCopy = (state.chips as Chip[][]).map((row) => row.slice());
+  let bestAction: Action = top[0]!.action;
+  let bestNet = -Infinity;
+
+  for (const cand of top) {
+    const a = cand.action;
+    // Only "place" actions affect the board's threat landscape; for
+    // "remove" or "discardDead" we use immediate score directly.
+    if (a.type !== "place") {
+      if (cand.score > bestNet) {
+        bestNet = cand.score;
+        bestAction = a;
+      }
+      continue;
+    }
+    // Apply hypothetically.
+    chipsCopy[a.pos.r]![a.pos.c] = myTeam;
+    const oppBest = bestOpponentPlacementScore(chipsCopy, state.board, myTeam);
+    chipsCopy[a.pos.r]![a.pos.c] = null;
+    const net = cand.score - oppBest;
+    if (net > bestNet) {
+      bestNet = net;
+      bestAction = a;
+    }
+  }
+  return bestAction;
+}
+
+/**
+ * For every empty non-corner square and every opposing team in play,
+ * compute scorePlace() and return the maximum. Approximates "what's
+ * the worst thing the opponent could do to me on their next turn?"
+ *
+ * Doesn't account for which cards the opponent actually holds — they
+ * may not be able to legally play the best spot. But for Hard-bot
+ * defense, assuming the opponent has the right card is a fine heuristic.
+ */
+function bestOpponentPlacementScore(
+  chips: Chip[][],
+  board: BoardSquare[][],
+  myTeam: Team,
+): number {
+  let best = 0;
+  for (const opp of opposingTeams(myTeam)) {
+    for (let r = 0; r < chips.length; r++) {
+      const row = chips[r]!;
+      for (let c = 0; c < row.length; c++) {
+        if (row[c] !== null) continue;
+        if (board[r]![c]!.kind === "corner") continue;
+        const s = scorePlace(chips, board, { r, c }, opp);
+        if (s > best) best = s;
+      }
+    }
+  }
+  return best;
 }
 
 /**

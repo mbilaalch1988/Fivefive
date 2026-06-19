@@ -15,7 +15,7 @@ interface Props {
   onChooseTeam: (team: Team) => Promise<void>;
   onSetReady: (ready: boolean) => Promise<void>;
   onRenameTeam: (team: Team, name: string) => Promise<void>;
-  onAddBot: (team: Team, difficulty: "easy" | "medium") => Promise<void>;
+  onAddBot: (team: Team, difficulty: "easy" | "medium" | "hard") => Promise<void>;
   onRemoveBot: (playerId: PlayerId) => Promise<void>;
   onStart: (opts: { sequencesToWin: number; deckId: string | null }) => Promise<void>;
   onLeave: () => Promise<void>;
@@ -42,7 +42,7 @@ export function LobbyScreen({
   const [deckId, setDeckId] = useState("");
   const [renamingTeam, setRenamingTeam] = useState<Team | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
-  const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium">("medium");
+  const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
 
   const allReady = room.seats.length >= 2 && room.seats.every((s) => s.team && s.ready);
   const teamCounts = new Map<Team, number>();
@@ -225,6 +225,18 @@ export function LobbyScreen({
                 }`}
               >
                 Medium
+              </button>
+              <button
+                type="button"
+                onClick={() => setBotDifficulty("hard")}
+                className={`px-3 py-1 transition-colors ${
+                  botDifficulty === "hard"
+                    ? "bg-rose-500/30 text-rose-100"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+                title="One-ply lookahead — considers your best response"
+              >
+                Hard
               </button>
             </div>
           </div>

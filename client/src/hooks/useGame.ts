@@ -95,7 +95,7 @@ export interface UseGame {
   startGame: (opts?: { sequencesToWin?: number; deckId?: string | null }) => Promise<void>;
   stopGame: () => Promise<void>;
   renameTeam: (team: Team, name: string) => Promise<void>;
-  addBot: (team: Team, difficulty: "easy" | "medium") => Promise<void>;
+  addBot: (team: Team, difficulty: "easy" | "medium" | "hard") => Promise<void>;
   removeBot: (playerId: PlayerId) => Promise<void>;
   sendSticker: (stickerId: string) => Promise<void>;
   /** Active sticker broadcasts (most recently received first). */
@@ -364,7 +364,7 @@ export function useGame(): UseGame {
   );
 
   const addBot = useCallback(
-    async (team: Team, difficulty: "easy" | "medium") => {
+    async (team: Team, difficulty: "easy" | "medium" | "hard") => {
       const s = socketRef.current!;
       const res = (await emit(s, "addBot", { team, difficulty })) as {
         ok: boolean;

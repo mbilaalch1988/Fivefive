@@ -181,7 +181,7 @@ export interface ClientToServerEvents {
   ) => void;
   stopGame: (ack: (res: AckResult<{}>) => void) => void;
   addBot: (
-    payload: { team: Team; difficulty: "easy" | "medium" },
+    payload: { team: Team; difficulty: "easy" | "medium" | "hard" },
     ack: (res: AckResult<{}>) => void,
   ) => void;
   removeBot: (
