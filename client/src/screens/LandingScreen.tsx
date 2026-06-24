@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
+import { AccountSetup } from "../components/AccountSetup";
 import { AuthPanel } from "../components/AuthPanel";
+import { ClaimNamePrompt } from "../components/ClaimNamePrompt";
 import { InstallPrompt } from "../components/InstallPrompt";
 import { ReplayListDialog } from "../components/ReplayListDialog";
 import { Scoreboard } from "../components/Scoreboard";
 import { ReplayScreen } from "./ReplayScreen";
+import { useAccount, type AccountInfo, type AnonymousStats } from "../hooks/useAccount";
 import { useAuth } from "../hooks/useAuth";
 
 const NAME_STORAGE_KEY = "sequence.playerName";
+const CLAIM_PROMPT_DONE_KEY = "sequence.claimPromptDone";
 
 interface Props {
   connected: boolean;
@@ -17,6 +21,12 @@ interface Props {
   onSpectate: (code: string, name: string) => Promise<void>;
 }
 
+type ClaimCheckState =
+  | { kind: "checking" }
+  | { kind: "none" }
+  | { kind: "ready"; name: string; stats: AnonymousStats }
+  | { kind: "done" };
+
 export function LandingScreen({
   connected,
   error,
@@ -25,53 +35,87 @@ export function LandingScreen({
   onJoin,
   onSpectate,
 }: Props) {
-  const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [scoreboardOpen, setScoreboardOpen] = useState(false);
   const [showSpectate, setShowSpectate] = useState(false);
+  const [spectateName, setSpectateName] = useState("");
   const [replayListOpen, setReplayListOpen] = useState(false);
   const [openReplayId, setOpenReplayId] = useState<string | null>(null);
 
   const auth = useAuth();
+  const account = useAccount(auth.accessToken);
+  // Destructure stable refs once so useEffect deps don't churn — useCallback
+  // wraps these inside the hook, but `account` as a whole is a fresh object
+  // each render which would loop forever.
+  const accountStateKind = account.state.kind;
+  const { peekAnonymousStats } = account;
 
-  // Auto-fill name from (a) signed-in profile, otherwise (b) localStorage.
+  /* ----- Claim-name detection ----- */
+  const [claimState, setClaimState] = useState<ClaimCheckState>({ kind: "checking" });
   useEffect(() => {
-    if (name) return; // user already typed something
-    if (auth.user && auth.displayName) {
-      setName(auth.displayName);
+    if (accountStateKind !== "ready") {
+      // Reset when sign-in state changes.
+      setClaimState({ kind: "checking" });
       return;
     }
+    let cancelled = false;
     try {
-      const saved = localStorage.getItem(NAME_STORAGE_KEY);
-      if (saved) setName(saved);
+      if (localStorage.getItem(CLAIM_PROMPT_DONE_KEY) === "1") {
+        setClaimState({ kind: "done" });
+        return;
+      }
     } catch { /* ignore */ }
-  }, [auth.user, auth.displayName, name]);
+    let oldName = "";
+    try { oldName = (localStorage.getItem(NAME_STORAGE_KEY) ?? "").trim(); } catch { /* ignore */ }
+    if (!oldName) {
+      setClaimState({ kind: "none" });
+      return;
+    }
+    void peekAnonymousStats(oldName).then((stats) => {
+      if (cancelled) return;
+      if (stats) {
+        setClaimState({ kind: "ready", name: oldName, stats });
+      } else {
+        setClaimState({ kind: "none" });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [accountStateKind, peekAnonymousStats]);
 
-  function saveName(n: string): void {
-    try { localStorage.setItem(NAME_STORAGE_KEY, n); } catch { /* ignore */ }
+  function dismissClaimPrompt() {
+    try {
+      localStorage.setItem(CLAIM_PROMPT_DONE_KEY, "1");
+      localStorage.removeItem(NAME_STORAGE_KEY);
+    } catch { /* ignore */ }
+    setClaimState({ kind: "done" });
   }
 
-  const canCreate = name.trim().length > 0 && !busy && connected;
-  const canJoin = canCreate && code.trim().length > 0;
-
+  /* ----- Action helpers ----- */
   async function go(fn: () => Promise<void>) {
     setBusy(true);
     onClearError();
     try {
       await fn();
-      saveName(name.trim());
     } finally {
       setBusy(false);
     }
   }
+
+  const ready = account.state.kind === "ready";
+  const accountRow = account.state.kind === "ready" ? account.state.account : null;
+  const displayName = accountRow?.displayName ?? "";
+
+  const canCreate = ready && !busy && connected;
+  const canJoin = canCreate && code.trim().length > 0;
+  const canSpectate = !busy && connected && code.trim().length > 0;
 
   return (
     <main
       className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden"
       style={{ background: "var(--md-surface)" }}
     >
-      {/* Drifting colored blobs — purely decorative, sit behind the cards. */}
+      {/* Drifting colored blobs */}
       <div className="fixed inset-0 -z-0 pointer-events-none">
         <span className="blob blob-1" style={{ top: "-8%", left: "-12%", width: "340px", height: "340px", background: "#a855f7" }} />
         <span className="blob blob-2" style={{ top: "30%", right: "-15%", width: "300px", height: "300px", background: "#ec4899" }} />
@@ -110,44 +154,77 @@ export function LandingScreen({
           </div>
         )}
 
-        {/* On lg+ screens, split into 2 columns so wide viewports stop wasting
-            real estate: left has auth + create/join, right has Hall of Fame. */}
+        {/* 2-col on lg+; left has auth/setup/play, right has Hall of Fame. */}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
         <div className="space-y-6">
-        {/* Sign in / sign up panel (email + Google). Replaces the old single
-            Google button — both methods now appear together. */}
-        <AuthPanel />
 
-        {/* Surface card: name + create */}
-        <section
-          className="rounded-3xl p-5 space-y-4 shadow-sm"
-          style={{ background: "var(--md-surface-1)" }}
-        >
-          <FilledTextField
-            label={auth.user ? "Your name (from your account — editable)" : "Your name"}
-            value={name}
-            onChange={setName}
-            autoFocus={!auth.user}
-            maxLength={20}
-            placeholder="e.g. Alex"
-            testId="name-input"
+        {/* Auth-state gated section. Renders one of:
+            - Not signed in       → AuthPanel
+            - Signed in, no row   → AccountSetup
+            - Ready + claim       → ClaimNamePrompt + ProfileBar
+            - Ready (post-claim)  → ProfileBar + Create + Join */}
+        {!auth.user ? (
+          <AuthPanel />
+        ) : account.state.kind === "loading" ? (
+          <LoadingPanel />
+        ) : account.state.kind === "needs-setup" ? (
+          <AccountSetup
+            account={account}
+            defaultDisplayName={auth.displayName ?? ""}
+            email={auth.user.email ?? null}
+            onReady={() => { /* useAccount will flip to "ready" on its own */ }}
+            onSignOut={() => void auth.signOut()}
           />
+        ) : (
+          <>
+            {accountRow && (
+              <ProfileBar
+                account={accountRow}
+                onSignOut={() => void auth.signOut()}
+                onEditDisplayName={async (n) => account.updateDisplayName(n)}
+              />
+            )}
 
-          <FilledButton
-            disabled={!canCreate}
-            onClick={() => go(() => onCreate(name.trim()))}
-            testId="create-button"
-          >
-            Create new room
-          </FilledButton>
-        </section>
+            {claimState.kind === "ready" && (
+              <ClaimNamePrompt
+                anonymousName={claimState.name}
+                totalWins={claimState.stats.totalWins}
+                totalGames={claimState.stats.totalGames}
+                onClaim={async () => {
+                  await account.claimName(claimState.name);
+                  dismissClaimPrompt();
+                }}
+                onSkip={dismissClaimPrompt}
+              />
+            )}
 
+            <section
+              className="rounded-3xl p-5 space-y-4 shadow-sm"
+              style={{ background: "var(--md-surface-1)" }}
+            >
+              <p className="text-xs" style={{ color: "var(--md-on-surface-variant)" }}>
+                You'll join games as{" "}
+                <b className="text-zinc-100">{displayName}</b>.
+              </p>
+              <FilledButton
+                disabled={!canCreate}
+                onClick={() => go(() => onCreate(displayName))}
+                testId="create-button"
+              >
+                Create new room
+              </FilledButton>
+            </section>
+          </>
+        )}
+
+        {/* Divider before the join + spectate row — always visible so
+            spectate stays reachable even before sign-in. */}
         <div className="relative py-1 text-center">
           <span
             className="text-xs uppercase tracking-widest px-3"
             style={{ background: "var(--md-surface)", color: "var(--md-on-surface-variant)" }}
           >
-            or
+            or join a room
           </span>
           <div
             className="absolute inset-x-0 top-1/2 border-t -z-10"
@@ -155,7 +232,6 @@ export function LandingScreen({
           />
         </div>
 
-        {/* Surface card: join */}
         <section
           className="rounded-3xl p-5 space-y-4 shadow-sm"
           style={{ background: "var(--md-surface-1)" }}
@@ -170,9 +246,9 @@ export function LandingScreen({
           />
           <TonalButton
             disabled={!canJoin}
-            onClick={() => go(() => onJoin(code.trim(), name.trim()))}
+            onClick={() => go(() => onJoin(code.trim(), displayName))}
           >
-            Join room
+            {ready ? "Join room" : "Sign in to join"}
           </TonalButton>
           <button
             type="button"
@@ -182,28 +258,36 @@ export function LandingScreen({
             {showSpectate ? "Hide spectate option" : "Just watching? Spectate a game"}
           </button>
           {showSpectate && (
-            <button
-              type="button"
-              data-testid="spectate-button"
-              onClick={() =>
-                go(() => onSpectate(code.trim(), name.trim() || "Spectator"))
-              }
-              disabled={!connected || code.trim().length === 0 || busy}
-              className="state-layer w-full py-3 rounded-full font-medium text-amber-100
-                         bg-amber-500/15 border border-amber-400/40 hover:bg-amber-500/25
-                         disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border-zinc-700
-                         disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              <span>👁</span>
-              <span>Spectate room</span>
-            </button>
+            <div className="space-y-2">
+              <FilledTextField
+                label="Spectator name (optional)"
+                value={spectateName}
+                onChange={setSpectateName}
+                maxLength={20}
+                placeholder="Spectator"
+              />
+              <button
+                type="button"
+                data-testid="spectate-button"
+                onClick={() =>
+                  go(() => onSpectate(code.trim(), spectateName.trim() || "Spectator"))
+                }
+                disabled={!canSpectate}
+                className="state-layer w-full py-3 rounded-full font-medium text-amber-100
+                           bg-amber-500/15 border border-amber-400/40 hover:bg-amber-500/25
+                           disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border-zinc-700
+                           disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                <span>👁</span>
+                <span>Spectate room</span>
+              </button>
+            </div>
           )}
         </section>
         </div>
 
         {/* Right column on lg+: Hall of Fame card. */}
         <div className="space-y-6">
-        {/* Scoreboard preview + full-dialog button */}
         <section
           className="rounded-3xl p-5 space-y-3 shadow-sm"
           style={{ background: "var(--md-surface-1)" }}
@@ -234,7 +318,6 @@ export function LandingScreen({
           <Scoreboard />
         </section>
 
-        {/* PWA install prompt — auto-hides if already installed/dismissed. */}
         <InstallPrompt />
         </div>
         </div>
@@ -260,6 +343,109 @@ export function LandingScreen({
         />
       )}
     </main>
+  );
+}
+
+/* ------------------------------------------------------------ */
+/* ProfileBar — small chip above Create button                   */
+/* ------------------------------------------------------------ */
+function ProfileBar({
+  account,
+  onSignOut,
+  onEditDisplayName,
+}: {
+  account: AccountInfo;
+  onSignOut: () => void;
+  onEditDisplayName: (name: string) => Promise<{ ok: boolean; error?: string }>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(account.displayName);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    if (draft.trim() === account.displayName) {
+      setEditing(false);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await onEditDisplayName(draft.trim());
+      if (!res.ok) {
+        setError(res.error ?? "Failed to update");
+      } else {
+        setEditing(false);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section
+      className="rounded-3xl p-4 shadow-sm flex items-center gap-3"
+      style={{ background: "var(--md-surface-1)" }}
+      data-testid="profile-bar"
+    >
+      <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-200 font-bold text-sm">
+        {account.displayName.charAt(0).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        {editing ? (
+          <div className="flex items-center gap-1">
+            <input
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") void save();
+                if (e.key === "Escape") { setEditing(false); setDraft(account.displayName); }
+              }}
+              maxLength={24}
+              className="flex-1 min-w-0 bg-zinc-900/60 rounded-lg px-2 py-1 text-sm border border-zinc-700 focus:outline-none focus:border-indigo-400"
+            />
+            <button onClick={() => void save()} disabled={busy} className="text-xs text-emerald-300 hover:text-emerald-200 px-2">✓</button>
+            <button onClick={() => { setEditing(false); setDraft(account.displayName); }} className="text-xs text-zinc-400 hover:text-zinc-200 px-2">✕</button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold truncate">{account.displayName}</span>
+              <button
+                onClick={() => setEditing(true)}
+                title="Edit display name"
+                className="text-[0.55rem] uppercase tracking-widest text-zinc-500 hover:text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-700"
+              >
+                Edit
+              </button>
+            </div>
+            <div className="text-xs font-mono" style={{ color: "var(--md-on-surface-variant)" }}>
+              @{account.username}
+            </div>
+            {error && <div className="text-[0.65rem] text-rose-300 mt-1">{error}</div>}
+          </>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onSignOut}
+        className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-zinc-700"
+      >
+        Sign out
+      </button>
+    </section>
+  );
+}
+
+function LoadingPanel() {
+  return (
+    <section
+      className="rounded-3xl p-5 shadow-sm flex items-center justify-center"
+      style={{ background: "var(--md-surface-1)", minHeight: "8rem" }}
+    >
+      <div className="h-8 w-8 rounded-full animate-pulse" style={{ background: "var(--md-surface-2)" }} />
+    </section>
   );
 }
 
