@@ -167,6 +167,17 @@ export function LandingScreen({
           <AuthPanel />
         ) : account.state.kind === "loading" ? (
           <LoadingPanel />
+        ) : account.state.kind === "unauthenticated" ? (
+          // auth.user is set (we have a Supabase session) but the server
+          // 401'd on /api/accounts/me. The server can't verify the token —
+          // almost always means SUPABASE_JWT_SECRET on the server doesn't
+          // match the Supabase project's current JWT secret (often after
+          // a key rotation). Render an explicit dead-end with a way out.
+          <ServerAuthMismatch
+            email={auth.user.email ?? null}
+            onSignOut={() => void auth.signOut()}
+            onRetry={() => void account.refresh()}
+          />
         ) : account.state.kind === "needs-setup" ? (
           <AccountSetup
             account={account}
@@ -434,6 +445,71 @@ function ProfileBar({
       >
         Sign out
       </button>
+    </section>
+  );
+}
+
+/**
+ * Shown when the client has a valid Supabase session but the server keeps
+ * returning 401 on /api/accounts/me. Almost always SUPABASE_JWT_SECRET on
+ * the server is stale (post-rotation) and doesn't match Supabase's
+ * current JWT secret.
+ */
+function ServerAuthMismatch({
+  email,
+  onSignOut,
+  onRetry,
+}: {
+  email: string | null;
+  onSignOut: () => void;
+  onRetry: () => void;
+}) {
+  return (
+    <section
+      className="rounded-3xl p-5 space-y-4 shadow-sm border"
+      style={{
+        background: "rgba(244, 63, 94, 0.08)",
+        borderColor: "rgba(244, 63, 94, 0.4)",
+      }}
+      data-testid="server-auth-mismatch"
+    >
+      <header className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full bg-rose-500/20 border border-rose-400/40 flex items-center justify-center text-lg shrink-0">
+          ⚠️
+        </div>
+        <div className="min-w-0">
+          <div className="text-xs uppercase tracking-widest font-semibold text-rose-200">
+            Server can't verify your sign-in
+          </div>
+          <h2 className="text-base font-medium tracking-tight mt-1">
+            Account temporarily unreachable
+          </h2>
+        </div>
+      </header>
+      <p className="text-sm text-zinc-200 leading-snug">
+        You're signed in as <b>{email ?? "your account"}</b>, but our server
+        rejected the credentials. This usually means the server's JWT secret
+        was just rotated and needs a moment to sync.
+      </p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="state-layer flex-1 py-2.5 rounded-full font-medium text-zinc-200
+                     bg-transparent border border-zinc-700 hover:border-zinc-500
+                     transition-colors text-sm"
+        >
+          Sign out
+        </button>
+        <button
+          type="button"
+          onClick={onRetry}
+          className="state-layer flex-1 py-2.5 rounded-full font-medium text-white
+                     bg-rose-500 hover:bg-rose-400 transition-colors text-sm"
+        >
+          Retry
+        </button>
+      </div>
     </section>
   );
 }
