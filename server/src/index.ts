@@ -30,7 +30,11 @@ import {
   type SeatInput,
 } from "@sequence/shared";
 import {
+  claimAnonymousName,
+  createAccount,
   deletePushSubscription,
+  getAccountByUserId,
+  getAnonymousStatsForName,
   getGameInitialSeed,
   getPagedPlayersByPoints,
   getPagedTeams,
@@ -43,8 +47,10 @@ import {
   getTopTeams,
   initDb,
   isPersistenceEnabled,
+  isUsernameAvailable,
   listRecentReplays,
   savePushSubscription,
+  updateDisplayName,
 } from "./db.js";
 import {
   SubscriptionGoneError,
@@ -191,6 +197,153 @@ app.get("/api/replays/:gameId", async (req, res) => {
     return;
   }
   res.json(detail);
+});
+
+/* ------------------------------------------------------------ */
+/* Account endpoints (mandatory-account migration)              */
+/* ------------------------------------------------------------ */
+
+/**
+ * Pull the Authorization: Bearer JWT, verify with Supabase JWT secret,
+ * return the verified user. 401 if missing/invalid.
+ */
+function requireAuth(req: express.Request, res: express.Response): { userId: string; email?: string } | null {
+  const header = req.header("authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const verified = verifyToken(token);
+  if (!verified) {
+    res.status(401).json({ error: "auth required" });
+    return null;
+  }
+  return { userId: verified.userId };
+}
+
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+const DISPLAY_NAME_MAX = 24;
+
+function validateUsername(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim().toLowerCase();
+  if (!USERNAME_RE.test(v)) return null;
+  return v;
+}
+
+function validateDisplayName(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const v = raw.trim();
+  if (v.length === 0 || v.length > DISPLAY_NAME_MAX) return null;
+  return v;
+}
+
+/** Lightweight check used by the sign-up form for live availability. */
+app.get("/api/accounts/check-username", async (req, res) => {
+  const u = validateUsername(req.query.username);
+  if (!u) {
+    res.status(400).json({ available: false, error: "username must be 3-20 chars, lowercase letters/numbers/underscore" });
+    return;
+  }
+  const available = await isUsernameAvailable(u);
+  res.json({ available });
+});
+
+/** Get the currently authenticated user's account row, if any. */
+app.get("/api/accounts/me", async (req, res) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+  const account = await getAccountByUserId(auth.userId);
+  if (!account) {
+    res.json({ account: null });
+    return;
+  }
+  res.json({ account });
+});
+
+/**
+ * Create the account row for a freshly-verified Supabase user. Caller
+ * supplies the desired username + display name. Username must be unique
+ * (case-insensitive). One account per user_id — a second call from the
+ * same user 409s.
+ */
+app.post("/api/accounts/register", async (req, res) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+  const username = validateUsername(req.body?.username);
+  const displayName = validateDisplayName(req.body?.displayName) ?? username;
+  if (!username) {
+    res.status(400).json({ error: "invalid username" });
+    return;
+  }
+  // Reject if already registered (UX nicety; the DB would 500 on PK collision otherwise).
+  const existing = await getAccountByUserId(auth.userId);
+  if (existing) {
+    res.status(409).json({ error: "account already exists", account: existing });
+    return;
+  }
+  if (!(await isUsernameAvailable(username))) {
+    res.status(409).json({ error: "username already taken" });
+    return;
+  }
+  try {
+    const account = await createAccount({
+      userId: auth.userId,
+      username,
+      displayName: displayName ?? username,
+      email: typeof req.body?.email === "string" ? req.body.email : null,
+    });
+    res.json({ account });
+  } catch (e) {
+    res.status(400).json({ error: (e as Error).message });
+  }
+});
+
+/** Update the signed-in user's display name. Username is immutable. */
+app.patch("/api/accounts/me", async (req, res) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+  const displayName = validateDisplayName(req.body?.displayName);
+  if (!displayName) {
+    res.status(400).json({ error: "invalid display name" });
+    return;
+  }
+  await updateDisplayName(auth.userId, displayName);
+  const updated = await getAccountByUserId(auth.userId);
+  res.json({ account: updated });
+});
+
+/**
+ * Peek anonymous stats for a name (used by the claim prompt).
+ * Returns 200 with stats payload, or { stats: null } when the name has
+ * nothing unclaimed.
+ */
+app.get("/api/accounts/anonymous-stats", async (req, res) => {
+  const name = typeof req.query.name === "string" ? req.query.name.trim() : "";
+  if (!name) {
+    res.status(400).json({ error: "name required" });
+    return;
+  }
+  const stats = await getAnonymousStatsForName(name);
+  res.json({ stats });
+});
+
+/**
+ * Claim an anonymous player_stats row for the signed-in user. The row's
+ * lifetime stats get rolled into the account's user_stats; the anon row
+ * is marked claimed_by_user_id so it disappears from anonymous leaderboards.
+ */
+app.post("/api/accounts/claim-name", async (req, res) => {
+  const auth = requireAuth(req, res);
+  if (!auth) return;
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  if (!name) {
+    res.status(400).json({ error: "name required" });
+    return;
+  }
+  const ok = await claimAnonymousName(auth.userId, name);
+  if (!ok) {
+    res.status(409).json({ error: "name not found or already claimed" });
+    return;
+  }
+  res.json({ claimed: true });
 });
 
 /**

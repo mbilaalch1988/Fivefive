@@ -148,6 +148,28 @@ async function runMigration(): Promise<void> {
     -- be analyzed, only games from now on.
     ALTER TABLE game_log ADD COLUMN IF NOT EXISTS initial_seed BIGINT;
 
+    -- ------------------------------------------------------------
+    -- Mandatory accounts. Username is the unique immutable handle;
+    -- display name is shown in games and can be changed anytime.
+    -- ------------------------------------------------------------
+    CREATE TABLE IF NOT EXISTS accounts (
+      user_id UUID PRIMARY KEY,
+      username TEXT NOT NULL,
+      display_name TEXT NOT NULL,
+      email TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    -- Case-insensitive uniqueness on username so @Ayesha and @ayesha
+    -- can't coexist.
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_username_lower
+      ON accounts (LOWER(username));
+
+    -- Tracks which anonymous player_stats rows have been claimed by
+    -- which account. Once claimed, the row is hidden from the anonymous
+    -- leaderboard (its totals now live in user_stats instead).
+    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS claimed_by_user_id UUID;
+
     -- Web push subscriptions, keyed by endpoint (browser-unique).
     -- Each subscription is bound to a specific (room, player) pair so we
     -- only ping the right person.
@@ -211,6 +233,202 @@ export async function persistGameStart(record: GameStartRecord): Promise<void> {
     );
   } catch (e) {
     console.warn("[db] persistGameStart failed:", (e as Error).message);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Accounts                                                           */
+/* ------------------------------------------------------------------ */
+
+export interface AccountRow {
+  userId: string;
+  username: string;
+  displayName: string;
+  email: string | null;
+}
+
+/** Case-insensitive username availability check. */
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  if (!pool) return true;
+  try {
+    const r = await pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM accounts WHERE LOWER(username) = LOWER($1)`,
+      [username],
+    );
+    return Number(r.rows[0]?.count ?? 0) === 0;
+  } catch (e) {
+    console.warn("[db] isUsernameAvailable failed:", (e as Error).message);
+    return false;
+  }
+}
+
+export async function getAccountByUserId(userId: string): Promise<AccountRow | null> {
+  if (!pool) return null;
+  try {
+    const r = await pool.query<{
+      user_id: string;
+      username: string;
+      display_name: string;
+      email: string | null;
+    }>(
+      `SELECT user_id, username, display_name, email
+       FROM accounts WHERE user_id = $1`,
+      [userId],
+    );
+    const row = r.rows[0];
+    if (!row) return null;
+    return {
+      userId: row.user_id,
+      username: row.username,
+      displayName: row.display_name,
+      email: row.email,
+    };
+  } catch (e) {
+    console.warn("[db] getAccountByUserId failed:", (e as Error).message);
+    return null;
+  }
+}
+
+/**
+ * Insert a new account row. Throws on username collision (unique-index
+ * violation). The caller should pre-flight with isUsernameAvailable for a
+ * friendlier error, but DB still enforces.
+ */
+export async function createAccount(input: {
+  userId: string;
+  username: string;
+  displayName: string;
+  email: string | null;
+}): Promise<AccountRow> {
+  if (!pool) throw new Error("database not configured");
+  try {
+    await pool.query(
+      `INSERT INTO accounts (user_id, username, display_name, email)
+       VALUES ($1, $2, $3, $4)`,
+      [input.userId, input.username, input.displayName, input.email],
+    );
+    return { ...input };
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (msg.includes("idx_accounts_username_lower")) {
+      throw new Error("username already taken");
+    }
+    throw e;
+  }
+}
+
+export async function updateDisplayName(
+  userId: string,
+  displayName: string,
+): Promise<void> {
+  if (!pool) return;
+  try {
+    await pool.query(
+      `UPDATE accounts SET display_name = $2, updated_at = NOW() WHERE user_id = $1`,
+      [userId, displayName],
+    );
+  } catch (e) {
+    console.warn("[db] updateDisplayName failed:", (e as Error).message);
+  }
+}
+
+/**
+ * Atomically claim an anonymous player_stats row for the given user.
+ * The row stays in the table but is marked claimed_by_user_id; its totals
+ * are added into user_stats so future leaderboards combine them. Returns
+ * true if a row was claimed, false if the name had no anonymous stats or
+ * was already claimed.
+ */
+export async function claimAnonymousName(
+  userId: string,
+  anonName: string,
+): Promise<boolean> {
+  if (!pool) return false;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const lock = await client.query<{
+      total_wins: number;
+      total_games: number;
+      sequences_closed: number;
+      mvp_games: number;
+      chips_placed: number;
+      winning_sequences_closed: number;
+    }>(
+      `SELECT total_wins, total_games, sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+       FROM player_stats
+       WHERE name = $1 AND claimed_by_user_id IS NULL
+       FOR UPDATE`,
+      [anonName],
+    );
+    const row = lock.rows[0];
+    if (!row) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+    // Mark the anonymous row as claimed (rather than deleting — preserves
+    // history in case we want to audit later).
+    await client.query(
+      `UPDATE player_stats SET claimed_by_user_id = $1 WHERE name = $2`,
+      [userId, anonName],
+    );
+    // Roll the totals into the account's user_stats. UPSERT pattern.
+    await client.query(
+      `INSERT INTO user_stats (
+         user_id, display_name, total_wins, total_games,
+         sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (user_id) DO UPDATE SET
+         total_wins = user_stats.total_wins + EXCLUDED.total_wins,
+         total_games = user_stats.total_games + EXCLUDED.total_games,
+         sequences_closed = user_stats.sequences_closed + EXCLUDED.sequences_closed,
+         mvp_games = user_stats.mvp_games + EXCLUDED.mvp_games,
+         chips_placed = user_stats.chips_placed + EXCLUDED.chips_placed,
+         winning_sequences_closed = user_stats.winning_sequences_closed + EXCLUDED.winning_sequences_closed,
+         updated_at = NOW()`,
+      [
+        userId,
+        anonName,
+        row.total_wins,
+        row.total_games,
+        row.sequences_closed,
+        row.mvp_games,
+        row.chips_placed,
+        row.winning_sequences_closed,
+      ],
+    );
+    await client.query("COMMIT");
+    return true;
+  } catch (e) {
+    await client.query("ROLLBACK");
+    console.warn("[db] claimAnonymousName failed:", (e as Error).message);
+    return false;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Peek anonymous stats for a name. Used by the claim prompt: "you have
+ * 12 wins as 'Ayesha' — link them?" Returns null if name has no
+ * unclaimed anonymous stats.
+ */
+export async function getAnonymousStatsForName(name: string): Promise<{
+  totalWins: number;
+  totalGames: number;
+} | null> {
+  if (!pool) return null;
+  try {
+    const r = await pool.query<{ total_wins: number; total_games: number }>(
+      `SELECT total_wins, total_games FROM player_stats
+       WHERE name = $1 AND claimed_by_user_id IS NULL`,
+      [name],
+    );
+    const row = r.rows[0];
+    if (!row || row.total_games === 0) return null;
+    return { totalWins: row.total_wins, totalGames: row.total_games };
+  } catch {
+    return null;
   }
 }
 
@@ -673,11 +891,14 @@ interface TeamTopRow {
  *   points = sequences_closed × 5 + winning_sequences_closed × 5 + mvp_games × 10
  */
 const COMBINED_PLAYER_SQL = `
+  -- Anonymous rows — exclude any that have been claimed by an account
+  -- (their totals now live in user_stats so including them would double-count).
   SELECT name, total_wins, total_games, sequences_closed, mvp_games,
     winning_sequences_closed,
     (sequences_closed * 5 + winning_sequences_closed * 5 + mvp_games * 10) AS points,
     false AS verified
   FROM player_stats
+  WHERE claimed_by_user_id IS NULL
   UNION ALL
   SELECT display_name AS name, total_wins, total_games, sequences_closed, mvp_games,
     winning_sequences_closed,
