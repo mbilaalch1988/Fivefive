@@ -4,6 +4,10 @@ import { supabase, isAuthConfigured } from "../lib/supabase";
 
 export type OAuthProvider = "google" | "azure" | "facebook";
 
+export type AuthResult =
+  | { ok: true; needsVerification?: boolean }
+  | { ok: false; error: string };
+
 export interface UseAuth {
   /** True when VITE_SUPABASE_* env vars are set — i.e., auth is wired. */
   configured: boolean;
@@ -16,7 +20,15 @@ export interface UseAuth {
   avatarUrl: string | null;
   /** Current JWT access token, suitable for passing to the server. */
   accessToken: string | null;
-  signIn: (provider: OAuthProvider) => Promise<{ ok: boolean; error?: string }>;
+  signIn: (provider: OAuthProvider) => Promise<AuthResult>;
+  /** Email + password sign-in (Supabase). Returns { needsVerification }
+   *  if Supabase rejects an unverified email login. */
+  signInWithEmail: (email: string, password: string) => Promise<AuthResult>;
+  /** Email + password sign-up — sends a verification email. The session is
+   *  NOT established until the user clicks the link. */
+  signUpWithEmail: (email: string, password: string) => Promise<AuthResult>;
+  /** Trigger Supabase password reset. They click email link → reset page. */
+  requestPasswordReset: (email: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
 }
 
@@ -45,11 +57,57 @@ export function useAuth(): UseAuth {
   }, []);
 
   const signIn = useCallback(
-    async (provider: OAuthProvider) => {
+    async (provider: OAuthProvider): Promise<AuthResult> => {
       if (!supabase) return { ok: false, error: "auth not configured" };
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo: window.location.origin },
+      });
+      if (error) return { ok: false, error: error.message };
+      return { ok: true };
+    },
+    [],
+  );
+
+  const signInWithEmail = useCallback(
+    async (email: string, password: string): Promise<AuthResult> => {
+      if (!supabase) return { ok: false, error: "auth not configured" };
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        // Supabase returns "Email not confirmed" when verification is pending.
+        const msg = (error.message || "").toLowerCase();
+        if (msg.includes("confirm")) {
+          return { ok: false, error: "Verify your email first — check your inbox." };
+        }
+        return { ok: false, error: error.message };
+      }
+      return { ok: true };
+    },
+    [],
+  );
+
+  const signUpWithEmail = useCallback(
+    async (email: string, password: string): Promise<AuthResult> => {
+      if (!supabase) return { ok: false, error: "auth not configured" };
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin },
+      });
+      if (error) return { ok: false, error: error.message };
+      // session is null when verification is required (the default Supabase
+      // setting for new projects).
+      const needsVerification = !data.session;
+      return { ok: true, needsVerification };
+    },
+    [],
+  );
+
+  const requestPasswordReset = useCallback(
+    async (email: string): Promise<AuthResult> => {
+      if (!supabase) return { ok: false, error: "auth not configured" };
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
       });
       if (error) return { ok: false, error: error.message };
       return { ok: true };
@@ -76,6 +134,9 @@ export function useAuth(): UseAuth {
       : null,
     accessToken,
     signIn,
+    signInWithEmail,
+    signUpWithEmail,
+    requestPasswordReset,
     signOut,
   };
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AuthPanel } from "../components/AuthPanel";
 import { InstallPrompt } from "../components/InstallPrompt";
 import { ReplayListDialog } from "../components/ReplayListDialog";
 import { Scoreboard } from "../components/Scoreboard";
@@ -28,7 +29,6 @@ export function LandingScreen({
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [scoreboardOpen, setScoreboardOpen] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
   const [showSpectate, setShowSpectate] = useState(false);
   const [replayListOpen, setReplayListOpen] = useState(false);
   const [openReplayId, setOpenReplayId] = useState<string | null>(null);
@@ -66,12 +66,6 @@ export function LandingScreen({
     }
   }
 
-  async function onSignInGoogle() {
-    setAuthError(null);
-    const res = await auth.signIn("google");
-    if (!res.ok) setAuthError(res.error ?? "sign-in failed");
-  }
-
   return (
     <main
       className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden"
@@ -100,18 +94,15 @@ export function LandingScreen({
           </p>
         </header>
 
-        {(error || authError) && (
+        {error && (
           <div
             role="alert"
             className="bg-rose-500/15 border border-rose-400/40 text-rose-200 rounded-2xl px-4 py-3 text-sm flex items-start justify-between gap-3"
           >
-            <span>{error ?? authError}</span>
+            <span>{error}</span>
             <button
               type="button"
-              onClick={() => {
-                onClearError();
-                setAuthError(null);
-              }}
+              onClick={onClearError}
               className="text-rose-300 hover:text-rose-100 text-xs font-medium uppercase tracking-wider"
             >
               Dismiss
@@ -123,62 +114,9 @@ export function LandingScreen({
             real estate: left has auth + create/join, right has Hall of Fame. */}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-start">
         <div className="space-y-6">
-        {/* Auth section — only rendered when Supabase is configured */}
-        {auth.configured && (
-          <section
-            className="rounded-3xl p-5 space-y-3 shadow-sm"
-            style={{ background: "var(--md-surface-1)" }}
-          >
-            {auth.user ? (
-              <div className="flex items-center gap-3">
-                {auth.avatarUrl ? (
-                  <img
-                    src={auth.avatarUrl}
-                    alt=""
-                    className="w-10 h-10 rounded-full border border-zinc-700"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-200 font-semibold">
-                    {(auth.displayName ?? "?").charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
-                    {auth.displayName ?? "Signed in"}
-                  </div>
-                  <div
-                    className="text-xs truncate"
-                    style={{ color: "var(--md-on-surface-variant)" }}
-                  >
-                    {auth.user.email ?? "—"}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void auth.signOut()}
-                  className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-zinc-700"
-                >
-                  Sign out
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void onSignInGoogle()}
-                disabled={auth.loading || !connected}
-                data-testid="signin-google"
-                className="state-layer w-full py-3 rounded-full font-medium text-zinc-100
-                           bg-zinc-800 hover:bg-zinc-700 border border-zinc-700
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           transition-colors flex items-center justify-center gap-3"
-              >
-                <GoogleGlyph />
-                <span>Sign in with Google</span>
-              </button>
-            )}
-          </section>
-        )}
+        {/* Sign in / sign up panel (email + Google). Replaces the old single
+            Google button — both methods now appear together. */}
+        <AuthPanel />
 
         {/* Surface card: name + create */}
         <section
@@ -326,19 +264,8 @@ export function LandingScreen({
 }
 
 /* ------------------------------------------------------------ */
-/* Local Material primitives + Google glyph                      */
+/* Local Material primitives                                     */
 /* ------------------------------------------------------------ */
-
-function GoogleGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
-      <path
-        d="M21.35 11.1H12.18v2.96h5.27c-.23 1.4-1.66 4.1-5.27 4.1-3.17 0-5.76-2.62-5.76-5.86s2.59-5.86 5.76-5.86c1.8 0 3.01.77 3.7 1.43l2.52-2.43C16.83 4.06 14.7 3 12.18 3 7 3 2.82 7.18 2.82 12.3S7 21.6 12.18 21.6c7 0 9.34-4.93 9.34-7.94 0-.53-.06-.95-.17-1.56z"
-        fill="#fff"
-      />
-    </svg>
-  );
-}
 
 function FilledTextField(props: {
   label: string;
