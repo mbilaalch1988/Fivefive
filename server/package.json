@@ -14,6 +14,7 @@
     "@sequence/shared": "*",
     "cors": "^2.8.5",
     "express": "^4.21.0",
+    "jose": "^6.2.3",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.0",
     "socket.io": "^4.8.0",

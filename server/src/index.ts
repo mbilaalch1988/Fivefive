@@ -207,10 +207,13 @@ app.get("/api/replays/:gameId", async (req, res) => {
  * Pull the Authorization: Bearer JWT, verify with Supabase JWT secret,
  * return the verified user. 401 if missing/invalid.
  */
-function requireAuth(req: express.Request, res: express.Response): { userId: string; email?: string } | null {
+async function requireAuth(
+  req: express.Request,
+  res: express.Response,
+): Promise<{ userId: string; email?: string } | null> {
   const header = req.header("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  const verified = verifyToken(token);
+  const verified = await verifyToken(token);
   if (!verified) {
     res.status(401).json({ error: "auth required" });
     return null;
@@ -248,7 +251,7 @@ app.get("/api/accounts/check-username", async (req, res) => {
 
 /** Get the currently authenticated user's account row, if any. */
 app.get("/api/accounts/me", async (req, res) => {
-  const auth = requireAuth(req, res);
+  const auth = await requireAuth(req, res);
   if (!auth) return;
   const account = await getAccountByUserId(auth.userId);
   if (!account) {
@@ -265,7 +268,7 @@ app.get("/api/accounts/me", async (req, res) => {
  * same user 409s.
  */
 app.post("/api/accounts/register", async (req, res) => {
-  const auth = requireAuth(req, res);
+  const auth = await requireAuth(req, res);
   if (!auth) return;
   const username = validateUsername(req.body?.username);
   const displayName = validateDisplayName(req.body?.displayName) ?? username;
@@ -298,7 +301,7 @@ app.post("/api/accounts/register", async (req, res) => {
 
 /** Update the signed-in user's display name. Username is immutable. */
 app.patch("/api/accounts/me", async (req, res) => {
-  const auth = requireAuth(req, res);
+  const auth = await requireAuth(req, res);
   if (!auth) return;
   const displayName = validateDisplayName(req.body?.displayName);
   if (!displayName) {
@@ -331,7 +334,7 @@ app.get("/api/accounts/anonymous-stats", async (req, res) => {
  * is marked claimed_by_user_id so it disappears from anonymous leaderboards.
  */
 app.post("/api/accounts/claim-name", async (req, res) => {
-  const auth = requireAuth(req, res);
+  const auth = await requireAuth(req, res);
   if (!auth) return;
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
   if (!name) {
@@ -812,9 +815,9 @@ function broadcastGame(room: Room): void {
 io.on("connection", (socket) => {
   console.log(`[io] connect ${socket.id}`);
 
-  socket.on("createRoom", ({ playerName, authToken }, ack) => {
+  socket.on("createRoom", async ({ playerName, authToken }, ack) => {
     try {
-      const verified = verifyToken(authToken);
+      const verified = await verifyToken(authToken);
       // If user is signed in, prefer the verified display name when none typed.
       const name = (playerName ?? verified?.displayName ?? "").trim();
       if (!name) return ack({ ok: false, error: "name required" });
@@ -833,9 +836,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("joinRoom", ({ roomCode, playerName, authToken }, ack) => {
+  socket.on("joinRoom", async ({ roomCode, playerName, authToken }, ack) => {
     try {
-      const verified = verifyToken(authToken);
+      const verified = await verifyToken(authToken);
       const code = (roomCode ?? "").trim().toUpperCase();
       const name = (playerName ?? verified?.displayName ?? "").trim();
       if (!code) return ack({ ok: false, error: "room code required" });
@@ -858,9 +861,9 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("joinAsSpectator", ({ roomCode, spectatorName, authToken }, ack) => {
+  socket.on("joinAsSpectator", async ({ roomCode, spectatorName, authToken }, ack) => {
     try {
-      const verified = verifyToken(authToken);
+      const verified = await verifyToken(authToken);
       const code = (roomCode ?? "").trim().toUpperCase();
       const name = (spectatorName ?? verified?.displayName ?? "Spectator").trim() || "Spectator";
       if (!code) return ack({ ok: false, error: "room code required" });
