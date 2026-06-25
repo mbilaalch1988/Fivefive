@@ -103,12 +103,50 @@ async function runMigration(): Promise<void> {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    -- Rebrand 6/6: rename pre-rebrand columns to their fivefive equivalents
+    -- BEFORE any ALTER ADD COLUMN runs (else ADD COLUMN IF NOT EXISTS would
+    -- create empty new-named columns alongside the populated old-named ones).
+    -- Idempotent: only renames when old name exists AND new name doesn't.
+    DO $$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name='player_stats' AND column_name='sequences_closed')
+         AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                         WHERE table_name='player_stats' AND column_name='fivefives_closed') THEN
+        ALTER TABLE player_stats RENAME COLUMN sequences_closed TO fivefives_closed;
+      END IF;
+      IF EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name='player_stats' AND column_name='winning_sequences_closed')
+         AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                         WHERE table_name='player_stats' AND column_name='winning_fivefives_closed') THEN
+        ALTER TABLE player_stats RENAME COLUMN winning_sequences_closed TO winning_fivefives_closed;
+      END IF;
+      IF EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name='user_stats' AND column_name='sequences_closed')
+         AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                         WHERE table_name='user_stats' AND column_name='fivefives_closed') THEN
+        ALTER TABLE user_stats RENAME COLUMN sequences_closed TO fivefives_closed;
+      END IF;
+      IF EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name='user_stats' AND column_name='winning_sequences_closed')
+         AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                         WHERE table_name='user_stats' AND column_name='winning_fivefives_closed') THEN
+        ALTER TABLE user_stats RENAME COLUMN winning_sequences_closed TO winning_fivefives_closed;
+      END IF;
+      IF EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name='game_log' AND column_name='sequences_to_win')
+         AND NOT EXISTS (SELECT 1 FROM information_schema.columns
+                         WHERE table_name='game_log' AND column_name='fivefives_to_win') THEN
+        ALTER TABLE game_log RENAME COLUMN sequences_to_win TO fivefives_to_win;
+      END IF;
+    END $$;
+
     -- New player career stats (added after initial deploy).
-    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS sequences_closed INT NOT NULL DEFAULT 0;
+    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS fivefives_closed INT NOT NULL DEFAULT 0;
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS mvp_games INT NOT NULL DEFAULT 0;
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS chips_placed INT NOT NULL DEFAULT 0;
     -- Career count of fivefives personally closed that pushed a team to win.
-    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS winning_sequences_closed INT NOT NULL DEFAULT 0;
+    ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS winning_fivefives_closed INT NOT NULL DEFAULT 0;
 
     -- Signed-in user career stats keyed by Supabase auth.users.id.
     CREATE TABLE IF NOT EXISTS user_stats (
@@ -116,14 +154,14 @@ async function runMigration(): Promise<void> {
       display_name TEXT NOT NULL,
       total_wins INT NOT NULL DEFAULT 0,
       total_games INT NOT NULL DEFAULT 0,
-      sequences_closed INT NOT NULL DEFAULT 0,
+      fivefives_closed INT NOT NULL DEFAULT 0,
       mvp_games INT NOT NULL DEFAULT 0,
       chips_placed INT NOT NULL DEFAULT 0,
-      winning_sequences_closed INT NOT NULL DEFAULT 0,
+      winning_fivefives_closed INT NOT NULL DEFAULT 0,
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
     -- Backfill for tables created before the column existed.
-    ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS winning_sequences_closed INT NOT NULL DEFAULT 0;
+    ALTER TABLE user_stats ADD COLUMN IF NOT EXISTS winning_fivefives_closed INT NOT NULL DEFAULT 0;
 
     -- ------------------------------------------------------------
     -- Replay log: every game gets a UUID, every action gets a row.
@@ -133,7 +171,7 @@ async function runMigration(): Promise<void> {
       game_id UUID PRIMARY KEY,
       room_code TEXT NOT NULL,
       deck_id TEXT,
-      sequences_to_win INT NOT NULL,
+      fivefives_to_win INT NOT NULL,
       team_names JSONB NOT NULL,
       players JSONB NOT NULL,
       started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -218,7 +256,7 @@ export async function persistGameStart(record: GameStartRecord): Promise<void> {
   if (!pool) return;
   try {
     await pool.query(
-      `INSERT INTO game_log (game_id, room_code, deck_id, sequences_to_win, team_names, players, initial_seed)
+      `INSERT INTO game_log (game_id, room_code, deck_id, fivefives_to_win, team_names, players, initial_seed)
        VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7)
        ON CONFLICT (game_id) DO NOTHING`,
       [
@@ -350,12 +388,12 @@ export async function claimAnonymousName(
     const lock = await client.query<{
       total_wins: number;
       total_games: number;
-      sequences_closed: number;
+      fivefives_closed: number;
       mvp_games: number;
       chips_placed: number;
-      winning_sequences_closed: number;
+      winning_fivefives_closed: number;
     }>(
-      `SELECT total_wins, total_games, sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+      `SELECT total_wins, total_games, fivefives_closed, mvp_games, chips_placed, winning_fivefives_closed
        FROM player_stats
        WHERE name = $1 AND claimed_by_user_id IS NULL
        FOR UPDATE`,
@@ -376,25 +414,25 @@ export async function claimAnonymousName(
     await client.query(
       `INSERT INTO user_stats (
          user_id, display_name, total_wins, total_games,
-         sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+         fivefives_closed, mvp_games, chips_placed, winning_fivefives_closed
        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (user_id) DO UPDATE SET
          total_wins = user_stats.total_wins + EXCLUDED.total_wins,
          total_games = user_stats.total_games + EXCLUDED.total_games,
-         sequences_closed = user_stats.sequences_closed + EXCLUDED.sequences_closed,
+         fivefives_closed = user_stats.fivefives_closed + EXCLUDED.fivefives_closed,
          mvp_games = user_stats.mvp_games + EXCLUDED.mvp_games,
          chips_placed = user_stats.chips_placed + EXCLUDED.chips_placed,
-         winning_sequences_closed = user_stats.winning_sequences_closed + EXCLUDED.winning_sequences_closed,
+         winning_fivefives_closed = user_stats.winning_fivefives_closed + EXCLUDED.winning_fivefives_closed,
          updated_at = NOW()`,
       [
         userId,
         anonName,
         row.total_wins,
         row.total_games,
-        row.sequences_closed,
+        row.fivefives_closed,
         row.mvp_games,
         row.chips_placed,
-        row.winning_sequences_closed,
+        row.winning_fivefives_closed,
       ],
     );
     await client.query("COMMIT");
@@ -633,8 +671,8 @@ export async function getPushSubscriptions(
 export async function getReplay(gameId: string) {
   if (!pool) return null;
   try {
-    const meta = await pool.query<ReplaySummaryRow & { deck_id: string | null; sequences_to_win: number }>(
-      `SELECT game_id, room_code, deck_id, sequences_to_win,
+    const meta = await pool.query<ReplaySummaryRow & { deck_id: string | null; fivefives_to_win: number }>(
+      `SELECT game_id, room_code, deck_id, fivefives_to_win,
               started_at, finished_at, winning_team, action_count,
               team_names, players
        FROM game_log
@@ -654,7 +692,7 @@ export async function getReplay(gameId: string) {
       gameId: m.game_id,
       roomCode: m.room_code,
       deckId: m.deck_id,
-      fivefivesToWin: Number(m.sequences_to_win),
+      fivefivesToWin: Number(m.fivefives_to_win),
       teamNames: m.team_names,
       players: m.players,
       startedAt: m.started_at.toISOString(),
@@ -805,16 +843,16 @@ export async function persistWin(record: WinRecord): Promise<void> {
         await pool.query(
           `INSERT INTO user_stats (
              user_id, display_name, total_wins, total_games,
-             sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+             fivefives_closed, mvp_games, chips_placed, winning_fivefives_closed
            ) VALUES ($1, $2, $3, 1, $4, $5, $6, $7)
            ON CONFLICT (user_id) DO UPDATE SET
              display_name = EXCLUDED.display_name,
              total_wins = user_stats.total_wins + EXCLUDED.total_wins,
              total_games = user_stats.total_games + 1,
-             sequences_closed = user_stats.sequences_closed + EXCLUDED.sequences_closed,
+             fivefives_closed = user_stats.fivefives_closed + EXCLUDED.fivefives_closed,
              mvp_games = user_stats.mvp_games + EXCLUDED.mvp_games,
              chips_placed = user_stats.chips_placed + EXCLUDED.chips_placed,
-             winning_sequences_closed = user_stats.winning_sequences_closed + EXCLUDED.winning_sequences_closed,
+             winning_fivefives_closed = user_stats.winning_fivefives_closed + EXCLUDED.winning_fivefives_closed,
              updated_at = NOW()`,
           [
             c.userId,
@@ -829,15 +867,15 @@ export async function persistWin(record: WinRecord): Promise<void> {
       } else {
         await pool.query(
           `INSERT INTO player_stats (
-             name, total_wins, total_games, sequences_closed, mvp_games, chips_placed, winning_sequences_closed
+             name, total_wins, total_games, fivefives_closed, mvp_games, chips_placed, winning_fivefives_closed
            ) VALUES ($1, $2, 1, $3, $4, $5, $6)
            ON CONFLICT (name) DO UPDATE SET
              total_wins = player_stats.total_wins + EXCLUDED.total_wins,
              total_games = player_stats.total_games + 1,
-             sequences_closed = player_stats.sequences_closed + EXCLUDED.sequences_closed,
+             fivefives_closed = player_stats.fivefives_closed + EXCLUDED.fivefives_closed,
              mvp_games = player_stats.mvp_games + EXCLUDED.mvp_games,
              chips_placed = player_stats.chips_placed + EXCLUDED.chips_placed,
-             winning_sequences_closed = player_stats.winning_sequences_closed + EXCLUDED.winning_sequences_closed,
+             winning_fivefives_closed = player_stats.winning_fivefives_closed + EXCLUDED.winning_fivefives_closed,
              updated_at = NOW()`,
           [
             c.name,
@@ -873,9 +911,9 @@ interface PlayerTopRow {
   name: string;
   total_wins: number;
   total_games: number;
-  sequences_closed: number;
+  fivefives_closed: number;
   mvp_games: number;
-  winning_sequences_closed: number;
+  winning_fivefives_closed: number;
   points: number;
   verified: boolean;
 }
@@ -888,21 +926,21 @@ interface TeamTopRow {
 /**
  * Combined view: anonymous rows from player_stats + signed-in rows from user_stats.
  * Points are computed inline so we can tune the formula in one place.
- *   points = sequences_closed × 5 + winning_sequences_closed × 5 + mvp_games × 10
+ *   points = fivefives_closed × 5 + winning_fivefives_closed × 5 + mvp_games × 10
  */
 const COMBINED_PLAYER_SQL = `
   -- Anonymous rows — exclude any that have been claimed by an account
   -- (their totals now live in user_stats so including them would double-count).
-  SELECT name, total_wins, total_games, sequences_closed, mvp_games,
-    winning_sequences_closed,
-    (sequences_closed * 5 + winning_sequences_closed * 5 + mvp_games * 10) AS points,
+  SELECT name, total_wins, total_games, fivefives_closed, mvp_games,
+    winning_fivefives_closed,
+    (fivefives_closed * 5 + winning_fivefives_closed * 5 + mvp_games * 10) AS points,
     false AS verified
   FROM player_stats
   WHERE claimed_by_user_id IS NULL
   UNION ALL
-  SELECT display_name AS name, total_wins, total_games, sequences_closed, mvp_games,
-    winning_sequences_closed,
-    (sequences_closed * 5 + winning_sequences_closed * 5 + mvp_games * 10) AS points,
+  SELECT display_name AS name, total_wins, total_games, fivefives_closed, mvp_games,
+    winning_fivefives_closed,
+    (fivefives_closed * 5 + winning_fivefives_closed * 5 + mvp_games * 10) AS points,
     true AS verified
   FROM user_stats
 `;
@@ -946,8 +984,8 @@ export async function getTopPlayersByFivefives(limit: number) {
   try {
     const r = await pool.query<PlayerTopRow>(
       `SELECT * FROM (${COMBINED_PLAYER_SQL}) c
-       WHERE sequences_closed > 0
-       ORDER BY sequences_closed DESC, total_games ASC, name ASC
+       WHERE fivefives_closed > 0
+       ORDER BY fivefives_closed DESC, total_games ASC, name ASC
        LIMIT $1`,
       [limit],
     );
@@ -1066,8 +1104,8 @@ function playerRowToEntry(r: PlayerTopRow) {
     wins: Number(r.total_wins),
     games: Number(r.total_games),
     ratio: r.total_games > 0 ? Number(r.total_wins) / Number(r.total_games) : 0,
-    fivefivesClosed: Number(r.sequences_closed),
-    winningFivefivesClosed: Number(r.winning_sequences_closed),
+    fivefivesClosed: Number(r.fivefives_closed),
+    winningFivefivesClosed: Number(r.winning_fivefives_closed),
     mvpGames: Number(r.mvp_games),
     points: Number(r.points),
     verified: r.verified === true,
