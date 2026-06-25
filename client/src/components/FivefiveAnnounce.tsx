@@ -16,17 +16,17 @@ export function FivefiveAnnounce({ team, teamName }: Props) {
     <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
       <div className="fivefive-announce-text text-center select-none">
         <div
-          className="text-[3.2rem] sm:text-8xl font-black tracking-[0.15em] sm:tracking-[0.2em] text-amber-300 leading-none"
+          className="ff-wordmark text-[3.2rem] sm:text-8xl"
           style={{
-            WebkitTextStroke: "2px rgba(0,0,0,0.5)",
+            letterSpacing: "-0.04em",
             textShadow:
-              "0 4px 30px rgba(252, 211, 77, 0.7), 0 0 60px rgba(252, 211, 77, 0.4)",
+              "4px 4px 0 var(--ff-navy-ink), 0 6px 40px rgba(228, 195, 115, 0.55)",
           }}
         >
           FIVEFIVE!
         </div>
         <div
-          className={`mt-2 text-sm sm:text-xl font-bold tracking-[0.3em] uppercase ${TEAM_TEXT[team]}`}
+          className={`mt-3 text-sm sm:text-xl font-bold tracking-[0.3em] uppercase ${TEAM_TEXT[team]}`}
           style={{ textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}
         >
           {teamName}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AccountSetup } from "../components/AccountSetup";
+import { FivefiveLockup } from "../components/BrandMark";
 import { AuthPanel } from "../components/AuthPanel";
 import { ClaimNamePrompt } from "../components/ClaimNamePrompt";
 import { InstallPrompt } from "../components/InstallPrompt";
@@ -124,15 +125,8 @@ export function LandingScreen({
       </div>
 
       <div className="relative w-full max-w-sm lg:max-w-5xl space-y-6">
-        <header className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-2 shadow-lg shadow-fuchsia-900/30"
-               style={{
-                 background: "linear-gradient(135deg, rgba(168,85,247,0.25), rgba(236,72,153,0.25), rgba(245,158,11,0.25))",
-                 border: "1px solid rgba(255,255,255,0.15)",
-               }}>
-            <span className="text-4xl">🂠</span>
-          </div>
-          <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Fivefive</h1>
+        <header className="text-center flex flex-col items-center gap-3">
+          <FivefiveLockup sizeRem={3.2} />
           <p className="text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
             {connected ? "Connected" : "Connecting…"}
           </p>

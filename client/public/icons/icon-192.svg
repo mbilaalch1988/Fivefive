@@ -1,30 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
-  <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
-      <stop offset="0%" stop-color="#3f3f46"/>
-      <stop offset="100%" stop-color="#131316"/>
-    </radialGradient>
-    <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%"   stop-color="#fb7185"/>
-      <stop offset="35%"  stop-color="#fbbf24"/>
-      <stop offset="70%"  stop-color="#818cf8"/>
-      <stop offset="100%" stop-color="#34d399"/>
-    </linearGradient>
-    <radialGradient id="chipFill" cx="50%" cy="35%" r="65%">
-      <stop offset="0%" stop-color="#fef3c7"/>
-      <stop offset="100%" stop-color="#fbbf24"/>
-    </radialGradient>
-  </defs>
-  <!-- Background fills the full canvas. -->
-  <rect width="192" height="192" fill="url(#bg)"/>
-  <!-- Maskable safe area: content within central 154x154 (80%). -->
-  <!-- Chip body (poker-chip silhouette). -->
-  <circle cx="96" cy="96" r="62" fill="url(#chipFill)" stroke="#18181b" stroke-width="6"/>
-  <circle cx="96" cy="96" r="50" fill="none" stroke="#18181b" stroke-width="3" stroke-dasharray="6 4"/>
-  <!-- "S" wordmark in brand gradient. -->
-  <text x="96" y="120" text-anchor="middle"
-        font-family="ui-sans-serif, system-ui, sans-serif" font-weight="900"
-        font-size="78" fill="url(#brand)"
-        style="paint-order: stroke; stroke: #18181b; stroke-width: 3;">S</text>
+  <!-- Fivefive "55" mark. Maskable: content stays within central 154x154 (80%). -->
+  <rect width="192" height="192" fill="#0a1840"/>
+  <!-- Gold rounded square (mark body) -->
+  <rect x="28" y="28" width="124" height="124" rx="30" ry="30"
+        fill="#e4c373" stroke="#060d2a" stroke-width="6"/>
+  <!-- "55" numerals — Fredoka 500, navy. -->
+  <text x="96" y="124" text-anchor="middle"
+        font-family="Fredoka, 'Inter', system-ui, sans-serif"
+        font-weight="500"
+        font-size="84"
+        letter-spacing="-3.4"
+        fill="#0a1840">55</text>
+  <!-- Coral accent dot, top-right corner. -->
+  <circle cx="156" cy="36" r="14" fill="#fb7185" stroke="#060d2a" stroke-width="5"/>
 </svg>
