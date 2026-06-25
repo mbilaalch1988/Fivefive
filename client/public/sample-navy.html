@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fivefive · Royal navy cartoon sample</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bagel+Fat+One&family=Inter:wght@400;500;600;700;800&family=Geist+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:       #0a1840;
+    --navy-soft:  #122560;
+    --navy-card:  #1a2f78;
+    --navy-line:  #060d2a;
+    --gold:       #e4c373;
+    --gold-deep:  #c9a35b;
+    --cream:      #fef3c7;
+    --cream-soft: #fde68a;
+    --coral:      #fb7185;
+    --coral-deep: #e11d48;
+    --mint:       #86efac;
+    --sky:        #38bdf8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--navy);
+    color: var(--cream);
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+  body { padding: 40px 16px 80px; min-height: 100vh; }
+
+  /* Wavy navy background pattern */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(circle at 10% 20%, rgba(228, 195, 115, 0.08), transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(251, 113, 133, 0.06), transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.05), transparent 50%);
+  }
+
+  .container { max-width: 760px; margin: 0 auto; }
+  .section { margin-bottom: 56px; }
+  .section-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;
+    color: var(--gold); opacity: 0.8;
+    margin-bottom: 12px; font-weight: 600;
+  }
+
+  /* ============ Reusable cartoon primitives ============ */
+  .sticker {
+    border: 3px solid var(--navy-line);
+    border-radius: 20px;
+    box-shadow: 4px 4px 0 var(--navy-line);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+  .sticker:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--navy-line);
+  }
+  .pill {
+    border: 3px solid var(--navy-line);
+    border-radius: 999px;
+    box-shadow: 3px 3px 0 var(--navy-line);
+    transition: transform 120ms ease, box-shadow 120ms ease;
+  }
+  .pill:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--navy-line);
+  }
+  .pill:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 var(--navy-line);
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    background: linear-gradient(135deg, var(--navy-card) 0%, var(--navy-soft) 100%);
+    padding: 48px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before, .hero::after {
+    content: ""; position: absolute; border-radius: 50%;
+    border: 3px solid var(--navy-line);
+  }
+  .hero::before {
+    width: 80px; height: 80px;
+    background: var(--coral);
+    top: -20px; right: -20px;
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+  }
+  .hero::after {
+    width: 60px; height: 60px;
+    background: var(--gold);
+    bottom: -15px; left: -15px;
+    box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
+  }
+  .hero .logo-mark {
+    width: 96px; height: 96px;
+    background: var(--gold);
+    border: 4px solid var(--navy-line);
+    border-radius: 24px;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 6px 6px 0 var(--navy-line);
+    transform: rotate(-3deg);
+    position: relative;
+  }
+  .hero .logo-mark .num {
+    font-family: 'Bagel Fat One', cursive;
+    font-size: 52px;
+    color: var(--navy);
+    letter-spacing: -0.05em;
+    line-height: 1;
+  }
+  .hero .logo-mark .dot {
+    position: absolute;
+    width: 14px; height: 14px;
+    background: var(--coral);
+    border: 3px solid var(--navy-line);
+    border-radius: 50%;
+    top: 12px; right: 12px;
+  }
+  .hero h1 {
+    font-family: 'Bagel Fat One', cursive;
+    font-size: 56px; line-height: 1;
+    color: var(--gold);
+    letter-spacing: -0.02em;
+    text-shadow: 4px 4px 0 var(--navy-line);
+    margin-bottom: 12px;
+  }
+  .hero .tagline {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 18px; font-weight: 500;
+    color: var(--cream);
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+  .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 17px;
+    padding: 14px 28px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+  }
+  .btn-gold {
+    background: var(--gold);
+    color: var(--navy);
+  }
+  .btn-coral {
+    background: var(--coral);
+    color: var(--cream);
+  }
+  .btn-ghost {
+    background: var(--navy-card);
+    color: var(--cream);
+  }
+
+  /* ============ GAME BOARD SNIPPET ============ */
+  .board-wrap {
+    background: var(--navy-card);
+    padding: 24px;
+  }
+  .board-title {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--gold); margin-bottom: 12px;
+    text-transform: uppercase; letter-spacing: 0.15em;
+  }
+  .board {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    aspect-ratio: 4 / 3;
+  }
+  .cell {
+    aspect-ratio: 5 / 7;
+    border-radius: 10px;
+    border: 3px solid var(--navy-line);
+    background: var(--cream);
+    color: var(--navy);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    box-shadow: 2px 2px 0 var(--navy-line);
+    position: relative;
+    overflow: visible;
+  }
+  .cell .rank { font-size: 16px; line-height: 1; }
+  .cell .suit { font-size: 20px; line-height: 1; margin-top: 2px; }
+  .cell.red { color: #b91c1c; }
+  .cell.corner { background: var(--gold); color: var(--navy); }
+  .cell.corner::after { content: "★"; font-size: 24px; }
+  .cell.chip-red .chip, .cell.chip-blue .chip {
+    position: absolute;
+    width: 56%; aspect-ratio: 1 / 1;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 3px solid var(--navy-line);
+    box-shadow: 2px 3px 0 var(--navy-line), inset 0 -3px 0 rgba(0,0,0,0.2);
+  }
+  .cell.chip-red .chip { background: var(--coral); }
+  .cell.chip-blue .chip { background: var(--sky); }
+  .cell.glow { animation: glow 1.8s ease-in-out infinite; }
+  @keyframes glow {
+    0%, 100% { box-shadow: 2px 2px 0 var(--navy-line), 0 0 12px 2px rgba(228, 195, 115, 0.6); }
+    50%      { box-shadow: 2px 2px 0 var(--navy-line), 0 0 24px 6px rgba(228, 195, 115, 0.9); }
+  }
+
+  /* ============ TURN BAR ============ */
+  .turn-bar {
+    display: flex; gap: 8px; padding: 16px;
+    background: var(--navy-card);
+    flex-wrap: wrap; align-items: center; justify-content: center;
+  }
+  .player-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 13px;
+    color: var(--cream);
+  }
+  .player-badge.red { background: var(--coral); }
+  .player-badge.blue { background: var(--sky); color: var(--navy); }
+  .player-badge.current {
+    animation: bounce 1.2s ease-in-out infinite;
+    box-shadow: 3px 3px 0 var(--navy-line), 0 0 0 4px var(--gold);
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+  }
+  .player-badge .you {
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em;
+    background: var(--navy); color: var(--gold);
+    padding: 2px 6px; border-radius: 999px;
+    border: 2px solid var(--navy-line);
+  }
+
+  /* ============ WIN OVERLAY SAMPLE ============ */
+  .win-overlay {
+    background: linear-gradient(180deg, #1a2f78 0%, #0a1840 100%);
+    padding: 40px 32px;
+    text-align: center;
+    position: relative;
+  }
+  .win-overlay .trophy {
+    font-size: 80px; line-height: 1;
+    margin-bottom: 8px;
+    display: inline-block;
+    animation: wobble 2s ease-in-out infinite;
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(-6deg); }
+    50%      { transform: rotate(6deg); }
+  }
+  .win-overlay .winner-label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.25em;
+    color: var(--gold); font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .win-overlay .team-name {
+    font-family: 'Bagel Fat One', cursive;
+    font-size: 48px; line-height: 1;
+    color: var(--coral);
+    text-shadow: 4px 4px 0 var(--navy-line);
+    margin-bottom: 16px;
+  }
+  .mvp-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 14px;
+  }
+  /* Confetti dots scattered in the win overlay */
+  .confetti-dot {
+    position: absolute; border-radius: 50%;
+    border: 2px solid var(--navy-line);
+    box-shadow: 2px 2px 0 var(--navy-line);
+  }
+
+  /* ============ PROFILE BAR ============ */
+  .profile-bar {
+    background: var(--navy-card);
+    padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .profile-bar .avatar {
+    width: 48px; height: 48px;
+    background: var(--coral);
+    border: 3px solid var(--navy-line);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bagel Fat One', cursive;
+    font-size: 24px;
+    color: var(--cream);
+    box-shadow: 2px 2px 0 var(--navy-line);
+    flex-shrink: 0;
+  }
+  .profile-bar .info { flex: 1; min-width: 0; }
+  .profile-bar .name {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 16px;
+    color: var(--cream);
+  }
+  .profile-bar .handle {
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    opacity: 0.8;
+  }
+  .signout {
+    background: transparent;
+    color: var(--cream);
+    border: 2px solid var(--gold);
+    box-shadow: 2px 2px 0 var(--gold-deep);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 999px;
+  }
+
+  /* ============ ACHIEVEMENT TILES ============ */
+  .ach-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .ach {
+    aspect-ratio: 1;
+    border: 3px solid var(--navy-line);
+    border-radius: 16px;
+    box-shadow: 3px 3px 0 var(--navy-line);
+    padding: 12px 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    position: relative;
+  }
+  .ach .icon { font-size: 28px; line-height: 1; margin-bottom: 6px; }
+  .ach .label {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 11px; font-weight: 700;
+    line-height: 1.15;
+    color: var(--cream);
+  }
+  .ach.bronze { background: linear-gradient(180deg, #c47b2c 0%, #8b531a 100%); }
+  .ach.silver { background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%); }
+  .ach.silver .label { color: var(--navy); }
+  .ach.gold {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-deep) 100%);
+    box-shadow: 3px 3px 0 var(--navy-line), 0 0 16px rgba(228, 195, 115, 0.4);
+  }
+  .ach.gold .label { color: var(--navy); }
+  .ach.locked {
+    background: var(--navy-soft);
+    opacity: 0.6;
+  }
+  .ach.locked .icon { filter: grayscale(1); opacity: 0.5; }
+  .ach .check {
+    position: absolute; top: -8px; right: -8px;
+    width: 24px; height: 24px;
+    background: var(--mint);
+    border: 2.5px solid var(--navy-line);
+    border-radius: 50%;
+    color: var(--navy);
+    font-family: 'Inter', sans-serif;
+    font-weight: 900; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 1px 1px 0 var(--navy-line);
+  }
+
+  /* ============ FAIZI CARD ============ */
+  .faizi {
+    background: linear-gradient(135deg, var(--navy-soft) 0%, var(--navy-card) 100%);
+    padding: 20px;
+  }
+  .faizi-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .faizi-avatar {
+    width: 44px; height: 44px;
+    background: var(--gold);
+    border: 3px solid var(--navy-line);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 2px 2px 0 var(--navy-line);
+    transform: rotate(-4deg);
+    flex-shrink: 0;
+  }
+  .faizi-name {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 18px;
+    color: var(--gold);
+  }
+  .faizi-sub {
+    font-size: 12px;
+    color: var(--cream); opacity: 0.7;
+  }
+  .roast-line {
+    background: var(--navy);
+    border: 2.5px solid var(--navy-line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    box-shadow: 2px 2px 0 var(--navy-line);
+  }
+  .roast-line b { color: var(--gold); font-weight: 700; }
+  .roast-line .tag {
+    display: inline-block;
+    background: var(--coral);
+    color: var(--cream);
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 2px 8px; border-radius: 999px;
+    border: 2px solid var(--navy-line);
+    margin-right: 6px;
+  }
+  .roast-line .tag.good { background: var(--mint); color: var(--navy); }
+
+  /* ============ STICKER / CHAT BUBBLES ============ */
+  .chat-stack {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 20px;
+    background: var(--navy-card);
+  }
+  .chat-bubble {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600; font-size: 14px;
+    color: var(--cream);
+    transform: rotate(-2deg);
+    animation: float 3s ease-in-out infinite;
+  }
+  .chat-bubble:nth-child(even) {
+    transform: rotate(1.5deg);
+    animation-delay: 0.5s;
+  }
+  @keyframes float {
+    0%, 100% { transform: rotate(-2deg) translateY(0); }
+    50%      { transform: rotate(-2deg) translateY(-4px); }
+  }
+  .chat-bubble.coral { background: var(--coral); }
+  .chat-bubble.sky { background: var(--sky); color: var(--navy); }
+  .chat-bubble.gold { background: var(--gold); color: var(--navy); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- =================== HERO =================== -->
+  <div class="section">
+    <div class="section-label">Hero · landing</div>
+    <div class="hero sticker">
+      <div class="logo-mark">
+        <span class="num">55</span>
+        <span class="dot"></span>
+      </div>
+      <h1>fivefive</h1>
+      <p class="tagline">Five in a row.<br>Anywhere a browser opens.</p>
+      <div class="cta-row">
+        <button class="btn btn-gold pill">Create a room</button>
+        <button class="btn btn-coral pill">Join with code</button>
+        <button class="btn btn-ghost pill">Spectate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== TURN BAR + GAME BOARD =================== -->
+  <div class="section">
+    <div class="section-label">Game · in progress</div>
+    <div class="turn-bar sticker" style="margin-bottom: 12px; border-radius: 20px;">
+      <div class="player-badge pill red current">Ayesha <span class="you">YOU</span></div>
+      <div class="player-badge pill blue">Mahnoor</div>
+      <div class="player-badge pill red" style="opacity:0.6">MBC</div>
+      <div class="player-badge pill blue" style="opacity:0.6">Hard Bot</div>
+    </div>
+    <div class="board-wrap sticker">
+      <div class="board-title">Board · 4×3 snippet</div>
+      <div class="board">
+        <div class="cell corner"></div>
+        <div class="cell"><span class="rank">A</span><span class="suit">♣</span></div>
+        <div class="cell chip-red red"><span class="rank">K</span><span class="suit">♣</span><div class="chip"></div></div>
+        <div class="cell chip-red glow"><span class="rank">Q</span><span class="suit">♣</span><div class="chip"></div></div>
+        <div class="cell red"><span class="rank">A</span><span class="suit">♥</span></div>
+        <div class="cell chip-blue"><span class="rank">7</span><span class="suit">♠</span><div class="chip"></div></div>
+        <div class="cell chip-red"><span class="rank">8</span><span class="suit">♠</span><div class="chip"></div></div>
+        <div class="cell"><span class="rank">9</span><span class="suit">♠</span></div>
+        <div class="cell red"><span class="rank">K</span><span class="suit">♦</span></div>
+        <div class="cell red"><span class="rank">6</span><span class="suit">♠</span></div>
+        <div class="cell chip-blue"><span class="rank">10</span><span class="suit">♣</span><div class="chip"></div></div>
+        <div class="cell corner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== WIN OVERLAY =================== -->
+  <div class="section">
+    <div class="section-label">Win overlay</div>
+    <div class="win-overlay sticker">
+      <span class="confetti-dot" style="width:14px;height:14px;background:var(--coral);top:30px;left:40px;"></span>
+      <span class="confetti-dot" style="width:10px;height:10px;background:var(--gold);top:60px;right:60px;"></span>
+      <span class="confetti-dot" style="width:12px;height:12px;background:var(--sky);bottom:40px;left:80px;"></span>
+      <span class="confetti-dot" style="width:8px;height:8px;background:var(--mint);bottom:60px;right:90px;"></span>
+      <span class="confetti-dot" style="width:16px;height:16px;background:var(--cream);top:100px;right:30px;"></span>
+
+      <div class="trophy">🏆</div>
+      <div class="winner-label">★ Winner ★</div>
+      <div class="team-name">Wolfpak!</div>
+      <div class="mvp-chip pill">⭐ MVP: Ayesha</div>
+      <div style="margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-gold pill">Re-match</button>
+        <button class="btn btn-coral pill">📊 Faizi's analysis</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== PROFILE BAR =================== -->
+  <div class="section">
+    <div class="section-label">Profile bar</div>
+    <div class="profile-bar sticker" style="border-radius: 20px;">
+      <div class="avatar">A</div>
+      <div class="info">
+        <div class="name">Ayesha</div>
+        <div class="handle">@ayesha</div>
+      </div>
+      <button class="signout">Sign out</button>
+    </div>
+  </div>
+
+  <!-- =================== ACHIEVEMENTS =================== -->
+  <div class="section">
+    <div class="section-label">Achievements · grid</div>
+    <div class="ach-grid">
+      <div class="ach gold"><span class="check">✓</span><div class="icon">🏆</div><div class="label">Sharpshooter</div></div>
+      <div class="ach gold"><span class="check">✓</span><div class="icon">💯</div><div class="label">Centurion</div></div>
+      <div class="ach silver"><span class="check">✓</span><div class="icon">🛡</div><div class="label">Veteran</div></div>
+      <div class="ach bronze"><span class="check">✓</span><div class="icon">⭐</div><div class="label">MVP</div></div>
+      <div class="ach bronze"><span class="check">✓</span><div class="icon">💪</div><div class="label">Heart of a Champion</div></div>
+      <div class="ach locked"><div class="icon">🌠</div><div class="label">Dedication</div></div>
+      <div class="ach locked"><div class="icon">🐉</div><div class="label">Grandmaster</div></div>
+      <div class="ach locked"><div class="icon">🥇</div><div class="label">MVP Master</div></div>
+    </div>
+  </div>
+
+  <!-- =================== FAIZI ROAST =================== -->
+  <div class="section">
+    <div class="section-label">Faizi · post-game roast</div>
+    <div class="faizi sticker">
+      <div class="faizi-header">
+        <div class="faizi-avatar">📊</div>
+        <div>
+          <div class="faizi-name">Faizi here.</div>
+          <div class="faizi-sub">I watched every move. Want my read?</div>
+        </div>
+      </div>
+      <div class="roast-line">
+        <span class="tag">🧠 Mastermind</span>
+        <b>Ayesha</b> · played like the bot was on their payroll. 87% optimal.
+      </div>
+      <div class="roast-line">
+        <span class="tag good">🎯 Sniper</span>
+        <b>Mahnoor</b> · 4 sequence-completing moves. Disgusting accuracy.
+      </div>
+      <div class="roast-line">
+        <span class="tag">🎪 Most Entertaining</span>
+        <b>MBC</b> · brilliant turn 4, baffling turn 12. Range.
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== CHAT BUBBLES =================== -->
+  <div class="section">
+    <div class="section-label">Quick chat · floating stickers</div>
+    <div class="chat-stack sticker" style="border-radius: 20px;">
+      <div class="chat-bubble pill coral">🎉 SEQUENCE!</div>
+      <div class="chat-bubble pill sky">😬 Oof.</div>
+      <div class="chat-bubble pill gold">🤝 Good game</div>
+      <div class="chat-bubble pill coral">⚡ Your turn!</div>
+    </div>
+  </div>
+
+  <!-- =================== BUTTON LIBRARY =================== -->
+  <div class="section">
+    <div class="section-label">Buttons · variants</div>
+    <div class="sticker" style="background: var(--navy-card); padding: 24px; border-radius: 20px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-gold pill">Primary</button>
+        <button class="btn btn-coral pill">Secondary</button>
+        <button class="btn btn-ghost pill">Ghost</button>
+        <button class="btn pill" style="background: var(--mint); color: var(--navy);">Confirm ✓</button>
+        <button class="btn pill" style="background: var(--coral-deep); color: var(--cream);">Stop game</button>
+      </div>
+    </div>
+  </div>
+
+  <p style="text-align:center;opacity:0.5;font-size:12px;margin-top:60px;font-family:'Geist Mono',monospace;">
+    Fivefive · royal navy + cartoon · sample mockup
+  </p>
+</div>
+</body>
+</html>
