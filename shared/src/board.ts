@@ -4,7 +4,7 @@ import type { BoardSquare, Pos, Rank, Suit } from "./types.js";
 export const BOARD_SIZE = 10;
 
 /**
- * The canonical Jax Ltd. Sequence board, transcribed row-major from the
+ * The canonical Jax Ltd. Fivefive board, transcribed row-major from the
  * official board art. Each cell is either "F" (free corner) or a two-character
  * card code: <rank><suit> where rank ∈ {2-9,T,Q,K,A} (no Jacks) and suit
  * ∈ {S,H,D,C}. Each non-Jack card appears exactly twice across the grid.
@@ -48,7 +48,7 @@ function flipRowsLeftRight<T>(grid: T[][]): T[][] {
 }
 
 /**
- * Return the Sequence board to render. Two transforms applied to the
+ * Return the Fivefive board to render. Two transforms applied to the
  * canonical Jax Ltd. layout (`OFFICIAL_LAYOUT` above, preserved as docs):
  *   1. transpose      — diamonds end up along the top instead of the left edge
  *   2. flip each row  — spades along the bottom run 9 → 2 (not 2 → 9)

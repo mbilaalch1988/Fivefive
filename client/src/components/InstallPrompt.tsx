@@ -40,7 +40,7 @@ export function InstallPrompt() {
       >
         <span className="text-2xl">📲</span>
         <span className="flex-1">
-          Tap <b>Share</b> → <b>Add to Home Screen</b> to install Sequence.
+          Tap <b>Share</b> → <b>Add to Home Screen</b> to install Fivefive.
         </span>
         <button
           type="button"
@@ -66,7 +66,7 @@ export function InstallPrompt() {
     >
       <span className="text-2xl">📲</span>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-emerald-200">Install Sequence</div>
+        <div className="text-sm font-semibold text-emerald-200">Install Fivefive</div>
         <div className="text-xs text-emerald-300/80">
           Launches from your home screen like a native app.
         </div>

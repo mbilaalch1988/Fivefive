@@ -23,7 +23,7 @@ async function fetchScoreboardSummary(): Promise<ScoreboardResponse> {
     topPlayersByPoints: [],
     topPlayers: [],
     topTeams: [],
-    topPlayersBySequences: [],
+    topPlayersByFivefives: [],
     topPlayersByMvp: [],
     persisted: false,
   };
@@ -388,8 +388,8 @@ function LeaderTable({
 }
 
 function PlayerDetail({ row }: { row: ScoreboardEntry }) {
-  const seq = row.sequencesClosed ?? 0;
-  const winSeq = row.winningSequencesClosed ?? 0;
+  const seq = row.fivefivesClosed ?? 0;
+  const winSeq = row.winningFivefivesClosed ?? 0;
   const mvp = row.mvpGames ?? 0;
   const total = row.points ?? 0;
   const achievements = computeAchievements(row);
@@ -755,7 +755,7 @@ function RankValue({
   if (variant === "sequences") {
     return (
       <span className="text-right shrink-0">
-        <div className="font-semibold">{row.sequencesClosed ?? 0}</div>
+        <div className="font-semibold">{row.fivefivesClosed ?? 0}</div>
         <div className="text-[0.65rem]" style={{ color: "var(--md-on-surface-variant)" }}>
           across {row.games} game{row.games === 1 ? "" : "s"}
         </div>

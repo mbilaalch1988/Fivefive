@@ -207,7 +207,7 @@ export interface GameStartRecord {
   gameId: string;
   roomCode: string;
   deckId: string | null;
-  sequencesToWin: number;
+  fivefivesToWin: number;
   teamNames: { red: string; blue: string; green: string };
   players: Array<{ id: string; name: string; team: "red" | "blue" | "green" }>;
   /** RNG seed used by createInitialState — lets Faizi rebuild hands later. */
@@ -225,7 +225,7 @@ export async function persistGameStart(record: GameStartRecord): Promise<void> {
         record.gameId,
         record.roomCode,
         record.deckId,
-        record.sequencesToWin,
+        record.fivefivesToWin,
         JSON.stringify(record.teamNames),
         JSON.stringify(record.players),
         record.initialSeed,
@@ -654,7 +654,7 @@ export async function getReplay(gameId: string) {
       gameId: m.game_id,
       roomCode: m.room_code,
       deckId: m.deck_id,
-      sequencesToWin: Number(m.sequences_to_win),
+      fivefivesToWin: Number(m.sequences_to_win),
       teamNames: m.team_names,
       players: m.players,
       startedAt: m.started_at.toISOString(),
@@ -747,7 +747,7 @@ export interface PlayerGameContribution {
   /** Set when this player was signed in for this game; routes writes to user_stats. */
   userId: string | null;
   chipsPlaced: number;
-  sequencesClosed: number;
+  fivefivesClosed: number;
   isWinner: boolean;
   isMvp: boolean;
   /** True if this player's placement triggered the win (closes the winning sequence). */
@@ -820,7 +820,7 @@ export async function persistWin(record: WinRecord): Promise<void> {
             c.userId,
             c.name,
             c.isWinner ? 1 : 0,
-            c.sequencesClosed,
+            c.fivefivesClosed,
             c.isMvp ? 1 : 0,
             c.chipsPlaced,
             winningSeqInc,
@@ -842,7 +842,7 @@ export async function persistWin(record: WinRecord): Promise<void> {
           [
             c.name,
             c.isWinner ? 1 : 0,
-            c.sequencesClosed,
+            c.fivefivesClosed,
             c.isMvp ? 1 : 0,
             c.chipsPlaced,
             winningSeqInc,
@@ -941,7 +941,7 @@ export async function getTopPlayers(limit: number) {
   }
 }
 
-export async function getTopPlayersBySequences(limit: number) {
+export async function getTopPlayersByFivefives(limit: number) {
   if (!pool) return [];
   try {
     const r = await pool.query<PlayerTopRow>(
@@ -953,7 +953,7 @@ export async function getTopPlayersBySequences(limit: number) {
     );
     return r.rows.map(playerRowToEntry);
   } catch (e) {
-    console.warn("[db] getTopPlayersBySequences failed:", (e as Error).message);
+    console.warn("[db] getTopPlayersByFivefives failed:", (e as Error).message);
     return [];
   }
 }
@@ -1066,8 +1066,8 @@ function playerRowToEntry(r: PlayerTopRow) {
     wins: Number(r.total_wins),
     games: Number(r.total_games),
     ratio: r.total_games > 0 ? Number(r.total_wins) / Number(r.total_games) : 0,
-    sequencesClosed: Number(r.sequences_closed),
-    winningSequencesClosed: Number(r.winning_sequences_closed),
+    fivefivesClosed: Number(r.sequences_closed),
+    winningFivefivesClosed: Number(r.winning_sequences_closed),
     mvpGames: Number(r.mvp_games),
     points: Number(r.points),
     verified: r.verified === true,

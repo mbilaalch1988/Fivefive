@@ -10,8 +10,8 @@ import type { ScoreboardEntry } from "./protocol.js";
 export type AchievementStatKey =
   | "games"
   | "wins"
-  | "sequencesClosed"
-  | "winningSequencesClosed"
+  | "fivefivesClosed"
+  | "winningFivefivesClosed"
   | "mvpGames"
   | "points";
 
@@ -31,25 +31,25 @@ export const ACHIEVEMENTS: readonly AchievementInfo[] = [
   // Bronze — early-game milestones (low thresholds, hit within first session).
   { id: "first_step",  title: "First steps",         description: "Play your first game",                    icon: "🎬", statKey: "games",                  target: 1,   tier: "bronze" },
   { id: "first_win",   title: "First win",           description: "Win your first game",                     icon: "🏆", statKey: "wins",                   target: 1,   tier: "bronze" },
-  { id: "first_seq",   title: "First sequence",      description: "Personally close your first sequence",    icon: "🎯", statKey: "sequencesClosed",        target: 1,   tier: "bronze" },
+  { id: "first_seq",   title: "First sequence",      description: "Personally close your first sequence",    icon: "🎯", statKey: "fivefivesClosed",        target: 1,   tier: "bronze" },
   { id: "mvp",         title: "MVP",                 description: "Earn MVP in any game",                    icon: "⭐", statKey: "mvpGames",               target: 1,   tier: "bronze" },
   { id: "practiced",   title: "Practiced",           description: "Play 5 games",                            icon: "🎲", statKey: "games",                  target: 5,   tier: "bronze" },
   { id: "heart",       title: "Heart of a Champion", description: "Win 3 games",                             icon: "💪", statKey: "wins",                   target: 3,   tier: "bronze" },
 
   // Silver — committed-player tier, a few sessions in.
-  { id: "closer",      title: "The Closer",          description: "Close the winning sequence of a game",    icon: "💥", statKey: "winningSequencesClosed", target: 1,   tier: "silver" },
+  { id: "closer",      title: "The Closer",          description: "Close the winning sequence of a game",    icon: "💥", statKey: "winningFivefivesClosed", target: 1,   tier: "silver" },
   { id: "veteran",     title: "Veteran",             description: "Play 10 games",                           icon: "🛡", statKey: "games",                  target: 10,  tier: "silver" },
-  { id: "marksman",    title: "Marksman",            description: "Close 10 lifetime sequences",             icon: "🏹", statKey: "sequencesClosed",        target: 10,  tier: "silver" },
+  { id: "marksman",    title: "Marksman",            description: "Close 10 lifetime sequences",             icon: "🏹", statKey: "fivefivesClosed",        target: 10,  tier: "silver" },
   { id: "champ",       title: "Champion",            description: "Win 5 games",                             icon: "👑", statKey: "wins",                   target: 5,   tier: "silver" },
   { id: "triple_mvp",  title: "Triple MVP",          description: "Earn MVP in 3 games",                     icon: "🌟", statKey: "mvpGames",               target: 3,   tier: "silver" },
-  { id: "decisive",    title: "Decisive",            description: "Close 3 game-winning sequences",          icon: "⚡", statKey: "winningSequencesClosed", target: 3,   tier: "silver" },
+  { id: "decisive",    title: "Decisive",            description: "Close 3 game-winning sequences",          icon: "⚡", statKey: "winningFivefivesClosed", target: 3,   tier: "silver" },
   { id: "marathon",    title: "Marathon",            description: "Play 25 games",                           icon: "🏃", statKey: "games",                  target: 25,  tier: "silver" },
 
   // Gold — long-term mastery goals.
   { id: "legend",      title: "Legend",              description: "Win 20 games",                            icon: "🏅", statKey: "wins",                   target: 20,  tier: "gold"   },
-  { id: "sharpshooter",title: "Sharpshooter",        description: "Close 25 lifetime sequences",             icon: "🎖", statKey: "sequencesClosed",        target: 25,  tier: "gold"   },
+  { id: "sharpshooter",title: "Sharpshooter",        description: "Close 25 lifetime sequences",             icon: "🎖", statKey: "fivefivesClosed",        target: 25,  tier: "gold"   },
   { id: "centurion",   title: "Centurion",           description: "Reach 100 career points",                 icon: "💯", statKey: "points",                 target: 100, tier: "gold"   },
-  { id: "game_ender",  title: "Game Ender",          description: "Close 10 game-winning sequences",         icon: "⚔",  statKey: "winningSequencesClosed", target: 10,  tier: "gold"   },
+  { id: "game_ender",  title: "Game Ender",          description: "Close 10 game-winning sequences",         icon: "⚔",  statKey: "winningFivefivesClosed", target: 10,  tier: "gold"   },
   { id: "mvp_master",  title: "MVP Master",          description: "Earn MVP in 10 games",                    icon: "🥇", statKey: "mvpGames",               target: 10,  tier: "gold"   },
   { id: "dedication",  title: "Dedication",          description: "Play 50 games",                           icon: "🌠", statKey: "games",                  target: 50,  tier: "gold"   },
   { id: "grandmaster", title: "Grandmaster",         description: "Reach 500 career points",                 icon: "🐉", statKey: "points",                 target: 500, tier: "gold"   },
@@ -59,8 +59,8 @@ function statValue(entry: ScoreboardEntry, key: AchievementStatKey): number {
   switch (key) {
     case "games":                  return entry.games ?? 0;
     case "wins":                   return entry.wins ?? 0;
-    case "sequencesClosed":        return entry.sequencesClosed ?? 0;
-    case "winningSequencesClosed": return entry.winningSequencesClosed ?? 0;
+    case "fivefivesClosed":        return entry.fivefivesClosed ?? 0;
+    case "winningFivefivesClosed": return entry.winningFivefivesClosed ?? 0;
     case "mvpGames":               return entry.mvpGames ?? 0;
     case "points":                 return entry.points ?? 0;
   }

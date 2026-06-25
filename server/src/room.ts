@@ -272,7 +272,7 @@ export class Room {
 
   start(
     opts: {
-      sequencesToWin?: number;
+      fivefivesToWin?: number;
       seed?: number;
       deckId?: string | null;
       deck?: DeckManifest | null;
@@ -306,7 +306,7 @@ export class Room {
     }));
 
     this.game = createInitialState(seatInputs, {
-      sequencesToWin: opts.sequencesToWin,
+      fivefivesToWin: opts.fivefivesToWin,
       seed: opts.seed,
       deckId: opts.deckId ?? null,
     });
@@ -326,7 +326,7 @@ export class Room {
       gameId: this.gameId,
       roomCode: this.code,
       deckId: opts.deckId ?? null,
-      sequencesToWin: this.game.config.sequencesToWin,
+      fivefivesToWin: this.game.config.fivefivesToWin,
       teamNames: { ...this.teamNames },
       players: seatInputs.map((s) => ({ id: s.id, name: s.name, team: s.team })),
       initialSeed: this.game.config.seed,
@@ -371,15 +371,15 @@ export class Room {
     if (this.gameId) void persistGameFinish(this.gameId, winner);
     this.teamScores[winner] = (this.teamScores[winner] ?? 0) + 1;
 
-    // MVP: winning-team player(s) with the most sequencesClosed in this game.
+    // MVP: winning-team player(s) with the most fivefivesClosed in this game.
     const winners = this.game.players.filter((p) => p.team === winner);
-    const maxSeqs = winners.reduce((m, p) => Math.max(m, p.stats.sequencesClosed), 0);
+    const maxSeqs = winners.reduce((m, p) => Math.max(m, p.stats.fivefivesClosed), 0);
     const mvpNames = maxSeqs > 0
-      ? winners.filter((p) => p.stats.sequencesClosed === maxSeqs).map((p) => p.name)
+      ? winners.filter((p) => p.stats.fivefivesClosed === maxSeqs).map((p) => p.name)
       : [];
     this.lastMvpNames = mvpNames;
 
-    const winningPlayerId = this.game.winningSequencePlayerId;
+    const winningPlayerId = this.game.winningFivefivePlayerId;
     const winningNames: string[] = [];
     const allTeamNames = new Set<string>();
     const contributions: PlayerGameContribution[] = [];
@@ -395,7 +395,7 @@ export class Room {
         name: p.name,
         userId: seat?.userId ?? null,
         chipsPlaced: p.stats.chipsPlaced,
-        sequencesClosed: p.stats.sequencesClosed,
+        fivefivesClosed: p.stats.fivefivesClosed,
         isWinner,
         isMvp: mvpNames.includes(p.name),
         isWinningSequencePlayer: p.id === winningPlayerId,

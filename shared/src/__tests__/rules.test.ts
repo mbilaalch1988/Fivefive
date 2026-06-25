@@ -11,7 +11,7 @@ function setup(seed = 1234): GameState {
       { id: "p1", name: "Alice", team: "red" as Team },
       { id: "p2", name: "Bob", team: "blue" as Team },
     ],
-    { seed, sequencesToWin: 2 },
+    { seed, fivefivesToWin: 2 },
   );
 }
 
@@ -205,9 +205,9 @@ describe("applyAction: discard dead card", () => {
 });
 
 describe("win condition", () => {
-  it("declares a winner when a team reaches sequencesToWin", () => {
+  it("declares a winner when a team reaches fivefivesToWin", () => {
     const s = setup();
-    s.config.sequencesToWin = 1;
+    s.config.fivefivesToWin = 1;
     // Force red chips into a horizontal 5-in-a-row on row 5 cols 1..5,
     // leaving (5,5) empty so we trigger detection via a wild placement.
     for (let c = 1; c <= 4; c++) s.chips[5]![c] = "red";

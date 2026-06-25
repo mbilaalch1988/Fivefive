@@ -105,12 +105,12 @@ export interface ReplayCheckpoint {
 export function buildCheckpointsForPlayer(
   initialSeed: number,
   seats: SeatInput[],
-  sequencesToWin: number,
+  fivefivesToWin: number,
   deckId: string | null,
   actions: ReplayAction[],
   targetPlayerId: PlayerId,
 ): ReplayCheckpoint[] {
-  const state = createInitialState(seats, { seed: initialSeed, sequencesToWin, deckId });
+  const state = createInitialState(seats, { seed: initialSeed, fivefivesToWin, deckId });
   // Note: replay actions don't include the random first turn — server set it
   // to a random idx that we don't have stored. We rebuild turn order by
   // tracking who actually played each action.

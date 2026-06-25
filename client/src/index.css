@@ -339,10 +339,10 @@ body {
 }
 
 /* SEQUENCE! wordmark announce: zooms+rotates in, holds, fades out. */
-.sequence-announce-text {
-  animation: sequence-announce 1.8s ease-out forwards;
+.fivefive-announce-text {
+  animation: fivefive-announce 1.8s ease-out forwards;
 }
-@keyframes sequence-announce {
+@keyframes fivefive-announce {
   0%   { transform: scale(0.3)  rotate(-15deg); opacity: 0; }
   20%  { transform: scale(1.25) rotate(5deg);   opacity: 1; }
   35%  { transform: scale(1)    rotate(0deg);   opacity: 1; }

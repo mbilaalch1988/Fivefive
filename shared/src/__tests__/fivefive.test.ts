@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { BOARD_SIZE } from "../board.js";
-import { detectSequences } from "../sequence.js";
+import { detectFivefives } from "../fivefive.js";
 import type { Chip, Team } from "../types.js";
 
 function emptyChips(): Chip[][] {
@@ -9,14 +9,14 @@ function emptyChips(): Chip[][] {
   );
 }
 
-describe("detectSequences", () => {
+describe("detectFivefives", () => {
   const RED: Team = "red";
 
   it("detects a horizontal 5-in-a-row", () => {
     const chips = emptyChips();
     // place red chips at (3, 2..6)
     for (let c = 2; c <= 6; c++) chips[3]![c] = RED;
-    const seqs = detectSequences(chips, { r: 3, c: 6 }, RED, new Set());
+    const seqs = detectFivefives(chips, { r: 3, c: 6 }, RED, new Set());
     expect(seqs).toHaveLength(1);
     expect(seqs[0]!.positions).toHaveLength(5);
     expect(seqs[0]!.team).toBe(RED);
@@ -25,21 +25,21 @@ describe("detectSequences", () => {
   it("detects a vertical 5-in-a-row", () => {
     const chips = emptyChips();
     for (let r = 1; r <= 5; r++) chips[r]![4] = RED;
-    const seqs = detectSequences(chips, { r: 5, c: 4 }, RED, new Set());
+    const seqs = detectFivefives(chips, { r: 5, c: 4 }, RED, new Set());
     expect(seqs).toHaveLength(1);
   });
 
   it("detects a diagonal 5-in-a-row", () => {
     const chips = emptyChips();
     for (let i = 0; i < 5; i++) chips[2 + i]![3 + i] = RED;
-    const seqs = detectSequences(chips, { r: 4, c: 5 }, RED, new Set());
+    const seqs = detectFivefives(chips, { r: 4, c: 5 }, RED, new Set());
     expect(seqs).toHaveLength(1);
   });
 
   it("does NOT detect with only 4 chips", () => {
     const chips = emptyChips();
     for (let c = 2; c <= 5; c++) chips[3]![c] = RED;
-    const seqs = detectSequences(chips, { r: 3, c: 5 }, RED, new Set());
+    const seqs = detectFivefives(chips, { r: 3, c: 5 }, RED, new Set());
     expect(seqs).toHaveLength(0);
   });
 
@@ -47,7 +47,7 @@ describe("detectSequences", () => {
     const chips = emptyChips();
     // top-left corner is (0,0); make a row of 4 reds plus the corner
     for (let c = 1; c <= 4; c++) chips[0]![c] = RED;
-    const seqs = detectSequences(chips, { r: 0, c: 4 }, RED, new Set());
+    const seqs = detectFivefives(chips, { r: 0, c: 4 }, RED, new Set());
     expect(seqs).toHaveLength(1);
     // the sequence should contain the corner
     const hasCorner = seqs[0]!.positions.some((p) => p.r === 0 && p.c === 0);
@@ -67,7 +67,7 @@ describe("detectSequences", () => {
     chips[3]![7] = RED;
     chips[3]![8] = RED;
     chips[3]![9] = RED;
-    const seqs = detectSequences(chips, { r: 3, c: 9 }, RED, locked);
+    const seqs = detectFivefives(chips, { r: 3, c: 9 }, RED, locked);
     expect(seqs).toHaveLength(0); // 2 locked chips in the window → invalid
   });
 
@@ -82,10 +82,10 @@ describe("detectSequences", () => {
     chips[1]![5] = RED;
     chips[2]![5] = RED;
     chips[4]![5] = RED;
-    const seqs = detectSequences(chips, { r: 5, c: 5 }, RED, locked);
+    const seqs = detectFivefives(chips, { r: 5, c: 5 }, RED, locked);
     // need a 5th: place (5,5) — but that's the trigger; we need 5 consecutive.
     chips[5]![5] = RED;
-    const seqs2 = detectSequences(chips, { r: 5, c: 5 }, RED, locked);
+    const seqs2 = detectFivefives(chips, { r: 5, c: 5 }, RED, locked);
     expect(seqs2).toHaveLength(1);
   });
 
@@ -96,7 +96,7 @@ describe("detectSequences", () => {
     for (let c = 1; c <= 4; c++) chips[5]![c] = "red";
     for (let r = 1; r <= 4; r++) chips[r]![5] = "red";
     chips[5]![5] = "red";
-    const seqs = detectSequences(chips, { r: 5, c: 5 }, "red", new Set());
+    const seqs = detectFivefives(chips, { r: 5, c: 5 }, "red", new Set());
     expect(seqs).toHaveLength(2);
   });
 });

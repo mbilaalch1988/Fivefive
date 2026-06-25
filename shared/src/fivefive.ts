@@ -1,5 +1,5 @@
 import { BOARD_SIZE, isCornerPos, posKey } from "./board.js";
-import type { Chip, Pos, Sequence, Team } from "./types.js";
+import type { Chip, Pos, Fivefive, Team } from "./types.js";
 
 const DIRECTIONS: readonly [number, number][] = [
   [0, 1],   // horizontal
@@ -32,13 +32,13 @@ function countsFor(team: Team, chips: Chip[][], r: number, c: number): boolean {
  *  - One placement can complete at most one sequence per orientation, but may
  *    legitimately complete sequences in multiple orientations at once.
  */
-export function detectSequences(
+export function detectFivefives(
   chips: Chip[][],
   placed: Pos,
   team: Team,
   lockedChips: ReadonlySet<string>,
-): Sequence[] {
-  const found: Sequence[] = [];
+): Fivefive[] {
+  const found: Fivefive[] = [];
 
   for (const [dr, dc] of DIRECTIONS) {
     // Walk both ways from placed along this direction to find every contiguous
@@ -93,9 +93,9 @@ export function detectSequences(
 }
 
 /** Add new sequence chips (excluding corners) to the locked set. */
-export function lockSequenceChips(
+export function lockFivefiveChips(
   lockedChips: Set<string>,
-  seq: Sequence,
+  seq: Fivefive,
 ): void {
   for (const p of seq.positions) {
     if (!isCornerPos(p)) lockedChips.add(posKey(p));

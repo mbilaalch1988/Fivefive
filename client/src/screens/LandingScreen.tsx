@@ -132,7 +132,7 @@ export function LandingScreen({
                }}>
             <span className="text-4xl">🂠</span>
           </div>
-          <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Sequence</h1>
+          <h1 className="text-5xl font-extrabold tracking-tight gradient-text">Fivefive</h1>
           <p className="text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
             {connected ? "Connected" : "Connecting…"}
           </p>

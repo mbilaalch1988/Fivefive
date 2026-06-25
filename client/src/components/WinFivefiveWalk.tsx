@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import type { Sequence, Team } from "@fivefive/shared";
+import type { Fivefive, Team } from "@fivefive/shared";
 import { TEAM_TEXT } from "../lib/cards";
 
 interface Props {
   /** Team that just won (null = hide). */
   team: Team | null;
   teamName: string;
-  sequences: Sequence[];
+  sequences: Fivefive[];
   /** Total duration available — should match GameScreen's celebrate window. */
   totalDurationMs: number;
   /** Called when the walk finishes. */
@@ -15,7 +15,7 @@ interface Props {
 
 /**
  * Big banner across the top of the screen during the post-win celebration.
- * Counts up "Sequence 1 of N" while each chip in the winning team's
+ * Counts up "Fivefive 1 of N" while each chip in the winning team's
  * sequences pulses (driven by Board.tsx via celebrateDelayMs). Pure
  * presentational — Board does the chip glow timing.
  */
@@ -57,7 +57,7 @@ export function WinSequenceWalk({ team, teamName, sequences, totalDurationMs, on
         </div>
         <div className="text-xs uppercase tracking-widest text-amber-300 flex items-center gap-1.5">
           <span>★</span>
-          <span>Sequence {shown} of {count}</span>
+          <span>Fivefive {shown} of {count}</span>
         </div>
       </div>
     </div>

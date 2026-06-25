@@ -59,7 +59,7 @@ export function TurnBar({ view, myPlayerId }: Props) {
         className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 p-2 sm:p-2.5 rounded-2xl text-xs sm:text-sm"
         style={{ background: "var(--md-surface-1)" }}
       >
-        <span style={{ color: "var(--md-on-surface-variant)" }}>Need {view.sequencesToWin}:</span>
+        <span style={{ color: "var(--md-on-surface-variant)" }}>Need {view.fivefivesToWin}:</span>
         {teams.map((t) => {
           const count = view.teamSequenceCounts[t];
           if (count === 0 && !view.players.some((p) => p.team === t)) return null;

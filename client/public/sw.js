@@ -1,5 +1,5 @@
 /**
- * Sequence push service worker. Stays tiny — only handles push and
+ * Fivefive push service worker. Stays tiny — only handles push and
  * notificationclick. Notification suppression happens when an existing
  * client window is already visible (the player is staring at the game).
  */
@@ -19,7 +19,7 @@ self.addEventListener("push", (event) => {
     /* ignore parse errors */
   }
 
-  const title = payload.title || "Sequence";
+  const title = payload.title || "Fivefive";
   const body = payload.body || "It's your turn!";
   const tag = payload.tag || "sequence-turn";
   const roomCode = payload.roomCode || "";

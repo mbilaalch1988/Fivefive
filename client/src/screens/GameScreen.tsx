@@ -21,12 +21,12 @@ import { PreGameCountdown } from "../components/PreGameCountdown";
 import { QuickChatOverlay } from "../components/QuickChatOverlay";
 import { QuickChatPicker } from "../components/QuickChatPicker";
 import { RulesSheet } from "../components/RulesSheet";
-import { SequenceAnnounce } from "../components/SequenceAnnounce";
+import { SequenceAnnounce } from "../components/FivefiveAnnounce";
 import { StickerOverlay } from "../components/StickerOverlay";
 import { StickerPicker } from "../components/StickerPicker";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
-import { WinSequenceWalk } from "../components/WinSequenceWalk";
+import { WinSequenceWalk } from "../components/WinFivefiveWalk";
 import type { ActionLog, QuickChatBroadcast, StickerBroadcast } from "@fivefive/shared";
 import {
   notifyMyTurn,

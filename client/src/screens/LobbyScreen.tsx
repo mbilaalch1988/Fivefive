@@ -17,7 +17,7 @@ interface Props {
   onRenameTeam: (team: Team, name: string) => Promise<void>;
   onAddBot: (team: Team, difficulty: "easy" | "medium" | "hard") => Promise<void>;
   onRemoveBot: (playerId: PlayerId) => Promise<void>;
-  onStart: (opts: { sequencesToWin: number; deckId: string | null; turnTimerSec: number | null }) => Promise<void>;
+  onStart: (opts: { fivefivesToWin: number; deckId: string | null; turnTimerSec: number | null }) => Promise<void>;
   onLeave: () => Promise<void>;
 }
 
@@ -38,7 +38,7 @@ export function LobbyScreen({
 }: Props) {
   const mySeat = room.seats.find((s) => s.id === myPlayerId);
   const isHost = mySeat?.isHost ?? false;
-  const [sequencesToWin, setSequencesToWin] = useState(2);
+  const [fivefivesToWin, setSequencesToWin] = useState(2);
   const [deckId, setDeckId] = useState("");
   const [turnTimerSec, setTurnTimerSec] = useState<number | null>(null);
   const [renamingTeam, setRenamingTeam] = useState<Team | null>(null);
@@ -82,7 +82,7 @@ export function LobbyScreen({
       <div className="w-full max-w-md lg:max-w-5xl space-y-4">
 
       <header className="w-full flex items-center justify-between">
-        <h1 className="text-2xl font-medium tracking-tight">Sequence</h1>
+        <h1 className="text-2xl font-medium tracking-tight">Fivefive</h1>
         <span
           className="text-xs uppercase tracking-widest"
           style={{ color: connected ? "var(--md-on-surface-variant)" : "var(--md-error)" }}
@@ -399,7 +399,7 @@ export function LobbyScreen({
           <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
             Host controls
           </h2>
-          <SelectRow label="Sequences to win" value={String(sequencesToWin)} onChange={(v) => setSequencesToWin(Number(v))}>
+          <SelectRow label="Sequences to win" value={String(fivefivesToWin)} onChange={(v) => setSequencesToWin(Number(v))}>
             <option value="1">1 (quick)</option>
             <option value="2">2 (standard)</option>
             <option value="3">3 (long)</option>
@@ -432,7 +432,7 @@ export function LobbyScreen({
             disabled={!canStart}
             onClick={() =>
               onStart({
-                sequencesToWin,
+                fivefivesToWin,
                 deckId: deckId || null,
                 turnTimerSec,
               })

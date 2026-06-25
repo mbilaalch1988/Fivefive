@@ -14,7 +14,7 @@ interface Props {
 export function SequenceAnnounce({ team, teamName }: Props) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
-      <div className="sequence-announce-text text-center select-none">
+      <div className="fivefive-announce-text text-center select-none">
         <div
           className="text-[3.2rem] sm:text-8xl font-black tracking-[0.15em] sm:tracking-[0.2em] text-amber-300 leading-none"
           style={{

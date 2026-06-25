@@ -87,7 +87,7 @@ async function main() {
   // Both clients listen for the game push from startGame.
   const aGame = once(a, "game");
   const bGame = once(b, "game");
-  await emitAck(a, "startGame", { sequencesToWin: 1 });
+  await emitAck(a, "startGame", { fivefivesToWin: 1 });
   const aView = await aGame;
   const bView = await bGame;
 

@@ -1,7 +1,7 @@
 import { buildCardIndex, isCornerPos, posKey } from "./board.js";
 import { cardKey, isOneEyedJack, isTwoEyedJack } from "./cards.js";
 import { mulberry32, shuffle } from "./rng.js";
-import { detectSequences, lockSequenceChips } from "./sequence.js";
+import { detectFivefives, lockFivefiveChips } from "./fivefive.js";
 import type {
   Action,
   ActionLog,
@@ -195,7 +195,7 @@ function maybeEndOnDeadlock(state: GameState): void {
     }
   }
   state.winner = winner;
-  // winningSequencePlayerId stays null — no chip closed a winning sequence.
+  // winningFivefivePlayerId stays null — no chip closed a winning sequence.
 }
 
 function endTurn(state: GameState): void {
@@ -298,7 +298,7 @@ function applyPlace(
   });
 
   // Check for new sequences and update win state.
-  const newSeqs = detectSequences(
+  const newSeqs = detectFivefives(
     state.chips,
     pos,
     player.team,
@@ -306,14 +306,14 @@ function applyPlace(
   );
   for (const seq of newSeqs) {
     state.sequences.push(seq);
-    lockSequenceChips(state.lockedChips, seq);
+    lockFivefiveChips(state.lockedChips, seq);
   }
-  player.stats.sequencesClosed += newSeqs.length;
+  player.stats.fivefivesClosed += newSeqs.length;
 
   const teamSeqCount = state.sequences.filter((s) => s.team === player.team).length;
-  if (teamSeqCount >= state.config.sequencesToWin) {
+  if (teamSeqCount >= state.config.fivefivesToWin) {
     state.winner = player.team;
-    state.winningSequencePlayerId = player.id;
+    state.winningFivefivePlayerId = player.id;
     return { ok: true, state };
   }
 

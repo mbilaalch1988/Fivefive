@@ -31,7 +31,7 @@ export interface PlayerGameStats {
   /** Opposing chips removed via one-eyed Jacks. */
   chipsRemoved: number;
   /** New sequences personally closed by this player's placements. */
-  sequencesClosed: number;
+  fivefivesClosed: number;
 }
 
 export interface Player {
@@ -67,14 +67,14 @@ export interface ActionLog {
   targetSquare?: { rank: Rank; suit: Suit };
 }
 
-export interface Sequence {
+export interface Fivefive {
   team: Team;
   positions: Pos[]; // exactly 5
 }
 
 export interface GameConfig {
   /** Number of completed sequences a team needs to win. */
-  sequencesToWin: number;
+  fivefivesToWin: number;
   /** Cards dealt per player. Derived from player count if omitted. */
   handSize: number;
   /** RNG seed for deterministic deck shuffle + board generation. */
@@ -93,12 +93,12 @@ export interface GameState {
   drawPile: Card[];
   discardPile: Card[];
   /** Completed sequences in play order. */
-  sequences: Sequence[];
+  sequences: Fivefive[];
   /** Chip positions already counted in a sequence; "r,c" keys. */
   lockedChips: Set<string>;
   winner: Team | null;
   /** Id of the player whose placement triggered the win. Null until winner is set. */
-  winningSequencePlayerId: PlayerId | null;
+  winningFivefivePlayerId: PlayerId | null;
   /** Becomes true the moment a discardDead is consumed this turn (only one allowed per turn). */
   discardedThisTurn: boolean;
   /** Append-only log of recent actions. Most recent at end. Capped at 10. */

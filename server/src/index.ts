@@ -43,7 +43,7 @@ import {
   getTopPlayers,
   getTopPlayersByMvp,
   getTopPlayersByPoints,
-  getTopPlayersBySequences,
+  getTopPlayersByFivefives,
   getTopTeams,
   initDb,
   isPersistenceEnabled,
@@ -408,7 +408,7 @@ app.get("/api/replays/:gameId/faizi", async (req, res) => {
     const checkpoints = buildCheckpointsForPlayer(
       seed,
       seats,
-      detail.sequencesToWin,
+      detail.fivefivesToWin,
       detail.deckId,
       // DB returns rank/suit as plain string; cast to the shared union.
       detail.actions as Parameters<typeof buildCheckpointsForPlayer>[4],
@@ -480,7 +480,7 @@ app.get("/api/replays/:gameId/faizi/roast", async (req, res) => {
       const checkpoints = buildCheckpointsForPlayer(
         seed,
         seats,
-        detail.sequencesToWin,
+        detail.fivefivesToWin,
         detail.deckId,
         detail.actions as Parameters<typeof buildCheckpointsForPlayer>[4],
         p.id,
@@ -504,7 +504,7 @@ app.get("/api/scoreboard", async (_req, res) => {
       topPlayersByPoints: [],
       topPlayers: [],
       topTeams: [],
-      topPlayersBySequences: [],
+      topPlayersByFivefives: [],
       topPlayersByMvp: [],
       persisted: false,
     });
@@ -514,20 +514,20 @@ app.get("/api/scoreboard", async (_req, res) => {
     topPlayersByPoints,
     topPlayers,
     topTeams,
-    topPlayersBySequences,
+    topPlayersByFivefives,
     topPlayersByMvp,
   ] = await Promise.all([
     getTopPlayersByPoints(5),
     getTopPlayers(5),
     getTopTeams(5),
-    getTopPlayersBySequences(5),
+    getTopPlayersByFivefives(5),
     getTopPlayersByMvp(5),
   ]);
   res.json({
     topPlayersByPoints,
     topPlayers,
     topTeams,
-    topPlayersBySequences,
+    topPlayersByFivefives,
     topPlayersByMvp,
     persisted: true,
   });
@@ -939,7 +939,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("startGame", ({ sequencesToWin, deckId, turnTimerSec }, ack) => {
+  socket.on("startGame", ({ fivefivesToWin, deckId, turnTimerSec }, ack) => {
     const code = socketRoom.get(socket.id);
     const room = code ? registry.get(code) : undefined;
     if (!room) return ack({ ok: false, error: "not in a room" });
@@ -957,7 +957,7 @@ io.on("connection", (socket) => {
     try {
       cancelAutoStart(room);
       room.start({
-        sequencesToWin,
+        fivefivesToWin,
         deckId: deck?.id ?? null,
         deck,
         turnTimerSec: validatedTimer,

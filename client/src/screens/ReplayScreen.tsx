@@ -146,7 +146,7 @@ export function ReplayScreen({ gameId, onClose }: Props) {
         isCurrentTurn: i === step % replay.players.length,
         chipsPlaced: 0,
         chipsRemoved: 0,
-        sequencesClosed: 0,
+        fivefivesClosed: 0,
       })),
       myHand: [],
       turnIdx: step % replay.players.length,
@@ -156,7 +156,7 @@ export function ReplayScreen({ gameId, onClose }: Props) {
       lockedChips: [...boardState.lockedChips],
       winner: step >= replay.actions.length ? replay.winningTeam : null,
       discardedThisTurn: false,
-      sequencesToWin: replay.sequencesToWin,
+      fivefivesToWin: replay.fivefivesToWin,
       teamSequenceCounts: boardState.teamSequenceCounts,
       deck,
       teamNames: replay.teamNames,
@@ -299,7 +299,7 @@ function ReplayContent({
         className="w-full max-w-3xl flex items-center justify-center gap-3 text-xs sm:text-sm mt-2 min-h-[1.75rem]"
         style={{ color: "var(--md-on-surface-variant)" }}
       >
-        <span className="shrink-0">Need {replay.sequencesToWin}:</span>
+        <span className="shrink-0">Need {replay.fivefivesToWin}:</span>
         {(["red", "blue", "green"] as Team[]).map((t) => {
           if (!replay.players.some((p) => p.team === t)) return null;
           return (

@@ -11,7 +11,7 @@ export {
   isCornerPos,
   posKey,
 } from "./board.js";
-export { detectSequences, lockSequenceChips } from "./sequence.js";
+export { detectFivefives, lockFivefiveChips } from "./fivefive.js";
 export {
   createInitialState,
   currentPlayer,

@@ -12,7 +12,7 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     isCurrentTurn: i === state.turnIdx,
     chipsPlaced: p.stats.chipsPlaced,
     chipsRemoved: p.stats.chipsRemoved,
-    sequencesClosed: p.stats.sequencesClosed,
+    fivefivesClosed: p.stats.fivefivesClosed,
   }));
 
   const viewer = state.players.find((p) => p.id === viewerId);
@@ -35,7 +35,7 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     lockedChips: Array.from(state.lockedChips),
     winner: state.winner,
     discardedThisTurn: state.discardedThisTurn,
-    sequencesToWin: state.config.sequencesToWin,
+    fivefivesToWin: state.config.fivefivesToWin,
     teamSequenceCounts,
     deck: null, // server overrides with the Room's manifest if any
     teamNames: { red: "Red", blue: "Blue", green: "Green" },

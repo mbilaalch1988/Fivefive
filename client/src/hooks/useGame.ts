@@ -92,7 +92,7 @@ export interface UseGame {
   chooseTeam: (team: Team) => Promise<void>;
   setReady: (ready: boolean) => Promise<void>;
   decks: DeckSummary[];
-  startGame: (opts?: { sequencesToWin?: number; deckId?: string | null; turnTimerSec?: number | null }) => Promise<void>;
+  startGame: (opts?: { fivefivesToWin?: number; deckId?: string | null; turnTimerSec?: number | null }) => Promise<void>;
   stopGame: () => Promise<void>;
   renameTeam: (team: Team, name: string) => Promise<void>;
   addBot: (team: Team, difficulty: "easy" | "medium" | "hard") => Promise<void>;
@@ -334,7 +334,7 @@ export function useGame(): UseGame {
   );
 
   const startGame = useCallback(
-    async (opts: { sequencesToWin?: number; deckId?: string | null; turnTimerSec?: number | null } = {}) => {
+    async (opts: { fivefivesToWin?: number; deckId?: string | null; turnTimerSec?: number | null } = {}) => {
       const s = socketRef.current!;
       const res = (await emit(s, "startGame", opts)) as {
         ok: boolean;

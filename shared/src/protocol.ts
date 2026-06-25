@@ -1,4 +1,4 @@
-import type { Action, ActionLog, BoardSquare, Card, Chip, Team, PlayerId, Sequence } from "./types.js";
+import type { Action, ActionLog, BoardSquare, Card, Chip, Team, PlayerId, Fivefive } from "./types.js";
 
 /* ------------------------------------------------------------------ */
 /* Deck (card-art) manifests                                          */
@@ -39,9 +39,9 @@ export interface ScoreboardEntry {
   /** 0.0 to 1.0; 0 when games == 0. */
   ratio: number;
   /** Career sequences personally closed across all games (players only). 0 for teams. */
-  sequencesClosed?: number;
+  fivefivesClosed?: number;
   /** Career count of "winning sequences" closed (the one that triggered a win). */
-  winningSequencesClosed?: number;
+  winningFivefivesClosed?: number;
   /** Career MVP-credit count (players only). 0 for teams. */
   mvpGames?: number;
   /** Career points (sequences × 5 + winning sequences × 5 + MVPs × 10). */
@@ -58,7 +58,7 @@ export interface ScoreboardResponse {
   /** Top 5 teams by total wins. */
   topTeams: ScoreboardEntry[];
   /** Top 5 players by lifetime sequences-closed. */
-  topPlayersBySequences: ScoreboardEntry[];
+  topPlayersByFivefives: ScoreboardEntry[];
   /** Top 5 players by MVP-game count. */
   topPlayersByMvp: ScoreboardEntry[];
   /** True when the response came from Postgres; false = nothing persisted yet. */
@@ -116,7 +116,7 @@ export interface PlayerPublic {
   /** Per-player stats for the current game. */
   chipsPlaced: number;
   chipsRemoved: number;
-  sequencesClosed: number;
+  fivefivesClosed: number;
 }
 
 export interface GameView {
@@ -129,12 +129,12 @@ export interface GameView {
   turnIdx: number;
   drawPileCount: number;
   discardPileTop: Card | null;
-  sequences: Sequence[];
+  sequences: Fivefive[];
   /** Locked chip keys "r,c" — chips already part of a completed sequence. */
   lockedChips: string[];
   winner: Team | null;
   discardedThisTurn: boolean;
-  sequencesToWin: number;
+  fivefivesToWin: number;
   teamSequenceCounts: Record<Team, number>;
   /** Card-art manifest if the host picked a deck; null = built-in CSS rendering. */
   deck: DeckManifest | null;
@@ -184,7 +184,7 @@ export interface ClientToServerEvents {
   ) => void;
   startGame: (
     payload: {
-      sequencesToWin?: number;
+      fivefivesToWin?: number;
       deckId?: string | null;
       /** 0 / null = off, otherwise 30/60/90 second per-turn auto-play timer. */
       turnTimerSec?: number | null;
@@ -290,7 +290,7 @@ export interface ReplayDetail {
   gameId: string;
   roomCode: string;
   deckId: string | null;
-  sequencesToWin: number;
+  fivefivesToWin: number;
   teamNames: Record<Team, string>;
   players: ReplayPlayer[];
   startedAt: string;

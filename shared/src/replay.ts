@@ -7,14 +7,14 @@
  * state needed to render the Board.
  */
 
-import { detectSequences, lockSequenceChips } from "./sequence.js";
+import { detectFivefives, lockFivefiveChips } from "./fivefive.js";
 import { posKey } from "./board.js";
-import type { BoardSquare, Chip, Sequence, Team } from "./types.js";
+import type { BoardSquare, Chip, Fivefive, Team } from "./types.js";
 import type { ReplayAction } from "./protocol.js";
 
 export interface ReplayBoardState {
   chips: Chip[][];
-  sequences: Sequence[];
+  sequences: Fivefive[];
   lockedChips: Set<string>;
   /** Per-team sequence counts at this point in the replay. */
   teamSequenceCounts: Record<Team, number>;
@@ -40,7 +40,7 @@ export function replayBoardAt(
 ): ReplayBoardState {
   const clamped = Math.max(0, Math.min(actions.length, stepIndex));
   const chips = emptyChips(board);
-  const sequences: Sequence[] = [];
+  const sequences: Fivefive[] = [];
   const lockedChips = new Set<string>();
   const teamSequenceCounts: Record<Team, number> = { red: 0, blue: 0, green: 0 };
 
@@ -51,10 +51,10 @@ export function replayBoardAt(
     lastAction = a;
     if (a.type === "place" && a.pos) {
       chips[a.pos.r]![a.pos.c] = a.team;
-      const newSeqs = detectSequences(chips, a.pos, a.team, lockedChips);
+      const newSeqs = detectFivefives(chips, a.pos, a.team, lockedChips);
       for (const seq of newSeqs) {
         sequences.push(seq);
-        lockSequenceChips(lockedChips, seq);
+        lockFivefiveChips(lockedChips, seq);
         teamSequenceCounts[seq.team] += 1;
       }
     } else if (a.type === "remove" && a.pos) {

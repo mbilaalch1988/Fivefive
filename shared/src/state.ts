@@ -3,7 +3,7 @@ import { createDeck } from "./cards.js";
 import { mulberry32, shuffle } from "./rng.js";
 import type { Card, Chip, GameConfig, GameState, Player, Team } from "./types.js";
 
-/** Hand sizes by player count — one card below the official Sequence
+/** Hand sizes by player count — one card below the official Fivefive
  *  rule book at each bracket. Smaller hands speed up turns and reduce
  *  dead-card buildup, which matters on phones.
  *  ≤4 players → 6 cards · 5-7 players → 5 · 8+ players → 4. */
@@ -32,11 +32,11 @@ export function createInitialState(
   const teams = new Set(seats.map((s) => s.team));
   const seed = configOverride.seed ?? Math.floor(Math.random() * 2 ** 31);
   const handSize = configOverride.handSize ?? defaultHandSize(seats.length);
-  const sequencesToWin =
-    configOverride.sequencesToWin ?? defaultSequencesToWin(teams.size);
+  const fivefivesToWin =
+    configOverride.fivefivesToWin ?? defaultSequencesToWin(teams.size);
   const deckId = configOverride.deckId ?? null;
 
-  const config: GameConfig = { seed, handSize, sequencesToWin, deckId };
+  const config: GameConfig = { seed, handSize, fivefivesToWin, deckId };
 
   const board = generateBoard(seed);
   const chips: Chip[][] = [];
@@ -53,7 +53,7 @@ export function createInitialState(
     name: s.name,
     team: s.team,
     hand: [],
-    stats: { chipsPlaced: 0, chipsRemoved: 0, sequencesClosed: 0 },
+    stats: { chipsPlaced: 0, chipsRemoved: 0, fivefivesClosed: 0 },
   }));
 
   for (let i = 0; i < handSize; i++) {
@@ -75,7 +75,7 @@ export function createInitialState(
     sequences: [],
     lockedChips: new Set<string>(),
     winner: null,
-    winningSequencePlayerId: null,
+    winningFivefivePlayerId: null,
     discardedThisTurn: false,
     actionLog: [],
   };

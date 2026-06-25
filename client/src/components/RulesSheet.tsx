@@ -93,7 +93,7 @@ export function RulesSheet({ open, onClose }: Props) {
             to throw it away and draw — once per turn, before placing.
           </Section>
 
-          <Section title="Sequence overlap">
+          <Section title="Fivefive overlap">
             A chip can count toward two different sequences, but only one chip
             from your previous sequence can be re-used in the new one.
           </Section>
