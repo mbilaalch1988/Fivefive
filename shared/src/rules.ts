@@ -134,7 +134,7 @@ function playerHasLegalMove(state: GameState, player: Player): boolean {
       continue;
     }
     if (isOneEyedJack(card)) {
-      // Remover — any opponent chip that isn't part of a sequence.
+      // Remover — any opponent chip that isn't part of a fivefive.
       for (let r = 0; r < state.board.length; r++) {
         const row = state.board[r]!;
         for (let c = 0; c < row.length; c++) {
@@ -158,7 +158,7 @@ function playerHasLegalMove(state: GameState, player: Player): boolean {
 /**
  * After a turn ends, detect whether the game has hit a deadlock — nobody
  * can play AND the draw pile is empty. If so, declare a winner: team with
- * the most completed sequences; tie-breaker is total chips placed on the
+ * the most completed fivefives; tie-breaker is total chips placed on the
  * board (most chips = most contribution).
  */
 function maybeEndOnDeadlock(state: GameState): void {
@@ -170,7 +170,7 @@ function maybeEndOnDeadlock(state: GameState): void {
   }
 
   const seqCount: Record<Team, number> = { red: 0, blue: 0, green: 0 };
-  for (const seq of state.sequences) seqCount[seq.team] += 1;
+  for (const seq of state.fivefives) seqCount[seq.team] += 1;
   const chipCount: Record<Team, number> = { red: 0, blue: 0, green: 0 };
   for (let r = 0; r < state.chips.length; r++) {
     const row = state.chips[r]!;
@@ -195,7 +195,7 @@ function maybeEndOnDeadlock(state: GameState): void {
     }
   }
   state.winner = winner;
-  // winningFivefivePlayerId stays null — no chip closed a winning sequence.
+  // winningFivefivePlayerId stays null — no chip closed a winning fivefive.
 }
 
 function endTurn(state: GameState): void {
@@ -297,7 +297,7 @@ function applyPlace(
       square.kind === "card" ? { rank: square.rank, suit: square.suit } : undefined,
   });
 
-  // Check for new sequences and update win state.
+  // Check for new fivefives and update win state.
   const newSeqs = detectFivefives(
     state.chips,
     pos,
@@ -305,12 +305,12 @@ function applyPlace(
     state.lockedChips,
   );
   for (const seq of newSeqs) {
-    state.sequences.push(seq);
+    state.fivefives.push(seq);
     lockFivefiveChips(state.lockedChips, seq);
   }
   player.stats.fivefivesClosed += newSeqs.length;
 
-  const teamSeqCount = state.sequences.filter((s) => s.team === player.team).length;
+  const teamSeqCount = state.fivefives.filter((s) => s.team === player.team).length;
   if (teamSeqCount >= state.config.fivefivesToWin) {
     state.winner = player.team;
     state.winningFivefivePlayerId = player.id;
@@ -339,7 +339,7 @@ function applyRemove(
   if (chip === null) return err("no chip to remove");
   if (chip === player.team) return err("cannot remove your own chip");
   if (state.lockedChips.has(posKey(pos))) {
-    return err("chip is part of a completed sequence");
+    return err("chip is part of a completed fivefive");
   }
 
   state.chips[pos.r]![pos.c] = null;

@@ -6,8 +6,8 @@
  * holds visual prefs (color-blind mode, etc.).
  */
 
-const COLORBLIND_KEY = "sequence.colorblind";
-const PREFS_EVENT = "sequence:prefs-changed";
+const COLORBLIND_KEY = "fivefive.colorblind";
+const PREFS_EVENT = "fivefive:prefs-changed";
 
 function read(key: string): boolean {
   try { return localStorage.getItem(key) === "1"; } catch { return false; }

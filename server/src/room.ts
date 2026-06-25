@@ -398,7 +398,7 @@ export class Room {
         fivefivesClosed: p.stats.fivefivesClosed,
         isWinner,
         isMvp: mvpNames.includes(p.name),
-        isWinningSequencePlayer: p.id === winningPlayerId,
+        isWinningFivefivePlayer: p.id === winningPlayerId,
       });
     }
     this.gamesPlayed += 1;

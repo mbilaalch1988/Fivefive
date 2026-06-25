@@ -9,7 +9,7 @@ interface Props {
 }
 
 export function TurnBar({ view, myPlayerId }: Props) {
-  const teams = Object.keys(view.teamSequenceCounts) as Team[];
+  const teams = Object.keys(view.teamFivefiveCounts) as Team[];
   const nextIdx = (view.turnIdx + 1) % view.players.length;
 
   return (
@@ -61,7 +61,7 @@ export function TurnBar({ view, myPlayerId }: Props) {
       >
         <span style={{ color: "var(--md-on-surface-variant)" }}>Need {view.fivefivesToWin}:</span>
         {teams.map((t) => {
-          const count = view.teamSequenceCounts[t];
+          const count = view.teamFivefiveCounts[t];
           if (count === 0 && !view.players.some((p) => p.team === t)) return null;
           return (
             <span key={t} className="flex items-center gap-1.5">

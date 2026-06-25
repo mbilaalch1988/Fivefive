@@ -38,7 +38,7 @@ export function LobbyScreen({
 }: Props) {
   const mySeat = room.seats.find((s) => s.id === myPlayerId);
   const isHost = mySeat?.isHost ?? false;
-  const [fivefivesToWin, setSequencesToWin] = useState(2);
+  const [fivefivesToWin, setFivefivesToWin] = useState(2);
   const [deckId, setDeckId] = useState("");
   const [turnTimerSec, setTurnTimerSec] = useState<number | null>(null);
   const [renamingTeam, setRenamingTeam] = useState<Team | null>(null);
@@ -399,7 +399,7 @@ export function LobbyScreen({
           <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
             Host controls
           </h2>
-          <SelectRow label="Sequences to win" value={String(fivefivesToWin)} onChange={(v) => setSequencesToWin(Number(v))}>
+          <SelectRow label="Fivefives to win" value={String(fivefivesToWin)} onChange={(v) => setFivefivesToWin(Number(v))}>
             <option value="1">1 (quick)</option>
             <option value="2">2 (standard)</option>
             <option value="3">3 (long)</option>

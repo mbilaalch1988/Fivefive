@@ -30,7 +30,7 @@ export interface PlayerGameStats {
   chipsPlaced: number;
   /** Opposing chips removed via one-eyed Jacks. */
   chipsRemoved: number;
-  /** New sequences personally closed by this player's placements. */
+  /** New fivefives personally closed by this player's placements. */
   fivefivesClosed: number;
 }
 
@@ -47,7 +47,7 @@ export interface Player {
 export type Action =
   /** Play a numeric/face card or a two-eyed Jack to place a chip. */
   | { type: "place"; cardId: number; pos: Pos }
-  /** Play a one-eyed Jack to remove an opponent's chip (not one in a completed sequence). */
+  /** Play a one-eyed Jack to remove an opponent's chip (not one in a completed fivefive). */
   | { type: "remove"; cardId: number; pos: Pos }
   /** Discard a dead card (both matching board squares already occupied) before playing. */
   | { type: "discardDead"; cardId: number };
@@ -73,7 +73,7 @@ export interface Fivefive {
 }
 
 export interface GameConfig {
-  /** Number of completed sequences a team needs to win. */
+  /** Number of completed fivefives a team needs to win. */
   fivefivesToWin: number;
   /** Cards dealt per player. Derived from player count if omitted. */
   handSize: number;
@@ -92,9 +92,9 @@ export interface GameState {
   /** Cards remaining to draw, top at end (pop). */
   drawPile: Card[];
   discardPile: Card[];
-  /** Completed sequences in play order. */
-  sequences: Fivefive[];
-  /** Chip positions already counted in a sequence; "r,c" keys. */
+  /** Completed fivefives in play order. */
+  fivefives: Fivefive[];
+  /** Chip positions already counted in a fivefive; "r,c" keys. */
   lockedChips: Set<string>;
   winner: Team | null;
   /** Id of the player whose placement triggered the win. Null until winner is set. */

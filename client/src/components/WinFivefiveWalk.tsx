@@ -6,7 +6,7 @@ interface Props {
   /** Team that just won (null = hide). */
   team: Team | null;
   teamName: string;
-  sequences: Fivefive[];
+  fivefives: Fivefive[];
   /** Total duration available — should match GameScreen's celebrate window. */
   totalDurationMs: number;
   /** Called when the walk finishes. */
@@ -16,11 +16,11 @@ interface Props {
 /**
  * Big banner across the top of the screen during the post-win celebration.
  * Counts up "Fivefive 1 of N" while each chip in the winning team's
- * sequences pulses (driven by Board.tsx via celebrateDelayMs). Pure
+ * fivefives pulses (driven by Board.tsx via celebrateDelayMs). Pure
  * presentational — Board does the chip glow timing.
  */
-export function WinSequenceWalk({ team, teamName, sequences, totalDurationMs, onDone }: Props) {
-  const winningSeqs = sequences.filter((s) => s.team === team);
+export function WinFivefiveWalk({ team, teamName, fivefives, totalDurationMs, onDone }: Props) {
+  const winningSeqs = fivefives.filter((s) => s.team === team);
   const count = winningSeqs.length;
   const [shown, setShown] = useState(0);
 

@@ -107,7 +107,7 @@ async function runMigration(): Promise<void> {
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS sequences_closed INT NOT NULL DEFAULT 0;
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS mvp_games INT NOT NULL DEFAULT 0;
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS chips_placed INT NOT NULL DEFAULT 0;
-    -- Career count of sequences personally closed that pushed a team to win.
+    -- Career count of fivefives personally closed that pushed a team to win.
     ALTER TABLE player_stats ADD COLUMN IF NOT EXISTS winning_sequences_closed INT NOT NULL DEFAULT 0;
 
     -- Signed-in user career stats keyed by Supabase auth.users.id.
@@ -750,8 +750,8 @@ export interface PlayerGameContribution {
   fivefivesClosed: number;
   isWinner: boolean;
   isMvp: boolean;
-  /** True if this player's placement triggered the win (closes the winning sequence). */
-  isWinningSequencePlayer: boolean;
+  /** True if this player's placement triggered the win (closes the winning fivefive). */
+  isWinningFivefivePlayer: boolean;
 }
 
 export interface WinRecord {
@@ -800,7 +800,7 @@ export async function persistWin(record: WinRecord): Promise<void> {
     //   userId set  -> user_stats  (keyed by immutable Supabase UUID)
     //   userId null -> player_stats (keyed by display name, anonymous)
     for (const c of contributions) {
-      const winningSeqInc = c.isWinningSequencePlayer ? 1 : 0;
+      const winningSeqInc = c.isWinningFivefivePlayer ? 1 : 0;
       if (c.userId) {
         await pool.query(
           `INSERT INTO user_stats (

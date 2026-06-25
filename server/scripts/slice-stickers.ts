@@ -25,8 +25,8 @@ const REPO_ROOT = resolve(__dirname, "..", "..");
 const OUT_DIR = join(REPO_ROOT, "client", "public", "stickers");
 
 const LABELS = [
-  "got-this", "no-way", "thinking", "my-sequence", "on-fire", "just-wait",
-  "didnt-see-that", "perfect-card", "sequence", "blocked", "jack-played", "sequence-broken",
+  "got-this", "no-way", "thinking", "my-fivefive", "on-fire", "just-wait",
+  "didnt-see-that", "perfect-card", "fivefive", "blocked", "jack-played", "fivefive-broken",
   "watching-you", "you-win", "your-turn", "bad-hand", "nice-move", "oops",
   "hahaha", "good-luck", "too-easy", "love-this", "gg", "good-game",
 ];

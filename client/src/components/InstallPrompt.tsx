@@ -18,7 +18,7 @@ import {
 export function InstallPrompt() {
   const [installable, setInstallable] = useState<boolean>(() => canPromptInstall());
   const [dismissed, setDismissed] = useState<boolean>(() => {
-    try { return localStorage.getItem("sequence.installDismissed") === "1"; } catch { return false; }
+    try { return localStorage.getItem("fivefive.installDismissed") === "1"; } catch { return false; }
   });
 
   useEffect(() => {
@@ -97,6 +97,6 @@ export function InstallPrompt() {
 
   function dismiss() {
     setDismissed(true);
-    try { localStorage.setItem("sequence.installDismissed", "1"); } catch { /* ignore */ }
+    try { localStorage.setItem("fivefive.installDismissed", "1"); } catch { /* ignore */ }
   }
 }

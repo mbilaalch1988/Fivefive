@@ -12,7 +12,7 @@ const SERVER_BASE =
   import.meta.env.VITE_SERVER_URL ??
   (import.meta.env.DEV ? "http://localhost:3001" : "");
 
-const PUSH_ENABLED_KEY = "sequence.pushEnabled";
+const PUSH_ENABLED_KEY = "fivefive.pushEnabled";
 
 export function isPushSupported(): boolean {
   return (

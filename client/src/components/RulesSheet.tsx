@@ -54,7 +54,7 @@ export function RulesSheet({ open, onClose }: Props) {
 
         <div className="px-5 py-4 space-y-5 text-sm leading-relaxed">
           <Section title="Goal">
-            Be the first team to complete the agreed number of <b>sequences</b> —
+            Be the first team to complete the agreed number of <b>fivefives</b> —
             five chips in a row (horizontal, vertical, or diagonal). The host
             sets the target before pressing Start.
           </Section>
@@ -69,7 +69,7 @@ export function RulesSheet({ open, onClose }: Props) {
 
           <Section title="Corners are wild">
             The four corner squares count as both teams' chips for any
-            sequence that runs through them. Use them to bridge two short runs.
+            fivefive that runs through them. Use them to bridge two short runs.
           </Section>
 
           <Section title="The Jacks">
@@ -81,7 +81,7 @@ export function RulesSheet({ open, onClose }: Props) {
               <li>
                 <Badge tone="rose">One-eyed</Badge> <span className="text-zinc-300">J♥ and J♠ are <b>removers</b>.</span>{" "}
                 Play one to remove an opponent's chip. Chips already part of a
-                completed sequence are locked and cannot be removed.
+                completed fivefive are locked and cannot be removed.
               </li>
             </ul>
           </Section>
@@ -94,14 +94,14 @@ export function RulesSheet({ open, onClose }: Props) {
           </Section>
 
           <Section title="Fivefive overlap">
-            A chip can count toward two different sequences, but only one chip
-            from your previous sequence can be re-used in the new one.
+            A chip can count toward two different fivefives, but only one chip
+            from your previous fivefive can be re-used in the new one.
           </Section>
 
           <Section title="Winning">
-            The instant your team's sequence count hits the target, the game
+            The instant your team's fivefive count hits the target, the game
             ends. The winner is announced and the player who closed the final
-            sequence is marked <span className="text-amber-300 font-medium">MVP</span>.
+            fivefive is marked <span className="text-amber-300 font-medium">MVP</span>.
           </Section>
         </div>
 

@@ -21,18 +21,18 @@ import { PreGameCountdown } from "../components/PreGameCountdown";
 import { QuickChatOverlay } from "../components/QuickChatOverlay";
 import { QuickChatPicker } from "../components/QuickChatPicker";
 import { RulesSheet } from "../components/RulesSheet";
-import { SequenceAnnounce } from "../components/FivefiveAnnounce";
+import { FivefiveAnnounce } from "../components/FivefiveAnnounce";
 import { StickerOverlay } from "../components/StickerOverlay";
 import { StickerPicker } from "../components/StickerPicker";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
-import { WinSequenceWalk } from "../components/WinFivefiveWalk";
+import { WinFivefiveWalk } from "../components/WinFivefiveWalk";
 import type { ActionLog, QuickChatBroadcast, StickerBroadcast } from "@fivefive/shared";
 import {
   notifyMyTurn,
   playChipDrop,
   playOneEyedJack,
-  playSequenceDing,
+  playFivefiveDing,
   playTwoEyedJack,
   playWinFlourish,
 } from "../lib/notify";
@@ -127,8 +127,8 @@ export function GameScreen({
     prevLockedRef.current = current;
     if (newly.size > 0) {
       setJustLocked(newly);
-      // Triple-bell ding to mark every sequence completion (not just wins).
-      playSequenceDing();
+      // Triple-bell ding to mark every fivefive completion (not just wins).
+      playFivefiveDing();
       // Fire confetti from each newly-locked chip (skip if no chip placed
       // at that pos, which can happen for corner-wild positions).
       requestAnimationFrame(() => {
@@ -152,8 +152,8 @@ export function GameScreen({
           });
         }
       });
-      // Show the SEQUENCE! wordmark using the most recent sequence's team.
-      const latest = view.sequences[view.sequences.length - 1];
+      // Show the FIVEFIVE! wordmark using the most recent fivefive's team.
+      const latest = view.fivefives[view.fivefives.length - 1];
       if (latest) setAnnounceTeam(latest.team);
       const tLock = setTimeout(() => setJustLocked(new Set()), 1200);
       const tAnn = setTimeout(() => setAnnounceTeam(null), 2000);
@@ -162,7 +162,7 @@ export function GameScreen({
         clearTimeout(tAnn);
       };
     }
-  }, [view.lockedChips, view.chips, view.sequences]);
+  }, [view.lockedChips, view.chips, view.fivefives]);
 
   // Notify (vibrate + chime) when the turn flips TO this player. Skip the
   // very first observation so we don't fire when the user lands in-game.
@@ -180,7 +180,7 @@ export function GameScreen({
 
   // Watch recentActions for newly-arrived Jack plays. For each one, locate the
   // target cell in the DOM and spawn a JackEffect over it. Independent of
-  // sequence completion — confetti still fires on locks, this just announces
+  // fivefive completion — confetti still fires on locks, this just announces
   // which square a special card hit.
   const prevActionCountRef = useRef<number>(0);
   useEffect(() => {
@@ -252,11 +252,11 @@ export function GameScreen({
   const [winStage, setWinStage] = useState<WinStage>("playing");
   const [celebratingTeam, setCelebratingTeam] = useState<Team | null>(null);
 
-  // Per-sequence celebration window: budget enough time so each winning
-  // sequence's chips can pulse one-at-a-time before the WinOverlay appears.
-  // 700ms gap between sequences × N winning sequences + 1200ms tail.
+  // Per-fivefive celebration window: budget enough time so each winning
+  // fivefive's chips can pulse one-at-a-time before the WinOverlay appears.
+  // 700ms gap between fivefives × N winning fivefives + 1200ms tail.
   const winningSeqCount = view.winner
-    ? view.sequences.filter((s) => s.team === view.winner).length
+    ? view.fivefives.filter((s) => s.team === view.winner).length
     : 0;
   const celebrateDurationMs = Math.max(2200, winningSeqCount * 700 + 1200);
 
@@ -501,7 +501,7 @@ export function GameScreen({
       )}
 
       {announceTeam && (
-        <SequenceAnnounce
+        <FivefiveAnnounce
           team={announceTeam}
           teamName={view.teamNames[announceTeam]}
         />
@@ -541,10 +541,10 @@ export function GameScreen({
       <QuickChatOverlay chats={quickChats} />
 
       {winStage === "celebrating" && view.winner && (
-        <WinSequenceWalk
+        <WinFivefiveWalk
           team={view.winner}
           teamName={winnerTeamName ?? "Winner"}
-          sequences={view.sequences}
+          fivefives={view.fivefives}
           totalDurationMs={celebrateDurationMs}
         />
       )}

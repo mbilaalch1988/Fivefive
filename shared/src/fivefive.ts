@@ -13,7 +13,7 @@ function inBounds(r: number, c: number): boolean {
 }
 
 /**
- * A square counts toward a team's sequence if it is a corner (wild for everyone)
+ * A square counts toward a team's fivefive if it is a corner (wild for everyone)
  * or holds that team's chip.
  */
 function countsFor(team: Team, chips: Chip[][], r: number, c: number): boolean {
@@ -22,15 +22,15 @@ function countsFor(team: Team, chips: Chip[][], r: number, c: number): boolean {
 }
 
 /**
- * Detect any 5-in-a-row sequences that include the just-placed chip at `placed`.
+ * Detect any 5-in-a-row fivefives that include the just-placed chip at `placed`.
  *
  * Rules implemented:
  *  - Lines in 4 orientations (H, V, both diagonals).
  *  - Corners are wild — they count for any team and don't consume a chip.
  *  - "One shared chip" rule: at most one chip in the candidate 5-run may already
- *    be locked into a previously-counted sequence (corners are never locked).
- *  - One placement can complete at most one sequence per orientation, but may
- *    legitimately complete sequences in multiple orientations at once.
+ *    be locked into a previously-counted fivefive (corners are never locked).
+ *  - One placement can complete at most one fivefive per orientation, but may
+ *    legitimately complete fivefives in multiple orientations at once.
  */
 export function detectFivefives(
   chips: Chip[][],
@@ -80,7 +80,7 @@ export function detectFivefives(
       }
       if (lockedCount <= 1) {
         best = window;
-        break; // first valid is fine; sequences in same orientation are equivalent
+        break; // first valid is fine; fivefives in same orientation are equivalent
       }
     }
 
@@ -92,7 +92,7 @@ export function detectFivefives(
   return found;
 }
 
-/** Add new sequence chips (excluding corners) to the locked set. */
+/** Add new fivefive chips (excluding corners) to the locked set. */
 export function lockFivefiveChips(
   lockedChips: Set<string>,
   seq: Fivefive,

@@ -13,8 +13,8 @@ export function defaultHandSize(playerCount: number): number {
   return 4;
 }
 
-/** Sequences needed to win, by team count. */
-export function defaultSequencesToWin(teamCount: number): number {
+/** Fivefives needed to win, by team count. */
+export function defaultFivefivesToWin(teamCount: number): number {
   return teamCount === 3 ? 1 : 2;
 }
 
@@ -33,7 +33,7 @@ export function createInitialState(
   const seed = configOverride.seed ?? Math.floor(Math.random() * 2 ** 31);
   const handSize = configOverride.handSize ?? defaultHandSize(seats.length);
   const fivefivesToWin =
-    configOverride.fivefivesToWin ?? defaultSequencesToWin(teams.size);
+    configOverride.fivefivesToWin ?? defaultFivefivesToWin(teams.size);
   const deckId = configOverride.deckId ?? null;
 
   const config: GameConfig = { seed, handSize, fivefivesToWin, deckId };
@@ -72,7 +72,7 @@ export function createInitialState(
     turnIdx: 0,
     drawPile: deck,
     discardPile: [],
-    sequences: [],
+    fivefives: [],
     lockedChips: new Set<string>(),
     winner: null,
     winningFivefivePlayerId: null,

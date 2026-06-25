@@ -141,7 +141,7 @@ describe("applyAction: one-eyed Jack (remove)", () => {
     expect(s.chips[5]![5]).toBeNull();
   });
 
-  it("refuses to remove a chip locked in a sequence", () => {
+  it("refuses to remove a chip locked in a fivefive", () => {
     const s = setup();
     s.chips[5]![5] = "blue";
     s.lockedChips.add("5,5");

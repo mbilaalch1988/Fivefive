@@ -693,7 +693,7 @@ async function pushTurnNotification(room: Room, playerId: string): Promise<void>
  * Shared Faizi scorer used by both the personal-analysis endpoint and the
  * group-roast endpoint. Wraps the bot's heuristic scorer to expose rank +
  * score, which the rank-based rater uses to avoid the "9% closeness =
- * mistake" trap when the bot finds a +1000 sequence completion.
+ * mistake" trap when the bot finds a +1000 fivefive completion.
  */
 const faiziScorer: Parameters<typeof analyzeForPlayer>[2] = (state, pid) => {
   const candidates = scoredCandidates(state, pid);

@@ -18,8 +18,8 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
   const viewer = state.players.find((p) => p.id === viewerId);
   const myHand = viewer ? viewer.hand : [];
 
-  const teamSequenceCounts: Record<Team, number> = { red: 0, blue: 0, green: 0 };
-  for (const s of state.sequences) teamSequenceCounts[s.team]++;
+  const teamFivefiveCounts: Record<Team, number> = { red: 0, blue: 0, green: 0 };
+  for (const s of state.fivefives) teamFivefiveCounts[s.team]++;
 
   const top = state.discardPile[state.discardPile.length - 1] ?? null;
 
@@ -31,12 +31,12 @@ export function toGameView(state: GameState, viewerId: PlayerId | null): GameVie
     turnIdx: state.turnIdx,
     drawPileCount: state.drawPile.length,
     discardPileTop: top,
-    sequences: state.sequences,
+    fivefives: state.fivefives,
     lockedChips: Array.from(state.lockedChips),
     winner: state.winner,
     discardedThisTurn: state.discardedThisTurn,
     fivefivesToWin: state.config.fivefivesToWin,
-    teamSequenceCounts,
+    teamFivefiveCounts,
     deck: null, // server overrides with the Room's manifest if any
     teamNames: { red: "Red", blue: "Blue", green: "Green" },
     mvpNames: [], // server fills this in after recording the win

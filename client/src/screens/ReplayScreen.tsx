@@ -152,12 +152,12 @@ export function ReplayScreen({ gameId, onClose }: Props) {
       turnIdx: step % replay.players.length,
       drawPileCount: 0,
       discardPileTop: null,
-      sequences: boardState.sequences,
+      fivefives: boardState.fivefives,
       lockedChips: [...boardState.lockedChips],
       winner: step >= replay.actions.length ? replay.winningTeam : null,
       discardedThisTurn: false,
       fivefivesToWin: replay.fivefivesToWin,
-      teamSequenceCounts: boardState.teamSequenceCounts,
+      teamFivefiveCounts: boardState.teamFivefiveCounts,
       deck,
       teamNames: replay.teamNames,
       mvpNames: [],
@@ -217,9 +217,9 @@ interface ContentProps {
   fakeView: GameView;
   boardState: {
     chips: GameView["chips"];
-    sequences: GameView["sequences"];
+    fivefives: GameView["fivefives"];
     lockedChips: Set<string>;
-    teamSequenceCounts: GameView["teamSequenceCounts"];
+    teamFivefiveCounts: GameView["teamFivefiveCounts"];
   };
   step: number;
   setStep: (s: number | ((s: number) => number)) => void;
@@ -307,7 +307,7 @@ function ReplayContent({
               <span className={`inline-block w-3 h-3 rounded-full ${TEAM_CHIP[t]}`} />
               <span className="truncate max-w-[8rem]">{replay.teamNames[t]}</span>:{" "}
               <span className="font-semibold text-zinc-100">
-                {boardState.teamSequenceCounts[t]}
+                {boardState.teamFivefiveCounts[t]}
               </span>
             </span>
           );

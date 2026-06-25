@@ -170,7 +170,7 @@ function cloneState(state: GameState): GameState {
  * Returns the rank (1-indexed) and score of the user's chosen action within
  * the sorted candidate list, plus the bot's best move. Faizi uses BOTH the
  * rank AND the absolute gap (best.score − userScore) so a player who picks
- * a "reasonable but not optimal" move when the bot found a +1000 sequence
+ * a "reasonable but not optimal" move when the bot found a +1000 fivefive
  * doesn't get scored as 9% closeness → mistake.
  */
 export interface MoveScorer {
@@ -189,7 +189,7 @@ export interface MoveScorer {
  * Rank- and gap-based rating. Gap fallback exists so that when many moves
  * score similarly, "I picked the 2nd-best out of 12" reads as best (not a
  * mistake). Numbers tuned against typical scorePlace() ranges:
- *   sequence completion ≈ 1000
+ *   fivefive completion ≈ 1000
  *   4-in-a-row extension ≈ 90
  *   normal placement ≈ 10–35
  *   defensive block ≈ 60–200

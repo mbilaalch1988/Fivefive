@@ -237,7 +237,7 @@ function ScoreboardDialog({ onClose }: { onClose: () => void }) {
                   className="text-[0.65rem] text-center pt-3"
                   style={{ color: "var(--md-on-surface-variant)" }}
                 >
-                  Points = sequences × 5 + winning sequences × 5 + MVPs × 10
+                  Points = fivefives × 5 + winning fivefives × 5 + MVPs × 10
                 </p>
               )}
             </>
@@ -314,7 +314,7 @@ function Pagination({
 /* Shared leader table + row detail                              */
 /* ------------------------------------------------------------ */
 
-type TableVariant = "points" | "wins" | "sequences" | "mvp";
+type TableVariant = "points" | "wins" | "fivefives" | "mvp";
 
 function LeaderTable({
   title,
@@ -405,8 +405,8 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
     >
       <div className="space-y-1.5">
         <DetailRow label="Wins" value={`${row.wins} of ${row.games} (${(row.ratio * 100).toFixed(0)}%)`} />
-        <DetailRow label="Sequences closed" value={`${seq}`} extra={`+${seq * 5} pts`} />
-        <DetailRow label="Game-winning sequences" value={`${winSeq}`} extra={`+${winSeq * 5} pts`} />
+        <DetailRow label="Fivefives closed" value={`${seq}`} extra={`+${seq * 5} pts`} />
+        <DetailRow label="Game-winning fivefives" value={`${winSeq}`} extra={`+${winSeq * 5} pts`} />
         <DetailRow label="MVP games" value={`${mvp}`} extra={`+${mvp * 10} pts`} />
         <div
           className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold text-zinc-100"
@@ -752,7 +752,7 @@ function RankValue({
       </span>
     );
   }
-  if (variant === "sequences") {
+  if (variant === "fivefives") {
     return (
       <span className="text-right shrink-0">
         <div className="font-semibold">{row.fivefivesClosed ?? 0}</div>

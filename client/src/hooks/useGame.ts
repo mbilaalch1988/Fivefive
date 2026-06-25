@@ -9,7 +9,7 @@ import type {
   StickerBroadcast,
   Team,
 } from "@fivefive/shared";
-import { emit, getSocket, type SequenceSocket } from "../lib/socket";
+import { emit, getSocket, type FivefiveSocket } from "../lib/socket";
 import { supabase } from "../lib/supabase";
 
 /** Fetch the current Supabase access token, if signed in. Used as a bearer
@@ -22,8 +22,8 @@ async function currentAuthToken(): Promise<string | undefined> {
 
 export type Phase = "landing" | "lobby" | "game" | "spectate-lobby" | "spectate-game";
 
-const STORAGE_KEY = "sequence.session";
-const SPECTATE_STORAGE_KEY = "sequence.spectate";
+const STORAGE_KEY = "fivefive.session";
+const SPECTATE_STORAGE_KEY = "fivefive.spectate";
 
 interface StoredSession {
   roomCode: string;
@@ -108,7 +108,7 @@ export interface UseGame {
 }
 
 export function useGame(): UseGame {
-  const socketRef = useRef<SequenceSocket | null>(null);
+  const socketRef = useRef<FivefiveSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [playerId, setPlayerId] = useState<PlayerId | null>(null);
   const [roomCode, setRoomCode] = useState<string | null>(null);
@@ -462,7 +462,7 @@ export function useGame(): UseGame {
 }
 
 async function rejoinStored(
-  s: SequenceSocket,
+  s: FivefiveSocket,
   stored: StoredSession,
 ): Promise<{ room: RoomView; game: GameView | null } | null> {
   const res = (await emit(s, "rejoin", stored)) as
@@ -473,7 +473,7 @@ async function rejoinStored(
 }
 
 async function rejoinSpectate(
-  s: SequenceSocket,
+  s: FivefiveSocket,
   spec: StoredSpectate,
 ): Promise<{ room: RoomView; game: GameView | null } | null> {
   const res = (await emit(s, "joinAsSpectator", {

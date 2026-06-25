@@ -1,7 +1,7 @@
 /**
  * Server-side bot decision engine. Pure function over GameState — no side
  * effects, no socket I/O. Caller (index.ts) schedules a delay and dispatches
- * the returned Action via Room.applyAction so persistence, sequence
+ * the returned Action via Room.applyAction so persistence, fivefive
  * detection, win checks, and replay logging all stay on the normal path.
  */
 
@@ -112,7 +112,7 @@ export function botDecide(
   for (const card of player.hand) {
     if (isOneEyedJack(card)) {
       // Target opponent chips that aren't locked. Prefer chips on an
-      // existing run (they're closer to completing a sequence).
+      // existing run (they're closer to completing a fivefive).
       for (let r = 0; r < chips.length; r++) {
         const row = chips[r]!;
         for (let c = 0; c < row.length; c++) {
@@ -252,7 +252,7 @@ function bestOpponentPlacementScore(
 
 /**
  * Score a hypothetical placement at `pos` for `team`. Considers:
- *  - Run length created (5 = sequence, 4 = primed, 3 = building)
+ *  - Run length created (5 = fivefive, 4 = primed, 3 = building)
  *  - Defensive: blocks an opponent who would have run-length 4 here
  *  - Corner adjacency bonus
  */
@@ -279,7 +279,7 @@ function scorePlace(
     chips[pos.r]![pos.c] = opp;
     const oppRun = maxRunThroughPos(chips, board, pos, opp);
     chips[pos.r]![pos.c] = null;
-    if (oppRun >= 5) score += 200; // would-be opponent sequence — major block
+    if (oppRun >= 5) score += 200; // would-be opponent fivefive — major block
     else if (oppRun >= 4) score += 60;
     else if (oppRun >= 3) score += 20;
   }

@@ -6,8 +6,8 @@
  *  - chime mute: silences ALL game audio (turn chime, chip drops, etc.)
  *  - vibration mute: silences haptic feedback
  */
-const CHIME_MUTE_KEY = "sequence.muteChime";
-const VIBRATE_MUTE_KEY = "sequence.muteVibration";
+const CHIME_MUTE_KEY = "fivefive.muteChime";
+const VIBRATE_MUTE_KEY = "fivefive.muteVibration";
 
 function readFlag(key: string): boolean {
   try { return localStorage.getItem(key) === "1"; } catch { return false; }
@@ -131,8 +131,8 @@ export function playChipDrop(): void {
   });
 }
 
-/** Triple ascending bell — fires when a sequence locks. */
-export function playSequenceDing(): void {
+/** Triple ascending bell — fires when a fivefive locks. */
+export function playFivefiveDing(): void {
   withCtx((ctx, t0) => {
     tone(ctx, t0, { freq: 783.99, start: 0,    dur: 0.30, peak: 0.20, type: "triangle" }); // G5
     tone(ctx, t0, { freq: 987.77, start: 0.10, dur: 0.30, peak: 0.20, type: "triangle" }); // B5

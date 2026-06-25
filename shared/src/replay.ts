@@ -3,7 +3,7 @@
  * persisted actions, build the board chip state at any point in the game.
  *
  * This is a SIMPLIFIED view-only re-application — it doesn't track hands,
- * draw pile, discard pile, or per-player stats. Only the chip/sequence
+ * draw pile, discard pile, or per-player stats. Only the chip/fivefive
  * state needed to render the Board.
  */
 
@@ -14,10 +14,10 @@ import type { ReplayAction } from "./protocol.js";
 
 export interface ReplayBoardState {
   chips: Chip[][];
-  sequences: Fivefive[];
+  fivefives: Fivefive[];
   lockedChips: Set<string>;
-  /** Per-team sequence counts at this point in the replay. */
-  teamSequenceCounts: Record<Team, number>;
+  /** Per-team fivefive counts at this point in the replay. */
+  teamFivefiveCounts: Record<Team, number>;
   /** Last action applied (for highlight/UI), null when stepIndex === 0. */
   lastAction: ReplayAction | null;
 }
@@ -40,9 +40,9 @@ export function replayBoardAt(
 ): ReplayBoardState {
   const clamped = Math.max(0, Math.min(actions.length, stepIndex));
   const chips = emptyChips(board);
-  const sequences: Fivefive[] = [];
+  const fivefives: Fivefive[] = [];
   const lockedChips = new Set<string>();
-  const teamSequenceCounts: Record<Team, number> = { red: 0, blue: 0, green: 0 };
+  const teamFivefiveCounts: Record<Team, number> = { red: 0, blue: 0, green: 0 };
 
   let lastAction: ReplayAction | null = null;
 
@@ -53,9 +53,9 @@ export function replayBoardAt(
       chips[a.pos.r]![a.pos.c] = a.team;
       const newSeqs = detectFivefives(chips, a.pos, a.team, lockedChips);
       for (const seq of newSeqs) {
-        sequences.push(seq);
+        fivefives.push(seq);
         lockFivefiveChips(lockedChips, seq);
-        teamSequenceCounts[seq.team] += 1;
+        teamFivefiveCounts[seq.team] += 1;
       }
     } else if (a.type === "remove" && a.pos) {
       // Only allowed on unlocked chips (server enforced); replay just clears.
@@ -66,5 +66,5 @@ export function replayBoardAt(
     // discardDead has no board effect.
   }
 
-  return { chips, sequences, lockedChips, teamSequenceCounts, lastAction };
+  return { chips, fivefives, lockedChips, teamFivefiveCounts, lastAction };
 }

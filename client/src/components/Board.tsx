@@ -24,12 +24,12 @@ export function Board({
   const deck: DeckManifest | null = view.deck ?? null;
 
   // Map each celebrating chip position to a staggered glow delay.
-  // Sequences fire ONE AT A TIME with a generous gap between them so the
-  // viewer reads each winning sequence clearly: chips within a sequence
-  // stagger by 80ms, sequences are separated by 700ms.
+  // Fivefives fire ONE AT A TIME with a generous gap between them so the
+  // viewer reads each winning fivefive clearly: chips within a fivefive
+  // stagger by 80ms, fivefives are separated by 700ms.
   const celebrateDelay = new Map<string, number>();
   if (celebratingTeam) {
-    const ordered = view.sequences.filter((s) => s.team === celebratingTeam);
+    const ordered = view.fivefives.filter((s) => s.team === celebratingTeam);
     ordered.forEach((seq, seqIdx) => {
       const start = seqIdx * 700;
       seq.positions.forEach((p, posIdx) => {

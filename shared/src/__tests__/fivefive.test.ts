@@ -43,25 +43,25 @@ describe("detectFivefives", () => {
     expect(seqs).toHaveLength(0);
   });
 
-  it("treats corners as wild for sequence formation", () => {
+  it("treats corners as wild for fivefive formation", () => {
     const chips = emptyChips();
     // top-left corner is (0,0); make a row of 4 reds plus the corner
     for (let c = 1; c <= 4; c++) chips[0]![c] = RED;
     const seqs = detectFivefives(chips, { r: 0, c: 4 }, RED, new Set());
     expect(seqs).toHaveLength(1);
-    // the sequence should contain the corner
+    // the fivefive should contain the corner
     const hasCorner = seqs[0]!.positions.some((p) => p.r === 0 && p.c === 0);
     expect(hasCorner).toBe(true);
   });
 
-  it("permits at most one chip shared with a previous sequence", () => {
+  it("permits at most one chip shared with a previous fivefive", () => {
     const chips = emptyChips();
-    // First sequence: (3,2..6). Lock chips at columns 2..6.
+    // First fivefive: (3,2..6). Lock chips at columns 2..6.
     for (let c = 2; c <= 6; c++) chips[3]![c] = RED;
     const locked = new Set<string>();
     for (let c = 2; c <= 6; c++) locked.add(`3,${c}`);
 
-    // Try to form a second horizontal sequence sharing TWO chips (3,5) and (3,6):
+    // Try to form a second horizontal fivefive sharing TWO chips (3,5) and (3,6):
     // we'd need (3,5),(3,6),(3,7),(3,8),(3,9) — already chips 5,6 are red.
     // Place chips at 7,8,9 and check the placement at 9.
     chips[3]![7] = RED;
@@ -71,14 +71,14 @@ describe("detectFivefives", () => {
     expect(seqs).toHaveLength(0); // 2 locked chips in the window → invalid
   });
 
-  it("allows exactly one shared chip with a previous sequence", () => {
+  it("allows exactly one shared chip with a previous fivefive", () => {
     const chips = emptyChips();
-    // First sequence row 3 cols 1..5
+    // First fivefive row 3 cols 1..5
     for (let c = 1; c <= 5; c++) chips[3]![c] = RED;
     const locked = new Set<string>();
     for (let c = 1; c <= 5; c++) locked.add(`3,${c}`);
 
-    // Build vertical sequence sharing only (3,5): place (1,5),(2,5),(4,5),(5,5)
+    // Build vertical fivefive sharing only (3,5): place (1,5),(2,5),(4,5),(5,5)
     chips[1]![5] = RED;
     chips[2]![5] = RED;
     chips[4]![5] = RED;
@@ -89,7 +89,7 @@ describe("detectFivefives", () => {
     expect(seqs2).toHaveLength(1);
   });
 
-  it("can complete sequences in two orientations on one placement", () => {
+  it("can complete fivefives in two orientations on one placement", () => {
     const chips = emptyChips();
     // Build a horizontal of 4 and a vertical of 4 meeting at (5,5).
     // Horizontal: (5,1..4) red; vertical: (1..4,5) red. Place (5,5) → completes both.

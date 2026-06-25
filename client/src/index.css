@@ -57,7 +57,7 @@ body {
   100% { transform: rotateY(0deg); }
 }
 
-/* Chip flip — fires once when a chip first becomes part of a sequence. */
+/* Chip flip — fires once when a chip first becomes part of a fivefive. */
 .chip-flip {
   animation: chip-flip 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -77,7 +77,7 @@ body {
 
 /* Win celebration: each winning-team chip pulses with a golden glow.
    Per-chip animation-delay is set inline by Board.tsx so the glow sweeps
-   along the sequence path. */
+   along the fivefive path. */
 .chip-celebrate {
   animation: chip-celebrate 1.2s ease-in-out;
   animation-fill-mode: backwards;
@@ -338,7 +338,7 @@ body {
   100% { transform: scale(1.1)  translateY(-40px); opacity: 0; }
 }
 
-/* SEQUENCE! wordmark announce: zooms+rotates in, holds, fades out. */
+/* FIVEFIVE! wordmark announce: zooms+rotates in, holds, fades out. */
 .fivefive-announce-text {
   animation: fivefive-announce 1.8s ease-out forwards;
 }

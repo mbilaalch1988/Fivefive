@@ -16,7 +16,7 @@ export {
   createInitialState,
   currentPlayer,
   defaultHandSize,
-  defaultSequencesToWin,
+  defaultFivefivesToWin,
 } from "./state.js";
 export type { SeatInput } from "./state.js";
 export { applyAction, pickRandomLegalAction } from "./rules.js";

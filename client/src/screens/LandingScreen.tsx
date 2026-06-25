@@ -9,8 +9,8 @@ import { ReplayScreen } from "./ReplayScreen";
 import { useAccount, type AccountInfo, type AnonymousStats } from "../hooks/useAccount";
 import { useAuth } from "../hooks/useAuth";
 
-const NAME_STORAGE_KEY = "sequence.playerName";
-const CLAIM_PROMPT_DONE_KEY = "sequence.claimPromptDone";
+const NAME_STORAGE_KEY = "fivefive.playerName";
+const CLAIM_PROMPT_DONE_KEY = "fivefive.claimPromptDone";
 
 interface Props {
   connected: boolean;

@@ -4,11 +4,11 @@ import type {
   ServerToClientEvents,
 } from "@fivefive/shared";
 
-export type SequenceSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+export type FivefiveSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-let singleton: SequenceSocket | null = null;
+let singleton: FivefiveSocket | null = null;
 
-export function getSocket(): SequenceSocket {
+export function getSocket(): FivefiveSocket {
   if (singleton) return singleton;
   // VITE_SERVER_URL wins if set (e.g. for a separate API host).
   // Otherwise: in dev hit the local Node server on :3001; in prod use same-origin.
@@ -20,7 +20,7 @@ export function getSocket(): SequenceSocket {
 
 /** Promise-wrapped emit-with-ack. Use a single payload object per event. */
 export function emit<E extends keyof ClientToServerEvents>(
-  socket: SequenceSocket,
+  socket: FivefiveSocket,
   event: E,
   payload?: unknown,
 ): Promise<unknown> {

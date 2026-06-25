@@ -38,13 +38,13 @@ export interface ScoreboardEntry {
   games: number;
   /** 0.0 to 1.0; 0 when games == 0. */
   ratio: number;
-  /** Career sequences personally closed across all games (players only). 0 for teams. */
+  /** Career fivefives personally closed across all games (players only). 0 for teams. */
   fivefivesClosed?: number;
-  /** Career count of "winning sequences" closed (the one that triggered a win). */
+  /** Career count of "winning fivefives" closed (the one that triggered a win). */
   winningFivefivesClosed?: number;
   /** Career MVP-credit count (players only). 0 for teams. */
   mvpGames?: number;
-  /** Career points (sequences × 5 + winning sequences × 5 + MVPs × 10). */
+  /** Career points (fivefives × 5 + winning fivefives × 5 + MVPs × 10). */
   points?: number;
   /** True when this row is a signed-in user (stats keyed by Supabase user_id). */
   verified?: boolean;
@@ -57,7 +57,7 @@ export interface ScoreboardResponse {
   topPlayers: ScoreboardEntry[];
   /** Top 5 teams by total wins. */
   topTeams: ScoreboardEntry[];
-  /** Top 5 players by lifetime sequences-closed. */
+  /** Top 5 players by lifetime fivefives-closed. */
   topPlayersByFivefives: ScoreboardEntry[];
   /** Top 5 players by MVP-game count. */
   topPlayersByMvp: ScoreboardEntry[];
@@ -129,13 +129,13 @@ export interface GameView {
   turnIdx: number;
   drawPileCount: number;
   discardPileTop: Card | null;
-  sequences: Fivefive[];
-  /** Locked chip keys "r,c" — chips already part of a completed sequence. */
+  fivefives: Fivefive[];
+  /** Locked chip keys "r,c" — chips already part of a completed fivefive. */
   lockedChips: string[];
   winner: Team | null;
   discardedThisTurn: boolean;
   fivefivesToWin: number;
-  teamSequenceCounts: Record<Team, number>;
+  teamFivefiveCounts: Record<Team, number>;
   /** Card-art manifest if the host picked a deck; null = built-in CSS rendering. */
   deck: DeckManifest | null;
   /** Display names for each team. */

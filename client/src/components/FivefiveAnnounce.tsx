@@ -7,11 +7,11 @@ interface Props {
 }
 
 /**
- * Briefly overlays a "SEQUENCE!" wordmark across the viewport when a team
- * closes a sequence. Pure CSS keyframe (defined in index.css) — runs once
+ * Briefly overlays a "FIVEFIVE!" wordmark across the viewport when a team
+ * closes a fivefive. Pure CSS keyframe (defined in index.css) — runs once
  * per mount, then the parent unmounts after a timer.
  */
-export function SequenceAnnounce({ team, teamName }: Props) {
+export function FivefiveAnnounce({ team, teamName }: Props) {
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
       <div className="fivefive-announce-text text-center select-none">
@@ -23,7 +23,7 @@ export function SequenceAnnounce({ team, teamName }: Props) {
               "0 4px 30px rgba(252, 211, 77, 0.7), 0 0 60px rgba(252, 211, 77, 0.4)",
           }}
         >
-          SEQUENCE!
+          FIVEFIVE!
         </div>
         <div
           className={`mt-2 text-sm sm:text-xl font-bold tracking-[0.3em] uppercase ${TEAM_TEXT[team]}`}
