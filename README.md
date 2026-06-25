@@ -2,6 +2,8 @@
 
 Online multiplayer Sequence (the board/card game), playable from any phone or laptop browser.
 
+🎮 **Live at [play.fivefive.app](https://play.fivefive.app)**
+
 ## Stack
 - **client/** — React 19 + Vite + Tailwind v4 + TypeScript
 - **server/** — Node + Express + Socket.IO + TypeScript
