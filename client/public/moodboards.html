@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fivefive — mood directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Space+Grotesk:wght@500;700&family=Playfair+Display:wght@700;900&family=Cardo:wght@400;700&family=Geist:wght@400;500;700&family=Geist+Mono&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: 'Geist', system-ui, sans-serif; background: #0a0a0a; color: #fafafa; }
+  body { padding: 32px 16px 64px; }
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px);
+    background: rgba(10, 10, 10, 0.75);
+    border-bottom: 1px solid #262626;
+    margin: -32px -16px 32px;
+    padding: 16px;
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    font-size: 13px;
+  }
+  .nav a {
+    color: #a3a3a3; text-decoration: none;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid #404040;
+    transition: all 150ms ease;
+  }
+  .nav a:hover { color: #fff; border-color: #737373; }
+  .intro { max-width: 720px; margin: 0 auto 48px; text-align: center; }
+  .intro h1 { font-family: 'Geist', sans-serif; font-weight: 800; font-size: 32px; margin-bottom: 12px; letter-spacing: -0.02em; }
+  .intro p { color: #a3a3a3; line-height: 1.6; }
+  section.mood {
+    max-width: 1100px; margin: 0 auto 64px;
+    border-radius: 24px;
+    padding: 48px 32px;
+    overflow: hidden;
+    position: relative;
+  }
+  .mood-header { margin-bottom: 32px; }
+  .mood-name { font-size: 14px; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.6; margin-bottom: 8px; }
+  .mood-title { font-size: 36px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 12px; }
+  .mood-tagline { font-size: 16px; line-height: 1.5; opacity: 0.7; max-width: 540px; }
+  .grid { display: grid; gap: 24px; grid-template-columns: 1fr; }
+  @media (min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
+  .card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.5; margin-bottom: 16px; font-weight: 600; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 12px; }
+  .swatch { width: 80px; }
+  .swatch .chip { width: 80px; height: 80px; border-radius: 12px; margin-bottom: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .swatch .label { font-size: 11px; font-family: 'Geist Mono', monospace; opacity: 0.7; }
+  .swatch .label .name { display: block; opacity: 0.9; }
+  .type-sample { display: flex; flex-direction: column; gap: 16px; }
+  .type-sample .display { font-size: 36px; line-height: 1.1; letter-spacing: -0.02em; }
+  .type-sample .title { font-size: 20px; line-height: 1.3; font-weight: 600; }
+  .type-sample .body { font-size: 15px; line-height: 1.6; opacity: 0.85; }
+  .type-meta { font-size: 11px; font-family: 'Geist Mono', monospace; opacity: 0.5; margin-top: 4px; }
+  .logo-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; gap: 16px; }
+  .voice-samples { display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 1.5; }
+  .voice-samples .row { padding: 12px 16px; border-radius: 12px; }
+
+  /* ============================================================ */
+  /* MOOD 1 · ARCADE-MODERN                                       */
+  /* ============================================================ */
+  #arcade {
+    background: linear-gradient(135deg, #0f0a1f 0%, #1a0f2e 100%);
+  }
+  #arcade .mood-title { color: #fef08a; }
+  #arcade .button-primary {
+    background: linear-gradient(135deg, #f472b6 0%, #fb923c 100%);
+    color: #fff; padding: 14px 32px;
+    border: none; border-radius: 999px;
+    font-weight: 800; font-size: 16px;
+    box-shadow: 0 8px 20px -4px rgba(244, 114, 182, 0.5);
+    cursor: pointer; letter-spacing: -0.01em;
+    transition: transform 100ms ease;
+  }
+  #arcade .button-primary:hover { transform: translateY(-2px); }
+  #arcade .button-secondary {
+    background: rgba(255,255,255,0.1); color: #fef08a;
+    padding: 14px 32px; border: 2px solid #fef08a;
+    border-radius: 999px; font-weight: 700; font-size: 16px;
+    cursor: pointer;
+  }
+  #arcade .game-card {
+    background: rgba(254, 240, 138, 0.08);
+    border: 2px solid rgba(254, 240, 138, 0.3);
+    border-radius: 20px; padding: 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  #arcade .game-card .chip {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fb923c, #ea580c);
+    border: 3px solid #1a0f2e;
+    box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
+  }
+  #arcade .game-card .label { font-weight: 800; font-size: 18px; letter-spacing: -0.01em; color: #fef08a; }
+  #arcade .game-card .meta { font-size: 13px; opacity: 0.7; }
+  #arcade .voice-samples .row { background: rgba(254, 240, 138, 0.08); border-left: 3px solid #f472b6; }
+  #arcade .logo-stage { font-family: 'Inter', sans-serif; font-weight: 900; }
+  #arcade .logo-wordmark {
+    font-size: 64px; letter-spacing: -0.04em; line-height: 1;
+    background: linear-gradient(135deg, #f472b6 0%, #fb923c 50%, #fef08a 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    position: relative;
+  }
+  /* Chip accent — a single chip dot above one of the "i"s, like a hi-five. */
+  #arcade .logo-wordmark .chip-accent {
+    position: absolute;
+    top: -0.1em; right: -0.35em;
+    width: 0.22em; height: 0.22em; border-radius: 50%;
+    background: #f472b6;
+    box-shadow: 0 0 24px rgba(244, 114, 182, 0.8), inset 0 -1px 0 rgba(0,0,0,0.2);
+  }
+  #arcade h1, #arcade h3 { color: #fef08a; }
+
+  /* ============================================================ */
+  /* MOOD 2 · CASINO-NOIR                                         */
+  /* ============================================================ */
+  #casino {
+    background: linear-gradient(180deg, #0c1f15 0%, #051a10 100%);
+    color: #f5f3e7;
+  }
+  #casino .mood-title { color: #d4af37; font-family: 'Playfair Display', serif; font-weight: 900; }
+  #casino .body, #casino .mood-tagline { font-family: 'Cardo', Georgia, serif; }
+  #casino .button-primary {
+    background: linear-gradient(180deg, #d4af37 0%, #b8941f 100%);
+    color: #0c1f15; padding: 14px 36px;
+    border: none; border-radius: 4px;
+    font-weight: 700; font-size: 14px; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  }
+  #casino .button-secondary {
+    background: transparent; color: #d4af37;
+    padding: 14px 36px; border: 1px solid #d4af37;
+    border-radius: 4px; font-weight: 600; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.15em;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+  }
+  #casino .game-card {
+    background: rgba(212, 175, 55, 0.04);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 4px; padding: 24px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  #casino .game-card .chip {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(180deg, #d4af37, #8b6914);
+    border: 4px double #f5f3e7;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+  }
+  #casino .game-card .label { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 20px; color: #d4af37; }
+  #casino .game-card .meta { font-size: 13px; opacity: 0.65; font-family: 'Cardo', serif; font-style: italic; }
+  #casino .voice-samples .row { background: rgba(212, 175, 55, 0.06); border-left: 2px solid #d4af37; font-family: 'Cardo', serif; }
+  #casino .logo-stage { font-family: 'Playfair Display', serif; font-weight: 900; }
+  #casino .logo-wordmark { font-size: 60px; letter-spacing: -0.02em; line-height: 1; color: #d4af37; font-style: italic; }
+  #casino .logo-wordmark .ampersand { font-style: normal; color: #f5f3e7; margin: 0 0.05em; opacity: 0.6; }
+  #casino h3 { color: #d4af37; font-family: 'Inter', sans-serif; }
+
+  /* ============================================================ */
+  /* MOOD 3 · POP-UTILITY                                         */
+  /* ============================================================ */
+  #pop {
+    background: #fafafa;
+    color: #0a0a0a;
+  }
+  #pop .mood-title { color: #0a0a0a; font-family: 'Geist', sans-serif; }
+  #pop .mood-tagline { color: #525252; }
+  #pop .card { background: #fff; border: 1px solid #e5e5e5; }
+  #pop .card h3 { color: #525252; }
+  #pop .swatch .label { color: #525252; }
+  #pop .button-primary {
+    background: #18181b; color: #fff;
+    padding: 12px 24px; border: none;
+    border-radius: 10px;
+    font-weight: 600; font-size: 15px;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  #pop .button-secondary {
+    background: #fff; color: #18181b;
+    padding: 12px 24px; border: 1px solid #d4d4d8;
+    border-radius: 10px;
+    font-weight: 600; font-size: 15px;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer;
+  }
+  #pop .button-accent {
+    background: linear-gradient(180deg, #ec4899 0%, #db2777 100%);
+    color: #fff; padding: 12px 24px; border: none;
+    border-radius: 10px;
+    font-weight: 600; font-size: 15px;
+    font-family: 'Geist', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
+  }
+  #pop .game-card {
+    background: #fff; border: 1px solid #e5e5e5;
+    border-radius: 12px; padding: 20px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  #pop .game-card .chip {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #ec4899;
+    border: 2px solid #18181b;
+  }
+  #pop .game-card .label { font-weight: 600; font-size: 16px; color: #0a0a0a; }
+  #pop .game-card .meta { font-size: 13px; color: #737373; }
+  #pop .voice-samples .row { background: #f5f5f5; border-left: 2px solid #ec4899; color: #0a0a0a; }
+  #pop .logo-stage { font-family: 'Geist', sans-serif; color: #0a0a0a; }
+  #pop .logo-wordmark { font-size: 56px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+  #pop .logo-wordmark .accent { color: #ec4899; }
+  #pop .logo-mark { width: 64px; height: 64px; border-radius: 14px; background: #18181b; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 28px; letter-spacing: -0.05em; }
+  #pop .logo-mark .dot { display: inline-block; width: 8px; height: 8px; background: #ec4899; border-radius: 50%; margin-left: 4px; vertical-align: 0.5em; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="#arcade">Arcade-modern</a>
+  <a href="#casino">Casino-noir</a>
+  <a href="#pop">Pop-utility</a>
+  <a href="#compare">Side-by-side</a>
+</nav>
+
+<div class="intro">
+  <h1>Fivefive · personality directions</h1>
+  <p>Three takes on the same brand. Same name, same game, three very different rooms. Scroll through, then pick the one that feels like "us" — or steal pieces from across and we'll mix.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- ARCADE-MODERN                                                 -->
+<!-- ============================================================ -->
+<section class="mood" id="arcade">
+  <header class="mood-header">
+    <div class="mood-name">Direction 01</div>
+    <h2 class="mood-title">Arcade-modern</h2>
+    <p class="mood-tagline">Confetti energy. Bright, chunky, unapologetically fun. The app feels like meeting friends at a noisy table where everyone's laughing and someone's about to play a Jack.</p>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Logo concept</h3>
+      <div class="logo-stage">
+        <div class="logo-wordmark">fivefive<span class="chip-accent"></span></div>
+        <div style="font-size: 13px; opacity: 0.6; font-family: 'Geist Mono', monospace;">chunky gradient wordmark · chip accent</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Color palette</h3>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#0f0a1f"></div><div class="label"><span class="name">ink</span>#0f0a1f</div></div>
+        <div class="swatch"><div class="chip" style="background:#fef08a"></div><div class="label"><span class="name">sun</span>#fef08a</div></div>
+        <div class="swatch"><div class="chip" style="background:#f472b6"></div><div class="label"><span class="name">pop</span>#f472b6</div></div>
+        <div class="swatch"><div class="chip" style="background:#fb923c"></div><div class="label"><span class="name">heat</span>#fb923c</div></div>
+        <div class="swatch"><div class="chip" style="background:#22d3ee"></div><div class="label"><span class="name">ice</span>#22d3ee</div></div>
+        <div class="swatch"><div class="chip" style="background:#a855f7"></div><div class="label"><span class="name">grape</span>#a855f7</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Typography</h3>
+      <div class="type-sample">
+        <div>
+          <div class="display" style="font-family:'Inter';font-weight:900;color:#fef08a">Your move.</div>
+          <div class="type-meta">Inter 900 · -0.02em · display</div>
+        </div>
+        <div>
+          <div class="title">Five in a row, anywhere.</div>
+          <div class="type-meta">Inter 700 · -0.01em · title</div>
+        </div>
+        <div>
+          <div class="body">Lock five chips in a row before the table catches on. Bots are mean, friends are meaner.</div>
+          <div class="type-meta">Inter 400 · 1.6 · body</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Components</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="button-primary">Start a game</button>
+        <button class="button-secondary">Join</button>
+      </div>
+      <div class="game-card">
+        <div class="chip"></div>
+        <div style="flex:1">
+          <div class="label">Heart of a Champion</div>
+          <div class="meta">Win 3 games · bronze trophy</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="grid-column: 1 / -1">
+      <h3>Voice</h3>
+      <div class="voice-samples">
+        <div class="row"><b>Your move.</b> The board's hot.</div>
+        <div class="row"><b>SEQUENCE!</b> 🎉 Three down, two to go.</div>
+        <div class="row">Welcome back, champ. The table's missed you.</div>
+        <div class="row"><b>Faizi here.</b> Move #14 was spicy — let me roast you.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CASINO-NOIR                                                   -->
+<!-- ============================================================ -->
+<section class="mood" id="casino">
+  <header class="mood-header">
+    <div class="mood-name">Direction 02</div>
+    <h2 class="mood-title">Casino-noir</h2>
+    <p class="mood-tagline">Deep felt, brushed gold, candle-warm light. The app feels like a private game room at 11pm — quiet, considered, every move matters. Sequence as a serious game played by serious people.</p>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Logo concept</h3>
+      <div class="logo-stage">
+        <div class="logo-wordmark">fivefive</div>
+        <div style="font-size: 13px; opacity: 0.6; font-family: 'Inter', sans-serif;">italic serif · gold on felt</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Color palette</h3>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#0c1f15"></div><div class="label"><span class="name">felt</span>#0c1f15</div></div>
+        <div class="swatch"><div class="chip" style="background:#1a3225"></div><div class="label"><span class="name">felt-2</span>#1a3225</div></div>
+        <div class="swatch"><div class="chip" style="background:#d4af37"></div><div class="label"><span class="name">gold</span>#d4af37</div></div>
+        <div class="swatch"><div class="chip" style="background:#f5f3e7"></div><div class="label"><span class="name">cream</span>#f5f3e7</div></div>
+        <div class="swatch"><div class="chip" style="background:#9d1f1f"></div><div class="label"><span class="name">cherry</span>#9d1f1f</div></div>
+        <div class="swatch"><div class="chip" style="background:#1e3a8a"></div><div class="label"><span class="name">navy</span>#1e3a8a</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Typography</h3>
+      <div class="type-sample">
+        <div>
+          <div class="display" style="font-family:'Playfair Display';font-weight:900;color:#d4af37">Your turn.</div>
+          <div class="type-meta" style="font-family:'Inter',sans-serif">Playfair Display 900 · italic · display</div>
+        </div>
+        <div>
+          <div class="title" style="font-family:'Cardo'">Five in a row. Across the table or across the world.</div>
+          <div class="type-meta" style="font-family:'Inter',sans-serif">Cardo 700 · title</div>
+        </div>
+        <div>
+          <div class="body" style="font-family:'Cardo'">A measured game, played carefully. Bots that punish hesitation. Friends that remember every Jack.</div>
+          <div class="type-meta" style="font-family:'Inter',sans-serif">Cardo 400 · body</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Components</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="button-primary">Deal in</button>
+        <button class="button-secondary">Spectate</button>
+      </div>
+      <div class="game-card">
+        <div class="chip"></div>
+        <div style="flex:1">
+          <div class="label">Heart of a Champion</div>
+          <div class="meta">Won three rounds running</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="grid-column: 1 / -1">
+      <h3>Voice</h3>
+      <div class="voice-samples">
+        <div class="row"><b>Your move.</b></div>
+        <div class="row"><b>Sequence locked.</b> One closer to the table.</div>
+        <div class="row">The deck has been re-cut. Choose carefully.</div>
+        <div class="row"><b>Faizi watched the whole hand.</b> Care for his read?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- POP-UTILITY                                                   -->
+<!-- ============================================================ -->
+<section class="mood" id="pop">
+  <header class="mood-header">
+    <div class="mood-name">Direction 03</div>
+    <h2 class="mood-title">Pop-utility</h2>
+    <p class="mood-tagline">Crisp, fast, intentional. Linear's discipline meets a bright pop accent. Almost no color until it matters — then everything sings. The app feels like a tool that happens to be a game.</p>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Logo concept</h3>
+      <div class="logo-stage">
+        <div class="logo-mark">55<span class="dot"></span></div>
+        <div class="logo-wordmark">five<span class="accent">five</span></div>
+        <div style="font-size: 13px; color: #737373;">monogram + wordmark · used together or alone</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Color palette</h3>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:#0a0a0a"></div><div class="label"><span class="name">ink</span>#0a0a0a</div></div>
+        <div class="swatch"><div class="chip" style="background:#fafafa;border:1px solid #e5e5e5"></div><div class="label"><span class="name">paper</span>#fafafa</div></div>
+        <div class="swatch"><div class="chip" style="background:#737373"></div><div class="label"><span class="name">smoke</span>#737373</div></div>
+        <div class="swatch"><div class="chip" style="background:#ec4899"></div><div class="label"><span class="name">pop</span>#ec4899</div></div>
+        <div class="swatch"><div class="chip" style="background:#10b981"></div><div class="label"><span class="name">go</span>#10b981</div></div>
+        <div class="swatch"><div class="chip" style="background:#3b82f6"></div><div class="label"><span class="name">cool</span>#3b82f6</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Typography</h3>
+      <div class="type-sample">
+        <div>
+          <div class="display" style="font-family:'Geist';font-weight:700;color:#0a0a0a">Your turn.</div>
+          <div class="type-meta">Geist 700 · -0.04em · display</div>
+        </div>
+        <div>
+          <div class="title" style="color:#0a0a0a">Five in a row. Made simple.</div>
+          <div class="type-meta">Geist 600 · title</div>
+        </div>
+        <div>
+          <div class="body" style="color:#525252">A fast game on a clean board. Sign in, share a code, start playing. Bots when you're alone, friends when you're not.</div>
+          <div class="type-meta">Geist 400 · 1.6 · body</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Components</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="button-primary">New game</button>
+        <button class="button-secondary">Join</button>
+        <button class="button-accent">Start now</button>
+      </div>
+      <div class="game-card">
+        <div class="chip"></div>
+        <div style="flex:1">
+          <div class="label">Heart of a Champion</div>
+          <div class="meta">Win 3 games · 1 of 20</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="grid-column: 1 / -1">
+      <h3>Voice</h3>
+      <div class="voice-samples">
+        <div class="row"><b>Your move.</b></div>
+        <div class="row"><b>Sequence.</b> 1 / 2.</div>
+        <div class="row">Deck reshuffled. 47 cards left.</div>
+        <div class="row"><b>Faizi's analysis</b> · Your 9♦ ranked 4th of 11 candidates. Solid.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SIDE-BY-SIDE COMPARISON                                       -->
+<!-- ============================================================ -->
+<section class="mood" id="compare" style="background:#171717;color:#fafafa">
+  <header class="mood-header">
+    <div class="mood-name">All three, at a glance</div>
+    <h2 class="mood-title" style="color:#fafafa">Side-by-side</h2>
+    <p class="mood-tagline">Pick one. Or call out specific elements from each — "the Arcade colors with the Pop wordmark" — and we'll mix.</p>
+  </header>
+  <div style="display:grid; grid-template-columns: 1fr; gap: 24px; max-width: 1000px;">
+    <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+      <thead>
+        <tr style="border-bottom: 1px solid #404040;">
+          <th style="text-align:left; padding: 12px; opacity: 0.6; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; font-size: 11px;">Aspect</th>
+          <th style="text-align:left; padding: 12px; color: #fef08a;">Arcade-modern</th>
+          <th style="text-align:left; padding: 12px; color: #d4af37;">Casino-noir</th>
+          <th style="text-align:left; padding: 12px; color: #ec4899;">Pop-utility</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #262626;">
+          <td style="padding: 14px 12px; opacity: 0.7;">Energy</td>
+          <td style="padding: 14px 12px;">High · social</td>
+          <td style="padding: 14px 12px;">Slow · considered</td>
+          <td style="padding: 14px 12px;">Crisp · focused</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #262626;">
+          <td style="padding: 14px 12px; opacity: 0.7;">Color load</td>
+          <td style="padding: 14px 12px;">Heavy (5+ accents)</td>
+          <td style="padding: 14px 12px;">Restrained (gold/cream/red)</td>
+          <td style="padding: 14px 12px;">Minimal (one accent)</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #262626;">
+          <td style="padding: 14px 12px; opacity: 0.7;">Typography</td>
+          <td style="padding: 14px 12px;">Inter, chunky weights</td>
+          <td style="padding: 14px 12px;">Playfair + Cardo</td>
+          <td style="padding: 14px 12px;">Geist, modern sans</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #262626;">
+          <td style="padding: 14px 12px; opacity: 0.7;">Best for</td>
+          <td style="padding: 14px 12px;">Casual phone players, friends</td>
+          <td style="padding: 14px 12px;">Strategy-oriented, leaderboard-focused</td>
+          <td style="padding: 14px 12px;">Power users, dev/maker audience</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #262626;">
+          <td style="padding: 14px 12px; opacity: 0.7;">Risk</td>
+          <td style="padding: 14px 12px;">Can feel "kid game"</td>
+          <td style="padding: 14px 12px;">Can feel inaccessible / pretentious</td>
+          <td style="padding: 14px 12px;">Can feel sterile / corporate</td>
+        </tr>
+        <tr>
+          <td style="padding: 14px 12px; opacity: 0.7;">Closest neighbors</td>
+          <td style="padding: 14px 12px;">Duolingo, Discord, Words With Friends</td>
+          <td style="padding: 14px 12px;">PokerStars, chess.com Premium</td>
+          <td style="padding: 14px 12px;">Linear, Vercel, Stripe</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</body>
+</html>
