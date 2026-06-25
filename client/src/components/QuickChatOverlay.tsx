@@ -23,7 +23,7 @@ export function QuickChatOverlay({ chats }: Props) {
       {chats.map((c) => {
         const info = getQuickChat(c.chatId);
         if (!info) return null;
-        const tint = c.fromTeam ? TEAM_CHIP[c.fromTeam] : "bg-zinc-800";
+        const tint = c.fromTeam ? TEAM_CHIP[c.fromTeam] : "bg-ff-navy-soft";
         const nameColor = c.fromTeam ? TEAM_TEXT[c.fromTeam] : "text-zinc-300";
         return (
           <div key={c.eventId} className="sticker-pop flex flex-col items-center">
@@ -37,7 +37,7 @@ export function QuickChatOverlay({ chats }: Props) {
               </span>
             </div>
             <span
-              className={`mt-1 px-2 py-0.5 rounded-full text-[0.65rem] font-semibold bg-zinc-900/80 backdrop-blur ${nameColor}`}
+              className={`mt-1 px-2 py-0.5 rounded-full text-[0.65rem] font-semibold bg-ff-navy/80 backdrop-blur ${nameColor}`}
               title={c.fromName}
             >
               {makeNickname(c.fromName)}

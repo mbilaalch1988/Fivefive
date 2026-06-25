@@ -51,7 +51,7 @@ export function QuickChatPicker({ open, onSend, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="w-8 h-8 rounded-full hover:bg-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition-colors"
+            className="w-8 h-8 rounded-full hover:bg-ff-navy-card/50 flex items-center justify-center text-zinc-400 hover:text-ff-cream transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -66,11 +66,11 @@ export function QuickChatPicker({ open, onSend, onClose }: Props) {
               type="button"
               onClick={() => pick(c.id)}
               data-testid={`quickchat-${c.id}`}
-              className="state-layer flex items-center gap-2 px-3 py-3 rounded-2xl text-left hover:bg-zinc-700/40 transition-colors"
+              className="state-layer flex items-center gap-2 px-3 py-3 rounded-2xl text-left hover:bg-ff-navy-card/40 transition-colors"
               style={{ background: "var(--md-surface-2)" }}
             >
               <span className="text-xl">{c.emoji}</span>
-              <span className="text-sm font-medium text-zinc-100">{c.text}</span>
+              <span className="text-sm font-medium text-ff-cream">{c.text}</span>
             </button>
           ))}
         </div>

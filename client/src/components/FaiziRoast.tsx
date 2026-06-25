@@ -59,7 +59,7 @@ export function FaiziRoast({ gameId, onClose }: Props) {
           style={{ borderColor: "var(--md-outline)" }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-fuchsia-500/20 border border-fuchsia-400/40 flex items-center justify-center text-lg shrink-0">
+            <div className="w-10 h-10 rounded-full bg-ff-coral/20 border border-ff-coral/40 flex items-center justify-center text-lg shrink-0">
               🎤
             </div>
             <div className="min-w-0">
@@ -73,7 +73,7 @@ export function FaiziRoast({ gameId, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="w-9 h-9 rounded-full hover:bg-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-zinc-100 shrink-0"
+            className="w-9 h-9 rounded-full hover:bg-ff-navy-card/50 flex items-center justify-center text-zinc-400 hover:text-ff-cream shrink-0"
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -123,7 +123,7 @@ export function FaiziRoast({ gameId, onClose }: Props) {
                           <div className="text-xs uppercase tracking-widest font-semibold text-amber-200">
                             {a.title}
                           </div>
-                          <div className="text-sm text-zinc-100">
+                          <div className="text-sm text-ff-cream">
                             <span className="font-semibold">{a.winnerName}</span>
                             <span className="text-zinc-300"> — {a.detail}</span>
                           </div>
@@ -171,7 +171,7 @@ function PlayerCard({ player: p }: { player: RoastPlayer }) {
           {p.qualityPct}%
         </span>
       </div>
-      <div className="text-sm font-semibold text-zinc-100">{p.title}</div>
+      <div className="text-sm font-semibold text-ff-cream">{p.title}</div>
       <div className="text-xs italic" style={{ color: "var(--md-on-surface-variant)" }}>
         "{p.tagline}"
       </div>

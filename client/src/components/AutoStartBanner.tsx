@@ -53,7 +53,7 @@ export function AutoStartBanner({ autoStartAt }: Props) {
       <span className="text-xl">⏱</span>
       <span className="flex-1">
         Everyone's ready —{" "}
-        <span className="font-bold text-fuchsia-200 tabular-nums">
+        <span className="font-bold text-ff-coral tabular-nums">
           auto-starting in {secs}…
         </span>
       </span>

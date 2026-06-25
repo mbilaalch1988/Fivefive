@@ -45,11 +45,11 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
             <img
               src={auth.avatarUrl}
               alt=""
-              className="w-10 h-10 rounded-full border border-zinc-700"
+              className="w-10 h-10 rounded-full border border-ff-navy-ink"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-200 font-semibold">
+            <div className="w-10 h-10 rounded-full bg-ff-gold/20 border border-ff-gold/40 flex items-center justify-center text-ff-cream font-semibold">
               {(auth.displayName ?? "?").charAt(0).toUpperCase()}
             </div>
           )}
@@ -67,7 +67,7 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
           <button
             type="button"
             onClick={() => void auth.signOut()}
-            className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-zinc-700"
+            className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-navy-ink"
           >
             Sign out
           </button>
@@ -158,8 +158,8 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
             autoComplete="email"
             placeholder="you@example.com"
             data-testid="auth-email"
-            className="w-full px-4 py-2.5 rounded-xl border bg-zinc-900/60 placeholder:text-zinc-600
-                       focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full px-4 py-2.5 rounded-xl border bg-ff-navy/60 placeholder:text-zinc-600
+                       focus:outline-none focus:border-ff-gold transition-colors"
             style={{ borderColor: "var(--md-outline)" }}
           />
         </FieldLabel>
@@ -172,8 +172,8 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
             placeholder="••••••••"
             minLength={6}
             data-testid="auth-password"
-            className="w-full px-4 py-2.5 rounded-xl border bg-zinc-900/60 placeholder:text-zinc-600
-                       focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full px-4 py-2.5 rounded-xl border bg-ff-navy/60 placeholder:text-zinc-600
+                       focus:outline-none focus:border-ff-gold transition-colors"
             style={{ borderColor: "var(--md-outline)" }}
           />
         </FieldLabel>
@@ -182,10 +182,10 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
           type="submit"
           disabled={!canSubmit}
           data-testid="auth-submit"
-          className="state-layer w-full py-3 rounded-full font-medium text-indigo-50
-                     bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600
-                     disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed
-                     transition-colors shadow-sm shadow-indigo-900/30"
+          className="state-layer w-full py-3 rounded-full font-medium text-ff-navy
+                     bg-ff-gold hover:bg-ff-cream-soft active:bg-ff-gold-deep
+                     disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:cursor-not-allowed
+                     transition-colors shadow-sm shadow-ff-navy-ink/40"
         >
           {busy ? "…" : tab === "signin" ? "Sign in" : "Create account"}
         </button>
@@ -195,7 +195,7 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
             type="button"
             onClick={() => void onForgotPassword()}
             disabled={busy}
-            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-zinc-200 py-1"
+            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-ff-cream py-1"
           >
             Forgot password?
           </button>
@@ -229,8 +229,8 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
         onClick={() => void onGoogle()}
         disabled={auth.loading || busy}
         data-testid="signin-google"
-        className="state-layer w-full py-2.5 rounded-full font-medium text-zinc-100
-                   bg-zinc-800 hover:bg-zinc-700 border border-zinc-700
+        className="state-layer w-full py-2.5 rounded-full font-medium text-ff-cream
+                   bg-ff-navy-soft hover:bg-ff-navy-card border border-ff-navy-ink
                    disabled:opacity-50 disabled:cursor-not-allowed
                    transition-colors flex items-center justify-center gap-3"
       >
@@ -258,7 +258,7 @@ function TabButton({
       aria-pressed={active}
       className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${
         active
-          ? "bg-indigo-500 text-white shadow-sm shadow-indigo-900/40"
+          ? "bg-ff-gold text-white shadow-sm shadow-ff-navy-ink/50"
           : "text-zinc-300 hover:text-white"
       }`}
     >
@@ -324,7 +324,7 @@ function BannerCard({ banner, onDismiss }: { banner: Banner; onDismiss: () => vo
   }
   if (banner.kind === "reset_sent") {
     return (
-      <div className="text-xs px-3 py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-400/40 text-indigo-200 flex items-start gap-2">
+      <div className="text-xs px-3 py-2.5 rounded-xl bg-ff-gold/10 border border-ff-gold/40 text-ff-cream flex items-start gap-2">
         <span className="text-base shrink-0">🔑</span>
         <div className="flex-1">
           <div className="font-semibold">Reset link sent</div>
@@ -335,7 +335,7 @@ function BannerCard({ banner, onDismiss }: { banner: Banner; onDismiss: () => vo
         <button
           type="button"
           onClick={onDismiss}
-          className="text-indigo-300 hover:text-indigo-100 text-[0.65rem] uppercase tracking-widest"
+          className="text-ff-gold hover:text-ff-cream text-[0.65rem] uppercase tracking-widest"
           aria-label="Dismiss"
         >
           ✕

@@ -106,7 +106,7 @@ export function GameMenu({
         aria-label="Open game menu"
         aria-expanded={open}
         data-testid="game-menu-button"
-        className="state-layer w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-zinc-800/95 hover:bg-zinc-700 backdrop-blur border border-zinc-700 text-zinc-100 shadow-lg flex items-center justify-center"
+        className="state-layer w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-ff-navy-soft/95 hover:bg-ff-navy-card backdrop-blur border border-ff-navy-ink text-ff-cream shadow-lg flex items-center justify-center"
       >
         <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <line x1="3" y1="6"  x2="21" y2="6"  />
@@ -117,7 +117,7 @@ export function GameMenu({
 
       {open && (
         <div
-          className="overlay-enter absolute right-0 mt-2 w-60 rounded-2xl shadow-2xl border border-zinc-700 overflow-hidden"
+          className="overlay-enter absolute right-0 mt-2 w-60 rounded-2xl shadow-2xl border border-ff-navy-ink overflow-hidden"
           style={{ background: "var(--md-surface-1)" }}
           role="menu"
         >
@@ -219,7 +219,7 @@ function MenuItem({
       onClick={onClick}
       data-testid={testId}
       role="menuitem"
-      className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-zinc-700/40 transition-colors"
+      className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-ff-cream hover:bg-ff-navy-card/40 transition-colors"
     >
       <span className="text-base w-5 text-center">{icon}</span>
       <span className="flex-1">{label}</span>
@@ -250,14 +250,14 @@ function ToggleItem({
       data-testid={testId}
       role="menuitemcheckbox"
       aria-checked={!isInactive}
-      className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-zinc-100 hover:bg-zinc-700/40 transition-colors"
+      className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-ff-cream hover:bg-ff-navy-card/40 transition-colors"
     >
       <span className="text-base w-5 text-center">{icon}</span>
       <span className="flex-1">{label}</span>
       <span
         className={`text-[0.65rem] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full ${
           isInactive
-            ? "bg-zinc-700 text-zinc-400"
+            ? "bg-ff-navy-card text-zinc-400"
             : "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40"
         }`}
       >

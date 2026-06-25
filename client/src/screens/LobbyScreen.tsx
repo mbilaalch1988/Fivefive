@@ -164,7 +164,7 @@ export function LobbyScreen({
                 <span className="text-amber-300 text-[0.65rem] uppercase tracking-wider font-medium">host</span>
               )}
               {s.id === myPlayerId && (
-                <span className="text-indigo-300 text-[0.65rem] uppercase tracking-wider font-medium">you</span>
+                <span className="text-ff-gold text-[0.65rem] uppercase tracking-wider font-medium">you</span>
               )}
               <span className="ml-auto flex items-center gap-2 text-xs">
                 {!s.connected && !s.isBot && <span className="text-rose-400">offline</span>}
@@ -204,14 +204,14 @@ export function LobbyScreen({
             <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
               Add a bot
             </h2>
-            <div className="inline-flex rounded-full border border-zinc-700 overflow-hidden text-xs">
+            <div className="inline-flex rounded-full border border-ff-navy-ink overflow-hidden text-xs">
               <button
                 type="button"
                 onClick={() => setBotDifficulty("easy")}
                 className={`px-3 py-1 transition-colors ${
                   botDifficulty === "easy"
                     ? "bg-emerald-500/30 text-emerald-100"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-400 hover:text-ff-cream"
                 }`}
               >
                 Easy
@@ -221,8 +221,8 @@ export function LobbyScreen({
                 onClick={() => setBotDifficulty("medium")}
                 className={`px-3 py-1 transition-colors ${
                   botDifficulty === "medium"
-                    ? "bg-indigo-500/30 text-indigo-100"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    ? "bg-ff-gold/25 text-ff-cream"
+                    : "text-zinc-400 hover:text-ff-cream"
                 }`}
               >
                 Medium
@@ -233,7 +233,7 @@ export function LobbyScreen({
                 className={`px-3 py-1 transition-colors ${
                   botDifficulty === "hard"
                     ? "bg-rose-500/30 text-rose-100"
-                    : "text-zinc-400 hover:text-zinc-200"
+                    : "text-zinc-400 hover:text-ff-cream"
                 }`}
                 title="One-ply lookahead — considers your best response"
               >
@@ -285,7 +285,7 @@ export function LobbyScreen({
                         if (e.key === "Escape") setRenamingTeam(null);
                       }}
                       maxLength={24}
-                      className="flex-1 min-w-0 bg-zinc-900/60 rounded-lg px-2 py-1 text-sm border border-zinc-700 focus:outline-none focus:border-indigo-400"
+                      className="flex-1 min-w-0 bg-ff-navy/60 rounded-lg px-2 py-1 text-sm border border-ff-navy-ink focus:outline-none focus:border-ff-gold"
                     />
                     <button
                       type="button"
@@ -297,7 +297,7 @@ export function LobbyScreen({
                     <button
                       type="button"
                       onClick={() => setRenamingTeam(null)}
-                      className="text-xs text-zinc-400 hover:text-zinc-200 px-2"
+                      className="text-xs text-zinc-400 hover:text-ff-cream px-2"
                     >
                       ✕
                     </button>
@@ -465,7 +465,7 @@ export function LobbyScreen({
           <button
             type="button"
             onClick={() => setScoreboardOpen(true)}
-            className="state-layer text-indigo-300 hover:text-indigo-200 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-indigo-400/40"
+            className="state-layer text-ff-gold hover:text-ff-cream text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-gold/40"
           >
             View all
           </button>
@@ -512,7 +512,7 @@ function SelectRow(props: {
         value={props.value}
         onChange={(e) => props.onChange(e.target.value)}
         data-testid={props.testId}
-        className="bg-zinc-900/60 border rounded-xl px-3 py-1.5 max-w-[60%] focus:outline-none focus:border-indigo-400 transition-colors"
+        className="bg-ff-navy/60 border rounded-xl px-3 py-1.5 max-w-[60%] focus:outline-none focus:border-ff-gold transition-colors"
         style={{ borderColor: "var(--md-outline)" }}
       >
         {props.children}

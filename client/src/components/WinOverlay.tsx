@@ -96,8 +96,8 @@ export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRemat
                 type="button"
                 onClick={() => setFaiziOpen(true)}
                 data-testid="faizi-open"
-                className="state-layer w-full py-2.5 rounded-full font-medium text-indigo-100
-                           bg-indigo-500/15 border border-indigo-400/40 hover:bg-indigo-500/25
+                className="state-layer w-full py-2.5 rounded-full font-medium text-ff-cream
+                           bg-ff-gold/15 border border-ff-gold/40 hover:bg-ff-gold/25
                            transition-colors flex items-center justify-center gap-2"
               >
                 <span>📊</span>
@@ -109,8 +109,8 @@ export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRemat
                 type="button"
                 onClick={() => setRoastOpen(true)}
                 data-testid="faizi-roast-open"
-                className="state-layer w-full py-2.5 rounded-full font-medium text-fuchsia-100
-                           bg-fuchsia-500/15 border border-fuchsia-400/40 hover:bg-fuchsia-500/25
+                className="state-layer w-full py-2.5 rounded-full font-medium text-ff-cream
+                           bg-ff-coral/15 border border-ff-coral/40 hover:bg-ff-coral/25
                            transition-colors flex items-center justify-center gap-2"
               >
                 <span>🎤</span>
@@ -124,8 +124,8 @@ export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRemat
           <button
             type="button"
             onClick={onLeave}
-            className="state-layer flex-1 py-3 rounded-full font-medium text-zinc-200
-                       bg-transparent border border-zinc-700 hover:border-zinc-500
+            className="state-layer flex-1 py-3 rounded-full font-medium text-ff-cream
+                       bg-transparent border border-ff-navy-ink hover:border-zinc-500
                        transition-colors"
           >
             Leave
@@ -134,8 +134,8 @@ export function WinOverlay({ team, teamName, mvpNames, room, myPlayerId, onRemat
             type="button"
             onClick={onRematch}
             data-testid="rematch"
-            className="state-layer flex-1 py-3 rounded-full font-medium text-indigo-50
-                       bg-indigo-500 hover:bg-indigo-400 shadow-sm shadow-indigo-900/30
+            className="state-layer flex-1 py-3 rounded-full font-medium text-ff-navy
+                       bg-ff-gold hover:bg-ff-cream-soft shadow-sm shadow-ff-navy-ink/40
                        transition-colors"
           >
             Re-match

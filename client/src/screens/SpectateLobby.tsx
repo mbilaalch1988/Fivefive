@@ -33,7 +33,7 @@ export function SpectateLobby({ room, onLeave }: Props) {
         <button
           type="button"
           onClick={() => void onLeave()}
-          className="state-layer text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-zinc-700 text-zinc-300 hover:text-white"
+          className="state-layer text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-navy-ink text-zinc-300 hover:text-white"
         >
           Leave
         </button>

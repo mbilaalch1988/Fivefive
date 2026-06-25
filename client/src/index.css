@@ -1,29 +1,50 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------ */
-/* Material Design 3 — minimal token sheet                      */
+/* Tailwind v4 theme tokens — exposes brand palette as utility  */
+/* classes: bg-ff-gold, text-ff-cream, border-ff-navy-ink, etc. */
+/* ------------------------------------------------------------ */
+@theme {
+  --color-ff-navy:       #0a1840;
+  --color-ff-navy-soft:  #122560;
+  --color-ff-navy-card:  #1a2f78;
+  --color-ff-navy-ink:   #060d2a;
+  --color-ff-gold:       #e4c373;
+  --color-ff-gold-deep:  #c9a35b;
+  --color-ff-cream:      #fef3c7;
+  --color-ff-cream-soft: #fde68a;
+  --color-ff-coral:      #fb7185;
+  --color-ff-coral-deep: #e11d48;
+  --color-ff-mint:       #86efac;
+  --color-ff-sky:        #38bdf8;
+  --font-display: "Fredoka", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------ */
+/* Brand-aliased Material Design tokens — legacy components     */
+/* using var(--md-*) inherit the Royal Navy theme automatically.*/
 /* ------------------------------------------------------------ */
 :root {
-  --md-surface: #131316;
-  --md-surface-1: #1c1c20;
-  --md-surface-2: #25252a;
-  --md-surface-3: #2f2f35;
-  --md-primary: #818cf8; /* indigo-400 */
-  --md-primary-container: #312e81; /* indigo-900 */
-  --md-on-primary: #1e1b4b;
-  --md-secondary: #fbbf24; /* amber-400 */
-  --md-error: #f43f5e;
-  --md-on-surface: #f4f4f5;
-  --md-on-surface-variant: #a1a1aa;
-  --md-outline: #52525b;
-  --md-ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --md-ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --md-surface:              #0a1840; /* navy */
+  --md-surface-1:            #122560; /* navy-soft */
+  --md-surface-2:            #1a2f78; /* navy-card */
+  --md-surface-3:            #213988; /* slightly lifted navy */
+  --md-primary:              #e4c373; /* gold */
+  --md-primary-container:    #122560; /* navy-soft */
+  --md-on-primary:           #0a1840; /* navy */
+  --md-secondary:            #fb7185; /* coral */
+  --md-error:                #e11d48; /* coral-deep */
+  --md-on-surface:           #fef3c7; /* cream */
+  --md-on-surface-variant:   #fde68a; /* cream-soft */
+  --md-outline:              #060d2a; /* navy-ink — cartoon border */
+  --md-ease-standard:        cubic-bezier(0.2, 0, 0, 1);
+  --md-ease-emphasized:      cubic-bezier(0.05, 0.7, 0.1, 1);
 
-  /* Fivefive brand identity tokens (Royal Navy + cartoon). */
+  /* Direct brand handles (raw refs for non-Tailwind sites). */
   --ff-navy:       #0a1840;
   --ff-navy-soft:  #122560;
   --ff-navy-card:  #1a2f78;
-  --ff-navy-ink:   #060d2a; /* hard outline / cartoon shadow */
+  --ff-navy-ink:   #060d2a;
   --ff-gold:       #e4c373;
   --ff-gold-deep:  #c9a35b;
   --ff-cream:      #fef3c7;

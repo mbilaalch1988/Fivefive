@@ -36,7 +36,7 @@ export function LastPlayedHistory({ actions, deck, onClose }: Props) {
             type="button"
             onClick={onClose}
             data-testid="history-close"
-            className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-zinc-700"
+            className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-navy-ink"
           >
             Close
           </button>
@@ -59,7 +59,7 @@ export function LastPlayedHistory({ actions, deck, onClose }: Props) {
                 <HistoryCard action={a} deck={deck} />
                 <div className="text-[0.65rem] text-center leading-tight">
                   <div
-                    className="font-medium text-zinc-200"
+                    className="font-medium text-ff-cream"
                     title={a.playerName}
                   >
                     {makeNickname(a.playerName)}

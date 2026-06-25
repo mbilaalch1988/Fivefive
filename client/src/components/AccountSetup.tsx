@@ -127,7 +127,7 @@ export function AccountSetup({ account, defaultDisplayName, onReady, onSignOut, 
             </span>
             <UsernameStatus state={availability.state} matchingInput={availability.forUsername === username.trim().toLowerCase()} />
           </div>
-          <div className="flex items-center gap-2 rounded-xl border bg-zinc-900/60 px-3 py-2.5 focus-within:border-indigo-400 transition-colors"
+          <div className="flex items-center gap-2 rounded-xl border bg-ff-navy/60 px-3 py-2.5 focus-within:border-ff-gold transition-colors"
                style={{ borderColor: "var(--md-outline)" }}>
             <span className="text-zinc-500 font-mono">@</span>
             <input
@@ -164,7 +164,7 @@ export function AccountSetup({ account, defaultDisplayName, onReady, onSignOut, 
             placeholder="Ayesha"
             maxLength={24}
             data-testid="account-setup-displayname"
-            className="w-full px-4 py-2.5 rounded-xl border bg-zinc-900/60 placeholder:text-zinc-600 focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full px-4 py-2.5 rounded-xl border bg-ff-navy/60 placeholder:text-zinc-600 focus:outline-none focus:border-ff-gold transition-colors"
             style={{ borderColor: "var(--md-outline)" }}
           />
         </label>
@@ -179,10 +179,10 @@ export function AccountSetup({ account, defaultDisplayName, onReady, onSignOut, 
           type="submit"
           disabled={!canSubmit}
           data-testid="account-setup-submit"
-          className="state-layer w-full py-3 rounded-full font-medium text-indigo-50
-                     bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600
-                     disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed
-                     transition-colors shadow-sm shadow-indigo-900/30"
+          className="state-layer w-full py-3 rounded-full font-medium text-ff-navy
+                     bg-ff-gold hover:bg-ff-cream-soft active:bg-ff-gold-deep
+                     disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:cursor-not-allowed
+                     transition-colors shadow-sm shadow-ff-navy-ink/40"
         >
           {submitting ? "Creating…" : "Create account"}
         </button>
@@ -191,7 +191,7 @@ export function AccountSetup({ account, defaultDisplayName, onReady, onSignOut, 
           <button
             type="button"
             onClick={onSignOut}
-            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-zinc-200 py-1"
+            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-ff-cream py-1"
           >
             Sign out and try a different method
           </button>

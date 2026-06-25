@@ -41,11 +41,11 @@ export function ClaimNamePrompt({ anonymousName, totalWins, totalGames, onClaim,
       data-testid="claim-name-prompt"
     >
       <header className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-fuchsia-500/20 border border-fuchsia-400/40 flex items-center justify-center text-lg shrink-0">
+        <div className="w-10 h-10 rounded-full bg-ff-coral/20 border border-ff-coral/40 flex items-center justify-center text-lg shrink-0">
           🪪
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-xs uppercase tracking-widest font-semibold text-fuchsia-200">
+          <div className="text-xs uppercase tracking-widest font-semibold text-ff-coral">
             Welcome back, looks like you have history here
           </div>
           <h2 className="text-base font-medium tracking-tight mt-1">
@@ -54,8 +54,8 @@ export function ClaimNamePrompt({ anonymousName, totalWins, totalGames, onClaim,
         </div>
       </header>
 
-      <p className="text-sm text-zinc-200 leading-snug">
-        You previously played as <b className="text-fuchsia-200">"{anonymousName}"</b>{" "}
+      <p className="text-sm text-ff-cream leading-snug">
+        You previously played as <b className="text-ff-coral">"{anonymousName}"</b>{" "}
         and racked up <b>{totalWins}</b> win{totalWins === 1 ? "" : "s"} across{" "}
         <b>{totalGames}</b> game{totalGames === 1 ? "" : "s"} ({winRate}% win rate).
       </p>
@@ -77,7 +77,7 @@ export function ClaimNamePrompt({ anonymousName, totalWins, totalGames, onClaim,
           disabled={busy}
           data-testid="claim-skip"
           className="state-layer flex-1 py-2.5 rounded-full font-medium text-zinc-300
-                     bg-transparent border border-zinc-700 hover:border-zinc-500
+                     bg-transparent border border-ff-navy-ink hover:border-zinc-500
                      transition-colors text-sm"
         >
           No thanks
@@ -88,8 +88,8 @@ export function ClaimNamePrompt({ anonymousName, totalWins, totalGames, onClaim,
           disabled={busy}
           data-testid="claim-confirm"
           className="state-layer flex-1 py-2.5 rounded-full font-medium text-white
-                     bg-fuchsia-500 hover:bg-fuchsia-400 disabled:bg-zinc-700 disabled:text-zinc-500
-                     transition-colors text-sm shadow-sm shadow-fuchsia-900/30"
+                     bg-ff-coral hover:bg-ff-coral-deep disabled:bg-ff-navy-soft disabled:text-ff-cream/40
+                     transition-colors text-sm shadow-sm shadow-ff-navy-ink/40"
         >
           {busy ? "Linking…" : "Link them to me"}
         </button>

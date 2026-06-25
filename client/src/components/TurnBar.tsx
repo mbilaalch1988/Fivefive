@@ -120,10 +120,10 @@ function TurnCountdown({
       style={{ background: "var(--md-surface-1)" }}
       data-testid="turn-countdown"
     >
-      <span className={`shrink-0 font-semibold tabular-nums ${urgent ? "text-rose-300" : "text-zinc-200"}`}>
+      <span className={`shrink-0 font-semibold tabular-nums ${urgent ? "text-rose-300" : "text-ff-cream"}`}>
         ⏱ {remaining}s
       </span>
-      <div className="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-ff-navy-soft overflow-hidden">
         <div
           className={`h-full ${fillColor} transition-all duration-200`}
           style={{ width: `${pct}%` }}

@@ -43,7 +43,7 @@ export function Board({
 
   return (
     <div
-      className="grid gap-px sm:gap-0.5 bg-zinc-800 p-1 sm:p-1.5 rounded-2xl shadow-lg shadow-black/40"
+      className="grid gap-px sm:gap-0.5 bg-ff-navy-soft p-1 sm:p-1.5 rounded-2xl shadow-lg shadow-black/40"
       style={{ gridTemplateColumns: "repeat(10, minmax(0, 1fr))" }}
     >
       {view.board.map((row, r) =>

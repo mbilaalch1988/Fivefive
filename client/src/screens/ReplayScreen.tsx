@@ -182,7 +182,7 @@ export function ReplayScreen({ gameId, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="state-layer px-5 py-2 rounded-full bg-zinc-800 text-zinc-100"
+            className="state-layer px-5 py-2 rounded-full bg-ff-navy-soft text-ff-cream"
           >
             Close
           </button>
@@ -285,7 +285,7 @@ function ReplayContent({
           onClick={onClose}
           aria-label="Close replay"
           data-testid="replay-close"
-          className="state-layer w-10 h-10 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 flex items-center justify-center text-xl shrink-0"
+          className="state-layer w-10 h-10 rounded-full bg-ff-navy-soft hover:bg-ff-navy-card text-ff-cream flex items-center justify-center text-xl shrink-0"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="6" y1="6" x2="18" y2="18" />
@@ -306,7 +306,7 @@ function ReplayContent({
             <span key={t} className="flex items-center gap-1.5 shrink-0">
               <span className={`inline-block w-3 h-3 rounded-full ${TEAM_CHIP[t]}`} />
               <span className="truncate max-w-[8rem]">{replay.teamNames[t]}</span>:{" "}
-              <span className="font-semibold text-zinc-100">
+              <span className="font-semibold text-ff-cream">
                 {boardState.teamFivefiveCounts[t]}
               </span>
             </span>
@@ -374,14 +374,14 @@ function ReplayContent({
             setPlaying(false);
             setStep(Number(e.target.value));
           }}
-          className="w-full accent-indigo-400"
+          className="w-full accent-ff-gold"
           aria-label="Scrub through replay"
         />
       </div>
 
       {/* Controls — fixed at the bottom for thumb access */}
       <div
-        className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-zinc-900/95 backdrop-blur rounded-full px-3 py-2 border border-zinc-700 shadow-lg shadow-black/40"
+        className="fixed left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-ff-navy/95 backdrop-blur rounded-full px-3 py-2 border border-ff-navy-ink shadow-lg shadow-black/40"
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}
       >
         <CtrlButton
@@ -403,7 +403,7 @@ function ReplayContent({
         <button
           type="button"
           onClick={() => setPlaying((p) => !p)}
-          className="state-layer w-12 h-12 rounded-full bg-indigo-500 hover:bg-indigo-400 text-white text-xl font-bold flex items-center justify-center"
+          className="state-layer w-12 h-12 rounded-full bg-ff-gold hover:bg-ff-cream-soft text-white text-xl font-bold flex items-center justify-center"
           title={playing ? "Pause" : "Play"}
           aria-label={playing ? "Pause" : "Play"}
         >
@@ -428,7 +428,7 @@ function ReplayContent({
         <button
           type="button"
           onClick={() => setSpeedIdx((i) => (i + 1) % SPEEDS.length)}
-          className="state-layer ml-1 px-3 h-9 rounded-full bg-zinc-800 text-zinc-100 text-xs font-semibold tabular-nums"
+          className="state-layer ml-1 px-3 h-9 rounded-full bg-ff-navy-soft text-ff-cream text-xs font-semibold tabular-nums"
           title="Playback speed"
         >
           {SPEEDS[speedIdx]!.label}
@@ -453,7 +453,7 @@ function CtrlButton({
       onClick={onClick}
       title={title}
       aria-label={title}
-      className="state-layer w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-sm flex items-center justify-center"
+      className="state-layer w-9 h-9 rounded-full bg-ff-navy-soft hover:bg-ff-navy-card text-ff-cream text-sm flex items-center justify-center"
     >
       {label}
     </button>

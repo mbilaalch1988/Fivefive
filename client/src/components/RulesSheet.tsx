@@ -43,7 +43,7 @@ export function RulesSheet({ open, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="w-9 h-9 rounded-full hover:bg-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition-colors"
+            className="w-9 h-9 rounded-full hover:bg-ff-navy-card/50 flex items-center justify-center text-zinc-400 hover:text-ff-cream transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -89,7 +89,7 @@ export function RulesSheet({ open, onClose }: Props) {
           <Section title="Dead card?">
             If both board squares for a card you're holding are already
             occupied, the card is <b>dead</b>. Tap it and use{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-xs">Discard dead card</kbd>{" "}
+            <kbd className="px-1.5 py-0.5 rounded bg-ff-navy-soft text-xs">Discard dead card</kbd>{" "}
             to throw it away and draw — once per turn, before placing.
           </Section>
 
@@ -109,7 +109,7 @@ export function RulesSheet({ open, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="state-layer w-full py-2.5 rounded-full font-medium text-indigo-50 bg-indigo-500 hover:bg-indigo-400 transition-colors"
+            className="state-layer w-full py-2.5 rounded-full font-medium text-ff-navy bg-ff-gold hover:bg-ff-cream-soft transition-colors"
           >
             Got it
           </button>
@@ -125,7 +125,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3 className="text-xs uppercase tracking-widest font-semibold" style={{ color: "var(--md-on-surface-variant)" }}>
         {title}
       </h3>
-      <div className="text-zinc-200">{children}</div>
+      <div className="text-ff-cream">{children}</div>
     </section>
   );
 }
@@ -134,7 +134,7 @@ function Badge({ children, tone = "indigo" }: { children: React.ReactNode; tone?
   const cls =
     tone === "rose"
       ? "bg-rose-500/15 border-rose-400/40 text-rose-200"
-      : "bg-indigo-500/15 border-indigo-400/40 text-indigo-200";
+      : "bg-ff-gold/15 border-ff-gold/40 text-ff-cream";
   return (
     <span className={`inline-block text-[0.65rem] uppercase tracking-widest font-semibold px-2 py-0.5 rounded-full border ${cls}`}>
       {children}

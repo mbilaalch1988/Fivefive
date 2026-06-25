@@ -66,7 +66,7 @@ export function FaiziAnalysis({ gameId, playerId, onClose }: Props) {
           style={{ borderColor: "var(--md-outline)" }}
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-lg shrink-0">
+            <div className="w-10 h-10 rounded-full bg-ff-gold/20 border border-ff-gold/40 flex items-center justify-center text-lg shrink-0">
               📊
             </div>
             <div className="min-w-0">
@@ -80,7 +80,7 @@ export function FaiziAnalysis({ gameId, playerId, onClose }: Props) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="w-9 h-9 rounded-full hover:bg-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-zinc-100 shrink-0"
+            className="w-9 h-9 rounded-full hover:bg-ff-navy-card/50 flex items-center justify-center text-zinc-400 hover:text-ff-cream shrink-0"
           >
             <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -144,7 +144,7 @@ function SummaryStrip({
         </span>
         <span className="text-2xl font-bold text-emerald-300 tabular-nums">{goodPct}%</span>
       </div>
-      <div className="h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-ff-navy-soft overflow-hidden">
         <div className="h-full bg-emerald-400" style={{ width: `${goodPct}%` }} />
       </div>
       <div className="flex items-center justify-between text-xs">
@@ -175,7 +175,7 @@ function MoveRow({ move }: { move: FaiziMove }) {
           </span>
           <span className="text-xs text-zinc-400 tabular-nums">#{move.actionIndex + 1}</span>
         </div>
-        <div className="text-sm text-zinc-100">
+        <div className="text-sm text-ff-cream">
           You {move.played}.
         </div>
         <div className="text-xs text-zinc-300 leading-snug">

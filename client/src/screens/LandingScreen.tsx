@@ -217,7 +217,7 @@ export function LandingScreen({
             >
               <p className="text-xs" style={{ color: "var(--md-on-surface-variant)" }}>
                 You'll join games as{" "}
-                <b className="text-zinc-100">{displayName}</b>.
+                <b className="text-ff-cream">{displayName}</b>.
               </p>
               <FilledButton
                 disabled={!canCreate}
@@ -266,7 +266,7 @@ export function LandingScreen({
           <button
             type="button"
             onClick={() => setShowSpectate((v) => !v)}
-            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-zinc-200 py-1"
+            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-ff-cream py-1"
           >
             {showSpectate ? "Hide spectate option" : "Just watching? Spectate a game"}
           </button>
@@ -288,7 +288,7 @@ export function LandingScreen({
                 disabled={!canSpectate}
                 className="state-layer w-full py-3 rounded-full font-medium text-amber-100
                            bg-amber-500/15 border border-amber-400/40 hover:bg-amber-500/25
-                           disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border-zinc-700
+                           disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:border-ff-navy-ink
                            disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 <span>👁</span>
@@ -322,7 +322,7 @@ export function LandingScreen({
                 type="button"
                 onClick={() => setScoreboardOpen(true)}
                 data-testid="scoreboard-button"
-                className="state-layer text-indigo-300 hover:text-indigo-200 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-indigo-400/40"
+                className="state-layer text-ff-gold hover:text-ff-cream text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-gold/40"
               >
                 View all
               </button>
@@ -401,7 +401,7 @@ function ProfileBar({
       style={{ background: "var(--md-surface-1)" }}
       data-testid="profile-bar"
     >
-      <div className="w-10 h-10 rounded-full bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-200 font-bold text-sm">
+      <div className="w-10 h-10 rounded-full bg-ff-gold/20 border border-ff-gold/40 flex items-center justify-center text-ff-cream font-bold text-sm">
         {account.displayName.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -416,10 +416,10 @@ function ProfileBar({
                 if (e.key === "Escape") { setEditing(false); setDraft(account.displayName); }
               }}
               maxLength={24}
-              className="flex-1 min-w-0 bg-zinc-900/60 rounded-lg px-2 py-1 text-sm border border-zinc-700 focus:outline-none focus:border-indigo-400"
+              className="flex-1 min-w-0 bg-ff-navy/60 rounded-lg px-2 py-1 text-sm border border-ff-navy-ink focus:outline-none focus:border-ff-gold"
             />
             <button onClick={() => void save()} disabled={busy} className="text-xs text-emerald-300 hover:text-emerald-200 px-2">✓</button>
-            <button onClick={() => { setEditing(false); setDraft(account.displayName); }} className="text-xs text-zinc-400 hover:text-zinc-200 px-2">✕</button>
+            <button onClick={() => { setEditing(false); setDraft(account.displayName); }} className="text-xs text-zinc-400 hover:text-ff-cream px-2">✕</button>
           </div>
         ) : (
           <>
@@ -428,7 +428,7 @@ function ProfileBar({
               <button
                 onClick={() => setEditing(true)}
                 title="Edit display name"
-                className="text-[0.55rem] uppercase tracking-widest text-zinc-500 hover:text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-700"
+                className="text-[0.55rem] uppercase tracking-widest text-zinc-500 hover:text-zinc-300 px-1.5 py-0.5 rounded border border-ff-navy-ink"
               >
                 Edit
               </button>
@@ -443,7 +443,7 @@ function ProfileBar({
       <button
         type="button"
         onClick={onSignOut}
-        className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-zinc-700"
+        className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-navy-ink"
       >
         Sign out
       </button>
@@ -488,7 +488,7 @@ function ServerAuthMismatch({
           </h2>
         </div>
       </header>
-      <p className="text-sm text-zinc-200 leading-snug">
+      <p className="text-sm text-ff-cream leading-snug">
         You're signed in as <b>{email ?? "your account"}</b>, but our server
         rejected the credentials. This usually means the server's JWT secret
         was just rotated and needs a moment to sync.
@@ -497,8 +497,8 @@ function ServerAuthMismatch({
         <button
           type="button"
           onClick={onSignOut}
-          className="state-layer flex-1 py-2.5 rounded-full font-medium text-zinc-200
-                     bg-transparent border border-zinc-700 hover:border-zinc-500
+          className="state-layer flex-1 py-2.5 rounded-full font-medium text-ff-cream
+                     bg-transparent border border-ff-navy-ink hover:border-zinc-500
                      transition-colors text-sm"
         >
           Sign out
@@ -557,8 +557,8 @@ function FilledTextField(props: {
         maxLength={props.maxLength}
         placeholder={props.placeholder}
         data-testid={props.testId}
-        className={`w-full px-4 py-3 rounded-xl border bg-zinc-900/60 placeholder:text-zinc-600
-                    focus:outline-none focus:border-indigo-400 transition-colors
+        className={`w-full px-4 py-3 rounded-xl border bg-ff-navy/60 placeholder:text-zinc-600
+                    focus:outline-none focus:border-ff-gold transition-colors
                     ${props.mono ? "font-mono tracking-[0.3em] uppercase" : ""}`}
         style={{ borderColor: "var(--md-outline)" }}
       />
@@ -578,10 +578,10 @@ export function FilledButton(props: {
       onClick={props.onClick}
       disabled={props.disabled}
       data-testid={props.testId}
-      className="state-layer w-full py-3 rounded-full font-medium text-indigo-50
-                 bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600
-                 disabled:bg-zinc-700 disabled:text-zinc-500 disabled:cursor-not-allowed
-                 transition-colors shadow-sm shadow-indigo-900/30"
+      className="state-layer w-full py-3 rounded-full font-medium text-ff-navy
+                 bg-ff-gold hover:bg-ff-cream-soft active:bg-ff-gold-deep
+                 disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:cursor-not-allowed
+                 transition-colors shadow-sm shadow-ff-navy-ink/40"
     >
       {props.children}
     </button>
@@ -600,9 +600,9 @@ export function TonalButton(props: {
       onClick={props.onClick}
       disabled={props.disabled}
       data-testid={props.testId}
-      className="state-layer w-full py-3 rounded-full font-medium text-indigo-200
-                 bg-indigo-500/15 border border-indigo-400/30 hover:bg-indigo-500/25
-                 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:border-zinc-700
+      className="state-layer w-full py-3 rounded-full font-medium text-ff-cream
+                 bg-ff-gold/15 border border-ff-gold/30 hover:bg-ff-gold/25
+                 disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:border-ff-navy-ink
                  disabled:cursor-not-allowed transition-colors"
     >
       {props.children}

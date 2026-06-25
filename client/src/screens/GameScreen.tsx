@@ -399,7 +399,7 @@ export function GameScreen({
               <div className="flex items-center justify-between text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
                 <span>
                   Your hand ({view.myHand.length}) —{" "}
-                  <span className="font-medium text-zinc-100">{me.name}</span>{" "}
+                  <span className="font-medium text-ff-cream">{me.name}</span>{" "}
                   <span className="opacity-80">({view.teamNames[me.team]})</span>
                 </span>
                 {showDiscardButton && (
@@ -471,7 +471,7 @@ export function GameScreen({
               <button
                 type="button"
                 onClick={() => setConfirmingStop(false)}
-                className="state-layer flex-1 py-2.5 rounded-full font-medium text-zinc-200 bg-transparent border border-zinc-700 hover:border-zinc-500 transition-colors"
+                className="state-layer flex-1 py-2.5 rounded-full font-medium text-ff-cream bg-transparent border border-ff-navy-ink hover:border-zinc-500 transition-colors"
               >
                 Cancel
               </button>

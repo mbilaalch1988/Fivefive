@@ -54,7 +54,7 @@ export function StickerPicker({ open, onSend, onClose }: Props) {
               onClick={() => pick(s.id)}
               title={s.label}
               data-testid={`sticker-pick-${s.id}`}
-              className="state-layer aspect-square rounded-xl p-1 hover:bg-zinc-700/50 transition-colors"
+              className="state-layer aspect-square rounded-xl p-1 hover:bg-ff-navy-card/50 transition-colors"
             >
               <img
                 src={STICKER_URL(s.id)}

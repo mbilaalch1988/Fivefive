@@ -36,7 +36,7 @@ export function StickerOverlay({ stickers }: Props) {
             draggable={false}
           />
           <span
-            className="mt-1 px-2 py-0.5 rounded-full text-[0.65rem] sm:text-xs font-semibold bg-zinc-900/80 text-zinc-100 backdrop-blur"
+            className="mt-1 px-2 py-0.5 rounded-full text-[0.65rem] sm:text-xs font-semibold bg-ff-navy/80 text-ff-cream backdrop-blur"
             title={s.fromName}
           >
             {makeNickname(s.fromName)}

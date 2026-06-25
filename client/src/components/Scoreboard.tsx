@@ -262,7 +262,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={`flex-1 py-3 text-xs uppercase tracking-widest font-medium transition-colors state-layer
-        ${active ? "text-indigo-300" : "text-zinc-400 hover:text-zinc-200"}`}
+        ${active ? "text-ff-gold" : "text-zinc-400 hover:text-ff-cream"}`}
       style={{
         borderBottom: active ? "2px solid #818cf8" : "2px solid transparent",
       }}
@@ -291,18 +291,18 @@ function Pagination({
         type="button"
         disabled={page <= 0}
         onClick={() => onChange(page - 1)}
-        className="state-layer px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-200 disabled:opacity-40"
+        className="state-layer px-3 py-1.5 rounded-full border border-ff-navy-ink text-ff-cream disabled:opacity-40"
       >
         ← Prev
       </button>
       <span style={{ color: "var(--md-on-surface-variant)" }}>
-        Page <span className="text-zinc-200 font-semibold">{page + 1}</span> of {totalPages}
+        Page <span className="text-ff-cream font-semibold">{page + 1}</span> of {totalPages}
       </span>
       <button
         type="button"
         disabled={page + 1 >= totalPages}
         onClick={() => onChange(page + 1)}
-        className="state-layer px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-200 disabled:opacity-40"
+        className="state-layer px-3 py-1.5 rounded-full border border-ff-navy-ink text-ff-cream disabled:opacity-40"
       >
         Next →
       </button>
@@ -362,7 +362,7 @@ function LeaderTable({
                     {r.verified && (
                       <span
                         title="Verified account"
-                        className="text-indigo-300 text-xs"
+                        className="text-ff-gold text-xs"
                         aria-label="verified"
                       >
                         ✓
@@ -409,7 +409,7 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
         <DetailRow label="Game-winning fivefives" value={`${winSeq}`} extra={`+${winSeq * 5} pts`} />
         <DetailRow label="MVP games" value={`${mvp}`} extra={`+${mvp * 10} pts`} />
         <div
-          className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold text-zinc-100"
+          className="border-t pt-2 mt-2 flex items-center justify-between text-sm font-semibold text-ff-cream"
           style={{ borderColor: "var(--md-outline)" }}
         >
           <span>Total points</span>
@@ -427,7 +427,7 @@ function PlayerDetail({ row }: { row: ScoreboardEntry }) {
           </span>
         </div>
         {/* Overall progress bar — quick visual read of total completion. */}
-        <div className="h-1.5 rounded-full bg-zinc-800/80 overflow-hidden mb-3">
+        <div className="h-1.5 rounded-full bg-ff-navy-soft/80 overflow-hidden mb-3">
           <div
             className="h-full bg-gradient-to-r from-amber-400 to-amber-200 transition-all"
             style={{
@@ -564,7 +564,7 @@ function AchievementTooltip({
         }}
         aria-label={`${a.info.title} — ${a.info.description}`}
         aria-expanded={pinned}
-        className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/60 rounded-xl inline-block"
+        className="cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ff-gold/60 rounded-xl inline-block"
       >
         {children}
       </span>
@@ -581,7 +581,7 @@ function AchievementTooltip({
           border: "1px solid var(--md-outline)",
         }}
       >
-        <span className="block text-xs font-semibold text-zinc-100">
+        <span className="block text-xs font-semibold text-ff-cream">
           {a.info.title}
         </span>
         <span className="block text-[0.7rem] mt-0.5 text-zinc-300 leading-snug">
@@ -636,7 +636,7 @@ function BadgeStrip({ row }: { row: ScoreboardEntry }) {
       </span>
       {rest > 0 && (
         <span
-          className="ml-2 inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-[0.6rem] font-bold bg-zinc-700/80 text-zinc-200 tabular-nums"
+          className="ml-2 inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-[0.6rem] font-bold bg-ff-navy-card/80 text-ff-cream tabular-nums"
           style={{ boxShadow: "0 0 0 2px var(--md-surface-2)" }}
           title={`+${rest} more achievement${rest === 1 ? "" : "s"}`}
         >
@@ -663,7 +663,7 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
         className={`relative rounded-2xl border aspect-square flex flex-col items-center justify-center gap-1 text-center w-full p-2 overflow-hidden ${
           a.earned
             ? `${s.ring} ${s.bg} ${s.glow}`
-            : "border-zinc-700/60 bg-zinc-800/30"
+            : "border-ff-navy-ink/60 bg-ff-navy-soft/30"
         }`}
       >
         {/* Fixed-size icon container normalizes the visual weight across
@@ -686,9 +686,9 @@ function AchievementCell({ a }: { a: AchievementStatus }) {
         {/* Bottom progress strip — absolute so it never pushes the layout.
             Earned tiles don't need it (background tint signals completion). */}
         {!a.earned && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-zinc-700/60">
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-ff-navy-card/60">
             <div
-              className="h-full bg-indigo-400 transition-all"
+              className="h-full bg-ff-gold transition-all"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -711,7 +711,7 @@ function DetailRow({
     <div className="flex items-center justify-between gap-3">
       <span>{label}</span>
       <span className="flex items-baseline gap-2">
-        <span className="font-medium text-zinc-200">{value}</span>
+        <span className="font-medium text-ff-cream">{value}</span>
         {extra && <span className="text-amber-300/80 text-[0.7rem]">{extra}</span>}
       </span>
     </div>
@@ -727,7 +727,7 @@ function RankBadge({ index }: { index: number }) {
   return (
     <span
       className={`w-7 h-6 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
-        styles[index] ?? "bg-zinc-700 text-zinc-200"
+        styles[index] ?? "bg-ff-navy-card text-ff-cream"
       }`}
     >
       {index + 1}
