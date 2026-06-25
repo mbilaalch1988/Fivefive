@@ -29,7 +29,7 @@
     font-family: 'Inter', system-ui, sans-serif;
     overflow-x: hidden;
   }
-  body { padding: 40px 16px 80px; min-height: 100vh; }
+  body { padding: clamp(24px, 5vw, 48px) clamp(12px, 4vw, 24px) 80px; min-height: 100vh; }
 
   /* Wavy navy background pattern */
   body::before {
@@ -42,9 +42,9 @@
   }
 
   .container { max-width: 760px; margin: 0 auto; }
-  .section { margin-bottom: 56px; }
+  .section { margin-bottom: clamp(32px, 6vw, 56px); }
   .section-label {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em;
+    font-size: clamp(10px, 1.4vw, 11px); text-transform: uppercase; letter-spacing: 0.2em;
     color: var(--gold); opacity: 0.8;
     margin-bottom: 12px; font-weight: 600;
   }
@@ -78,7 +78,7 @@
   /* ============ HERO ============ */
   .hero {
     background: linear-gradient(135deg, var(--navy-card) 0%, var(--navy-soft) 100%);
-    padding: 48px 32px;
+    padding: clamp(32px, 6vw, 56px) clamp(20px, 5vw, 40px);
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -100,10 +100,10 @@
     box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2);
   }
   .hero .logo-mark {
-    width: 96px; height: 96px;
+    width: clamp(72px, 14vw, 104px); height: clamp(72px, 14vw, 104px);
     background: var(--gold);
     border: 4px solid var(--navy-line);
-    border-radius: 24px;
+    border-radius: clamp(18px, 3.5vw, 26px);
     margin: 0 auto 20px;
     display: flex; align-items: center; justify-content: center;
     box-shadow: 6px 6px 0 var(--navy-line);
@@ -112,14 +112,14 @@
   }
   .hero .logo-mark .num {
     font-family: 'Bagel Fat One', cursive;
-    font-size: 52px;
+    font-size: clamp(40px, 8vw, 56px);
     color: var(--navy);
     letter-spacing: -0.05em;
     line-height: 1;
   }
   .hero .logo-mark .dot {
     position: absolute;
-    width: 14px; height: 14px;
+    width: clamp(11px, 1.8vw, 14px); height: clamp(11px, 1.8vw, 14px);
     background: var(--coral);
     border: 3px solid var(--navy-line);
     border-radius: 50%;
@@ -127,7 +127,7 @@
   }
   .hero h1 {
     font-family: 'Bagel Fat One', cursive;
-    font-size: 56px; line-height: 1;
+    font-size: clamp(40px, 9vw, 64px); line-height: 1;
     color: var(--gold);
     letter-spacing: -0.02em;
     text-shadow: 4px 4px 0 var(--navy-line);
@@ -135,16 +135,16 @@
   }
   .hero .tagline {
     font-family: 'Fredoka', sans-serif;
-    font-size: 18px; font-weight: 500;
+    font-size: clamp(14px, 2.4vw, 18px); font-weight: 500;
     color: var(--cream);
-    margin-bottom: 32px;
+    margin-bottom: clamp(20px, 4vw, 32px);
     line-height: 1.5;
   }
   .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   .btn {
     font-family: 'Fredoka', sans-serif;
-    font-weight: 700; font-size: 17px;
-    padding: 14px 28px;
+    font-weight: 700; font-size: clamp(14px, 2.2vw, 17px);
+    padding: clamp(10px, 1.8vw, 14px) clamp(18px, 3.5vw, 28px);
     cursor: pointer;
     letter-spacing: 0.01em;
   }
@@ -195,14 +195,18 @@
   .cell.red { color: #b91c1c; }
   .cell.corner { background: var(--gold); color: var(--navy); }
   .cell.corner::after { content: "★"; font-size: 24px; }
+  /* Chip styling matches the existing in-game chips exactly so the sample
+     reflects what would actually ship. Flat fill, 2.5px outline, 1px 1.5px
+     hard shadow. No 3D dome — keeps the cartoon-cell look but the chip
+     itself stays restrained. */
   .cell.chip-red .chip, .cell.chip-blue .chip {
     position: absolute;
     width: 56%; aspect-ratio: 1 / 1;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    border: 3px solid var(--navy-line);
-    box-shadow: 2px 3px 0 var(--navy-line), inset 0 -3px 0 rgba(0,0,0,0.2);
+    border: 2.5px solid var(--navy-line);
+    box-shadow: 1px 1.5px 0 var(--navy-line);
   }
   .cell.chip-red .chip { background: var(--coral); }
   .cell.chip-blue .chip { background: var(--sky); }
@@ -267,10 +271,13 @@
   }
   .win-overlay .team-name {
     font-family: 'Bagel Fat One', cursive;
-    font-size: 48px; line-height: 1;
+    font-size: clamp(36px, 8vw, 56px); line-height: 1;
     color: var(--coral);
     text-shadow: 4px 4px 0 var(--navy-line);
     margin-bottom: 16px;
+  }
+  .win-overlay .trophy {
+    font-size: clamp(56px, 12vw, 88px) !important;
   }
   .mvp-chip {
     display: inline-flex; align-items: center; gap: 8px;
@@ -332,8 +339,9 @@
 
   /* ============ ACHIEVEMENT TILES ============ */
   .ach-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: clamp(8px, 1.5vw, 12px);
   }
   .ach {
     aspect-ratio: 1;
@@ -413,7 +421,7 @@
     border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 8px;
-    font-size: 14px;
+    font-size: clamp(13px, 2vw, 14px);
     line-height: 1.5;
     box-shadow: 2px 2px 0 var(--navy-line);
   }
@@ -456,6 +464,32 @@
   .chat-bubble.coral { background: var(--coral); }
   .chat-bubble.sky { background: var(--sky); color: var(--navy); }
   .chat-bubble.gold { background: var(--gold); color: var(--navy); }
+
+  /* ============ Mobile tweaks ============ */
+  @media (max-width: 480px) {
+    /* Slightly tighter shadows on mobile so cards don't visually crowd. */
+    .sticker { box-shadow: 3px 3px 0 var(--navy-line); }
+    .sticker:hover { box-shadow: 4px 4px 0 var(--navy-line); }
+    .pill { box-shadow: 2px 2px 0 var(--navy-line); }
+    .pill:hover { box-shadow: 3px 3px 0 var(--navy-line); }
+
+    /* Profile bar: stack handle/name vertically since avatar + sign-out
+       button squeeze the middle column. */
+    .profile-bar { padding: 12px; gap: 10px; }
+    .profile-bar .avatar { width: 40px; height: 40px; font-size: 20px; }
+    .signout { padding: 6px 10px; font-size: 11px; }
+
+    /* Turn bar: smaller player badges + flex-wrap into rows. */
+    .player-badge { padding: 5px 10px; font-size: 12px; }
+
+    /* Faizi tag chips wrap onto their own line on narrow screens for breathing room. */
+    .roast-line .tag { display: inline-block; margin-bottom: 4px; }
+  }
+
+  /* Wider screens — give the hero a bit more presence. */
+  @media (min-width: 900px) {
+    .container { max-width: 880px; }
+  }
 </style>
 </head>
 <body>
