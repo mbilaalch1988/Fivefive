@@ -20,14 +20,27 @@
   --md-ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
 
   /* Fivefive brand identity tokens (Royal Navy + cartoon). */
-  --ff-navy: #0a1840;
-  --ff-navy-ink: #060d2a; /* hard outline / cartoon shadow */
-  --ff-gold: #e4c373;
-  --ff-cream: #fef3c7;
-  --ff-coral: #fb7185;
-  --ff-mint: #86efac;
-  --ff-sky: #38bdf8;
+  --ff-navy:       #0a1840;
+  --ff-navy-soft:  #122560;
+  --ff-navy-card:  #1a2f78;
+  --ff-navy-ink:   #060d2a; /* hard outline / cartoon shadow */
+  --ff-gold:       #e4c373;
+  --ff-gold-deep:  #c9a35b;
+  --ff-cream:      #fef3c7;
+  --ff-cream-soft: #fde68a;
+  --ff-coral:      #fb7185;
+  --ff-coral-deep: #e11d48;
+  --ff-mint:       #86efac;
+  --ff-sky:        #38bdf8;
   --ff-display: "Fredoka", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Base app surface uses the navy palette directly so non-brand legacy
+   surfaces inherit the rebrand without a sweeping per-component rewrite. */
+body {
+  background: var(--ff-navy);
+  color: var(--ff-cream);
+  font-family: var(--ff-display);
 }
 
 /* ------------------------------------------------------------ */
@@ -45,36 +58,49 @@
 .ff-wordmark--tight { letter-spacing: -0.07em; }
 .ff-wordmark--lean  { transform: skewX(-9deg); display: inline-block; }
 
-/* "55" mark — gold rounded square + coral dot. Sized via font-size on
-   the host; the inner number and dot scale from that. */
+/* Five-in-a-row mark — gold rounded square + 5 chips (center coral).
+   Sized via font-size on the host; inner SVG fills the box. Matches
+   the official mark-only.svg supplied in the brand bundle. */
 .ff-mark {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
   width: 2em;
   height: 2em;
   background: var(--ff-gold);
   border: 0.06em solid var(--ff-navy-ink);
-  border-radius: 0.45em;
+  border-radius: 0.22em;
   box-shadow: 0.1em 0.1em 0 var(--ff-navy-ink);
-  font-family: var(--ff-display);
-  font-weight: 500;
-  letter-spacing: -0.04em;
-  color: var(--ff-navy);
-  line-height: 1;
 }
-.ff-mark::after {
-  content: "";
+.ff-mark > svg {
   position: absolute;
-  right: -0.14em;
-  top: -0.14em;
-  width: 0.4em;
-  height: 0.4em;
-  background: var(--ff-coral);
-  border: 0.06em solid var(--ff-navy-ink);
-  border-radius: 999px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
+
+/* Cartoon surface primitives — apply for any panel/card that should
+   read as part of the royal-navy casino theme. */
+.ff-sticker {
+  background: var(--ff-navy-card);
+  border: 3px solid var(--ff-navy-ink);
+  border-radius: 20px;
+  box-shadow: 4px 4px 0 var(--ff-navy-ink);
+}
+.ff-pill {
+  border: 3px solid var(--ff-navy-ink);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--ff-navy-ink);
+  font-family: var(--ff-display);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.ff-pill:hover   { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--ff-navy-ink); }
+.ff-pill:active  { transform: translate(1px, 1px);   box-shadow: 1px 1px 0 var(--ff-navy-ink); }
+.ff-pill--gold   { background: var(--ff-gold);  color: var(--ff-navy); }
+.ff-pill--coral  { background: var(--ff-coral); color: var(--ff-cream); }
+.ff-pill--ghost  { background: var(--ff-navy-card); color: var(--ff-cream); }
 
 html, body, #root {
   height: 100%;

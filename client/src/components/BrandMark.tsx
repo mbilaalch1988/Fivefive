@@ -1,10 +1,11 @@
 /**
  * Fivefive brand primitives. Single React-side render of the wordmark and
- * the "55" mark; styling lives in index.css under `.ff-wordmark` / `.ff-mark`
- * so non-React surfaces (SVG icons, public HTML samples) can match exactly.
+ * the five-in-a-row mark; styling lives in index.css under `.ff-wordmark` /
+ * `.ff-mark` so non-React surfaces (SVG icons, public HTML samples) can
+ * match exactly. Mark geometry mirrors public/icons/mark-only.svg.
  */
 interface MarkProps {
-  /** Sets the overall mark size — number and coral dot scale from this. */
+  /** Sets the overall mark size in rem (mark stays square). */
   sizeRem?: number;
   className?: string;
 }
@@ -13,10 +14,18 @@ export function FivefiveMark({ sizeRem = 3.5, className = "" }: MarkProps) {
   return (
     <span
       className={`ff-mark ${className}`}
-      style={{ fontSize: `${sizeRem * 0.55}rem`, width: `${sizeRem}rem`, height: `${sizeRem}rem` }}
+      style={{ width: `${sizeRem}rem`, height: `${sizeRem}rem` }}
       aria-hidden="true"
     >
-      55
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="var(--ff-navy-ink)" strokeWidth="2.6">
+          <circle cx="18" cy="50" r="5.2" fill="var(--ff-navy)" />
+          <circle cx="34" cy="50" r="5.2" fill="var(--ff-navy)" />
+          <circle cx="50" cy="50" r="6.8" fill="var(--ff-coral)" />
+          <circle cx="66" cy="50" r="5.2" fill="var(--ff-navy)" />
+          <circle cx="82" cy="50" r="5.2" fill="var(--ff-navy)" />
+        </g>
+      </svg>
     </span>
   );
 }

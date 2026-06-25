@@ -114,20 +114,28 @@ export function LandingScreen({
   return (
     <main
       className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden"
-      style={{ background: "var(--md-surface)" }}
+      style={{ background: "var(--ff-navy)" }}
     >
-      {/* Drifting colored blobs */}
-      <div className="fixed inset-0 -z-0 pointer-events-none">
-        <span className="blob blob-1" style={{ top: "-8%", left: "-12%", width: "340px", height: "340px", background: "#a855f7" }} />
-        <span className="blob blob-2" style={{ top: "30%", right: "-15%", width: "300px", height: "300px", background: "#ec4899" }} />
-        <span className="blob blob-3" style={{ bottom: "-10%", left: "20%", width: "360px", height: "360px", background: "#f59e0b" }} />
-        <span className="blob blob-1" style={{ top: "55%", left: "-10%", width: "260px", height: "260px", background: "#22d3ee" }} />
-      </div>
+      {/* Royal-navy ambient glow — gold + coral + sky tints, no blobs. */}
+      <div
+        aria-hidden="true"
+        className="fixed inset-0 -z-0 pointer-events-none"
+        style={{
+          backgroundImage: [
+            "radial-gradient(circle at 12% 18%, rgba(228,195,115,0.10), transparent 45%)",
+            "radial-gradient(circle at 88% 82%, rgba(251,113,133,0.08), transparent 45%)",
+            "radial-gradient(circle at 50% 55%, rgba(56,189,248,0.06), transparent 55%)",
+          ].join(", "),
+        }}
+      />
 
       <div className="relative w-full max-w-sm lg:max-w-5xl space-y-6">
         <header className="text-center flex flex-col items-center gap-3">
           <FivefiveLockup sizeRem={3.2} />
-          <p className="text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
+          <p
+            className="text-sm font-medium tracking-wider uppercase"
+            style={{ color: "var(--ff-gold)", opacity: 0.85 }}
+          >
             {connected ? "Connected" : "Connecting…"}
           </p>
         </header>

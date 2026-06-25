@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Fivefive</title>
+    <title>Fivefive — multiplayer five-in-a-row</title>
     <meta name="description" content="Real-time multiplayer Fivefive — play with friends on any phone." />
 
     <!-- PWA: web app manifest + theme colors. -->
@@ -19,12 +19,25 @@
       rel="stylesheet"
     />
 
+    <!-- Favicons / browser tab -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+
     <!-- iOS-specific PWA hints. -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Fivefive" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
-    <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Open Graph / social share -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fivefive — multiplayer five-in-a-row" />
+    <meta property="og:description" content="Real-time multiplayer Fivefive — play with friends on any phone." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:url" content="https://play.fivefive.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/og-image.png" />
   </head>
   <body>
     <div id="root"></div>
