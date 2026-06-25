@@ -1,4 +1,4 @@
-import type { Team } from "@sequence/shared";
+import type { Team } from "@fivefive/shared";
 import { TEAM_TEXT } from "../lib/cards";
 
 interface Props {

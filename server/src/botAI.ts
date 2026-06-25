@@ -17,7 +17,7 @@ import {
   type PlayerId,
   type Pos,
   type Team,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 
 export type BotDifficulty = "easy" | "medium" | "hard";
 

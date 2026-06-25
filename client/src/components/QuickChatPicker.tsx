@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { QUICK_CHATS } from "@sequence/shared";
+import { QUICK_CHATS } from "@fivefive/shared";
 
 interface Props {
   open: boolean;

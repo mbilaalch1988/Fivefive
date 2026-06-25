@@ -5,7 +5,7 @@
  * Press Ctrl-C to disconnect.
  */
 import { io as ioClient, type Socket } from "socket.io-client";
-import type { ClientToServerEvents, ServerToClientEvents } from "@sequence/shared";
+import type { ClientToServerEvents, ServerToClientEvents } from "@fivefive/shared";
 
 const URL = `http://localhost:${process.env.PORT ?? 3001}`;
 

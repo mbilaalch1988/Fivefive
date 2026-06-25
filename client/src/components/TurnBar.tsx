@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { GameView, PlayerId, Team } from "@sequence/shared";
+import type { GameView, PlayerId, Team } from "@fivefive/shared";
 import { TEAM_CHIP } from "../lib/cards";
 import { makeNickname } from "../lib/nickname";
 

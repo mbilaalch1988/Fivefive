@@ -1,5 +1,5 @@
-import type { QuickChatBroadcast } from "@sequence/shared";
-import { getQuickChat } from "@sequence/shared";
+import type { QuickChatBroadcast } from "@fivefive/shared";
+import { getQuickChat } from "@fivefive/shared";
 import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 import { makeNickname } from "../lib/nickname";
 

@@ -1,4 +1,4 @@
-import { STICKERS, stickerUrlPath } from "@sequence/shared";
+import { STICKERS, stickerUrlPath } from "@fivefive/shared";
 
 interface Props {
   open: boolean;

@@ -1,4 +1,4 @@
-import type { DeckManifest, Rank, Suit } from "@sequence/shared";
+import type { DeckManifest, Rank, Suit } from "@fivefive/shared";
 
 /** Base URL for assets served by the Node server. Empty string = same origin. */
 const ASSET_BASE =

@@ -11,7 +11,7 @@ import {
   type Pos,
   type RoomView,
   type Team,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 import { Board } from "../components/Board";
 import { Hand } from "../components/Hand";
 import { GameMenu } from "../components/GameMenu";
@@ -27,7 +27,7 @@ import { StickerPicker } from "../components/StickerPicker";
 import { TurnBar } from "../components/TurnBar";
 import { WinOverlay } from "../components/WinOverlay";
 import { WinSequenceWalk } from "../components/WinSequenceWalk";
-import type { ActionLog, QuickChatBroadcast, StickerBroadcast } from "@sequence/shared";
+import type { ActionLog, QuickChatBroadcast, StickerBroadcast } from "@fivefive/shared";
 import {
   notifyMyTurn,
   playChipDrop,

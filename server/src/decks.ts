@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import type { DeckManifest, DeckSummary } from "@sequence/shared";
+import type { DeckManifest, DeckSummary } from "@fivefive/shared";
 
 /**
  * Scan Card_layout/ for subdirectories. Each subdir becomes a deck.

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { FaiziRoast as RoastData, RoastPlayer, Team } from "@sequence/shared";
+import type { FaiziRoast as RoastData, RoastPlayer, Team } from "@fivefive/shared";
 import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 
 interface Props {

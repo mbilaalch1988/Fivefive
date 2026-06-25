@@ -1,4 +1,4 @@
-import type { Card, DeckManifest } from "@sequence/shared";
+import type { Card, DeckManifest } from "@fivefive/shared";
 import { CardFace } from "./CardFace";
 
 interface Props {

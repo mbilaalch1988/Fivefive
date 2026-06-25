@@ -1,5 +1,5 @@
 {
-  "name": "@sequence/server",
+  "name": "@fivefive/server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@sequence/shared": "*",
+    "@fivefive/shared": "*",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "jose": "^6.2.3",

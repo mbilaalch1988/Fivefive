@@ -8,7 +8,7 @@ import type {
   RoomView,
   StickerBroadcast,
   Team,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 import { emit, getSocket, type SequenceSocket } from "../lib/socket";
 import { supabase } from "../lib/supabase";
 

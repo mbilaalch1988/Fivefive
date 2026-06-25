@@ -14,7 +14,7 @@ import {
   type ClientToServerEvents,
   type ServerToClientEvents,
   type Team,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 import { randomUUID } from "node:crypto";
 import { Room } from "./room.js";
 import { RoomRegistry } from "./registry.js";
@@ -28,7 +28,7 @@ import {
   type FaiziAnalysis,
   type FaiziRoast,
   type SeatInput,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 import {
   claimAnonymousName,
   createAccount,

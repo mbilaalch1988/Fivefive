@@ -11,7 +11,7 @@ import {
   type GameView,
   type RoomView,
   type ServerToClientEvents,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 
 const URL = `http://localhost:${process.env.PORT ?? 3001}`;
 

@@ -1,4 +1,4 @@
-import type { Card, Rank, Suit, Team } from "@sequence/shared";
+import type { Card, Rank, Suit, Team } from "@fivefive/shared";
 
 export const SUIT_SYMBOL: Record<Suit, string> = {
   S: "♠",

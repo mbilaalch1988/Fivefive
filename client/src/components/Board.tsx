@@ -1,11 +1,11 @@
-import type { DeckManifest, GameView, Pos } from "@sequence/shared";
+import type { DeckManifest, GameView, Pos } from "@fivefive/shared";
 import { Square } from "./Square";
 
 interface Props {
   view: GameView;
   justLocked: ReadonlySet<string>;
   justPlaced: ReadonlySet<string>;
-  celebratingTeam: import("@sequence/shared").Team | null;
+  celebratingTeam: import("@fivefive/shared").Team | null;
   highlight: (pos: Pos) => "none" | "playable" | "removable";
   onSquareClick: (pos: Pos) => void;
 }

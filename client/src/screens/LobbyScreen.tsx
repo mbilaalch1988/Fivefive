@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { DeckSummary, PlayerId, RoomView, Team } from "@sequence/shared";
+import type { DeckSummary, PlayerId, RoomView, Team } from "@fivefive/shared";
 import { AutoStartBanner } from "../components/AutoStartBanner";
 import { Scoreboard } from "../components/Scoreboard";
 import { TEAM_CHIP, TEAM_SURFACE, TEAM_TEXT } from "../lib/cards";

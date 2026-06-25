@@ -1,4 +1,4 @@
-import type { Card, DeckManifest } from "@sequence/shared";
+import type { Card, DeckManifest } from "@fivefive/shared";
 import { RANK_DISPLAY, SUIT_COLOR, SUIT_SYMBOL } from "../lib/cards";
 import { cardImageUrl } from "../lib/decks";
 

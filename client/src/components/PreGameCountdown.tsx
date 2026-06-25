@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Team } from "@sequence/shared";
+import type { Team } from "@fivefive/shared";
 import { TEAM_TEXT, TEAM_CHIP } from "../lib/cards";
 import { playCountdownGo, playCountdownTick } from "../lib/notify";
 

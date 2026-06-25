@@ -1,5 +1,5 @@
 {
-  "name": "@sequence/client",
+  "name": "@fivefive/client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@sequence/shared": "*",
+    "@fivefive/shared": "*",
     "@supabase/supabase-js": "^2.108.2",
     "canvas-confetti": "^1.9.3",
     "react": "^19.0.0",

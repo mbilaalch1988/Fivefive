@@ -11,7 +11,7 @@ import {
   type Seat,
   type SeatInput,
   type Team,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 import { randomUUID } from "node:crypto";
 import {
   loadRoomState,

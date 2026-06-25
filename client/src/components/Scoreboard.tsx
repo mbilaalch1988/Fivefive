@@ -4,8 +4,8 @@ import type {
   PaginatedScoreboard,
   ScoreboardEntry,
   ScoreboardResponse,
-} from "@sequence/shared";
-import { computeAchievements } from "@sequence/shared";
+} from "@fivefive/shared";
+import { computeAchievements } from "@fivefive/shared";
 
 interface Props {
   asDialog?: boolean;

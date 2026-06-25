@@ -1,4 +1,4 @@
-import type { ActionLog, DeckManifest } from "@sequence/shared";
+import type { ActionLog, DeckManifest } from "@fivefive/shared";
 import { RANK_DISPLAY, SUIT_COLOR, SUIT_SYMBOL } from "../lib/cards";
 import { cardImageUrl } from "../lib/decks";
 import { makeNickname } from "../lib/nickname";
@@ -162,8 +162,8 @@ function MiniCardArt({
   deck,
   className,
 }: {
-  rank: import("@sequence/shared").Rank;
-  suit: import("@sequence/shared").Suit;
+  rank: import("@fivefive/shared").Rank;
+  suit: import("@fivefive/shared").Suit;
   deck: DeckManifest | null;
   className?: string;
 }) {

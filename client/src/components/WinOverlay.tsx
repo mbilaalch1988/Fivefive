@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { RoomView, Team } from "@sequence/shared";
+import type { RoomView, Team } from "@fivefive/shared";
 import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 import { FaiziAnalysis } from "./FaiziAnalysis";
 import { FaiziRoast } from "./FaiziRoast";

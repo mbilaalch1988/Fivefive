@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { FaiziAnalysis as FaiziData, FaiziMove, FaiziRating } from "@sequence/shared";
+import type { FaiziAnalysis as FaiziData, FaiziMove, FaiziRating } from "@fivefive/shared";
 
 interface Props {
   gameId: string;

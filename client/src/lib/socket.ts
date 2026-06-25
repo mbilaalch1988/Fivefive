@@ -2,7 +2,7 @@ import { io, type Socket } from "socket.io-client";
 import type {
   ClientToServerEvents,
   ServerToClientEvents,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 
 export type SequenceSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 

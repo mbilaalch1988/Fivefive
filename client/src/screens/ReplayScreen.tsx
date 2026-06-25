@@ -7,7 +7,7 @@ import {
   type GameView,
   type ReplayDetail,
   type Team,
-} from "@sequence/shared";
+} from "@fivefive/shared";
 import { Board } from "../components/Board";
 import { RANK_DISPLAY, SUIT_SYMBOL, TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 

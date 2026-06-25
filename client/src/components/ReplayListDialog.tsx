@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ReplaySummary, Team } from "@sequence/shared";
+import type { ReplaySummary, Team } from "@fivefive/shared";
 import { TEAM_TEXT } from "../lib/cards";
 
 interface Props {

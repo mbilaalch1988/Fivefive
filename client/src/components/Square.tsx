@@ -1,4 +1,4 @@
-import type { BoardSquare, Chip, DeckManifest, Team } from "@sequence/shared";
+import type { BoardSquare, Chip, DeckManifest, Team } from "@fivefive/shared";
 import { RANK_DISPLAY, SUIT_COLOR, SUIT_SYMBOL, TEAM_CHIP } from "../lib/cards";
 import { backImageUrl, cardImageUrl } from "../lib/decks";
 

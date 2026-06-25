@@ -1,5 +1,5 @@
-import type { StickerBroadcast } from "@sequence/shared";
-import { stickerUrlPath } from "@sequence/shared";
+import type { StickerBroadcast } from "@fivefive/shared";
+import { stickerUrlPath } from "@fivefive/shared";
 import { makeNickname } from "../lib/nickname";
 
 interface Props {
