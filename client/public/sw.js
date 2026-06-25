@@ -21,7 +21,7 @@ self.addEventListener("push", (event) => {
 
   const title = payload.title || "Fivefive";
   const body = payload.body || "It's your turn!";
-  const tag = payload.tag || "sequence-turn";
+  const tag = payload.tag || "fivefive-turn";
   const roomCode = payload.roomCode || "";
 
   event.waitUntil(

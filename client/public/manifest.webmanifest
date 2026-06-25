@@ -1,7 +1,7 @@
 {
-  "name": "Sequence",
-  "short_name": "Sequence",
-  "description": "Real-time multiplayer Sequence — play with friends on any phone.",
+  "name": "Fivefive",
+  "short_name": "Fivefive",
+  "description": "Real-time multiplayer Fivefive — play with friends on any phone.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

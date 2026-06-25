@@ -7,14 +7,14 @@
 
 ## 1 · What is Fivefive
 
-A multiplayer Sequence-style board game for phones and laptops. Play with friends or against bots, anywhere a browser opens. Fast to start, smart to play.
+A multiplayer Fivefive-style board game for phones and laptops. Play with friends or against bots, anywhere a browser opens. Fast to start, smart to play.
 
 **Domain**: play.fivefive.app
 **Game ™ note**: Sequence™ is a registered trademark of Jax Ltd. Fivefive is an unofficial online platform for the game.
 
 The name **fivefive** comes from:
 - Five in a row = the win condition
-- Five-five = the rhythm — two halves of a game, a high-five after locking a sequence, the chip-line clapping into place
+- Five-five = the rhythm — two halves of a game, a high-five after locking a fivefive, the chip-line clapping into place
 
 ---
 
@@ -31,9 +31,9 @@ The name **fivefive** comes from:
 **Voice samples** (use these as reference):
 
 - "Your move." — never "Hey there, friend! It's your turn now!"
-- "Sequence locked." — never "Way to go! You scored! Whoo!"
+- "Fivefive locked." — never "Way to go! You scored! Whoo!"
 - "Tough day at the table. Faizi has notes." — never "Don't give up! Try again!"
-- "Wolfpak wins. MVP: Ayesha — 4 sequence-closing moves."
+- "Wolfpak wins. MVP: Ayesha — 4 fivefive-closing moves."
 - "Tap a card to see where it can play. Tap a glowing square to drop a chip."
 - "Faizi here. I watched every move. Want my read?"
 
@@ -90,7 +90,7 @@ Background uses radial-gradient glows in gold + coral + sky at very low opacity 
 
 | Use | Family | Weight | Tracking |
 |-----|--------|--------|----------|
-| Display (logo, "SEQUENCE!", win team) | **Bagel Fat One** | 400 (only weight) | -0.02em |
+| Display (logo, "FIVEFIVE!", win team) | **Bagel Fat One** | 400 (only weight) | -0.02em |
 | Titles, headings, button labels | **Fredoka** | 500-700 | normal |
 | Body, UI copy | **Inter** | 400-700 | normal |
 | Numbers, handles, code | **Geist Mono** | 400 | normal |
@@ -179,9 +179,9 @@ The mark is the standalone icon — used as favicon, PWA icon, social profile ph
 |---|---------|--------------------|
 | 1 | **Two 5s mirrored** | Two "5" digits, one normal + one mirrored, forming a symmetric stamp. Numbers face each other like a mirror. Reads as "55" both ways. |
 | 2 | **5-dot quincunx** | Five filled circles in the standard die-face-five pattern (the pattern on a 5-domino). Two of those squares tiled together = "fivefive". |
-| 3 | **Five chips in a row** | A horizontal row of 5 filled chips, the middle one slightly larger (the "winning" chip). Says "sequence" pictographically. |
+| 3 | **Five chips in a row** | A horizontal row of 5 filled chips, the middle one slightly larger (the "winning" chip). Says "fivefive" pictographically. |
 | 4 | **"55" lockup** | The numbers "55" in Bagel Fat One, set inside the rounded gold square, with a small coral chip-dot accent at the corner. (This is the version in the current sample.) |
-| 5 | **Chip-with-arrows** | A single chip in gold, with four small arrows pointing outward in the four diagonal directions (the four winning lines of Sequence). |
+| 5 | **Chip-with-arrows** | A single chip in gold, with four small arrows pointing outward in the four diagonal directions (the four winning lines of Fivefive). |
 | 6 | **Pentagram / 5-point** | The number 5 as a star inscribed in a circle, with chip-like outlines. Subtle nod to "five." |
 
 ### Color treatment
