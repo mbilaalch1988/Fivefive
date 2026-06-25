@@ -1,6 +1,11 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { migrateLegacyStorage } from "./lib/storageMigration";
+
+// One-time rebrand migration: copy any pre-rebrand "sequence.*" localStorage
+// entries onto their "fivefive.*" equivalents before any reader runs.
+migrateLegacyStorage();
 
 // NOTE: StrictMode is intentionally disabled. The shared game engine mutates
 // GameState in place; StrictMode's double-invocation of state updaters in dev
