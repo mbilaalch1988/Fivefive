@@ -19,6 +19,11 @@
     --coral:      #fb7185;
     --sky:        #38bdf8;
     --mint:       #86efac;
+
+    /* Layout heights / widths — change in one place. */
+    --turnbar-h: 56px;
+    --hand-h:    132px;          /* portrait: docked hand strip height */
+    --hand-w:    220px;          /* landscape: docked hand panel width */
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -27,71 +32,71 @@
     font-family: 'Fredoka', system-ui, sans-serif;
     min-height: 100vh;
     min-height: 100dvh;
-    overflow: hidden;
   }
 
   /* ============================================================ */
-  /* Rotate toggle — fixed top-right, always visible              */
+  /* Rotate toggle + mode badge                                   */
   /* ============================================================ */
   .rotate-btn {
     position: fixed;
-    top: 12px; right: 12px;
-    z-index: 50;
+    top: 10px; right: 12px;
+    z-index: 60;
     display: inline-flex; align-items: center; gap: 8px;
     background: var(--gold);
     color: var(--navy);
     border: 3px solid var(--navy-ink);
     border-radius: 999px;
-    padding: 8px 16px;
+    padding: 6px 14px;
     font-family: 'Fredoka', sans-serif;
-    font-weight: 700; font-size: 14px;
+    font-weight: 700; font-size: 13px;
     box-shadow: 3px 3px 0 var(--navy-ink);
     cursor: pointer;
     transition: transform 120ms ease, box-shadow 120ms ease;
   }
   .rotate-btn:hover  { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--navy-ink); }
   .rotate-btn:active { transform: translate(1px,1px);   box-shadow: 1px 1px 0 var(--navy-ink); }
-  .rotate-btn svg { width: 18px; height: 18px; }
-
+  .rotate-btn svg { width: 16px; height: 16px; }
   .mode-badge {
     position: fixed;
-    top: 12px; left: 12px;
-    z-index: 50;
+    top: 13px; left: 12px;
+    z-index: 60;
     background: var(--navy-card);
     color: var(--gold);
     border: 2px solid var(--navy-ink);
     border-radius: 999px;
-    padding: 6px 12px;
+    padding: 4px 10px;
     font-family: 'Geist Mono', ui-monospace, monospace;
-    font-weight: 600; font-size: 11px;
+    font-weight: 600; font-size: 10px;
     letter-spacing: 0.08em;
     box-shadow: 2px 2px 0 var(--navy-ink);
   }
 
   /* ============================================================ */
-  /* Top status strip — same in both orientations                 */
+  /* Top status strip — always fixed, both orientations           */
   /* ============================================================ */
   .turn-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 40;
+    height: var(--turnbar-h);
     background: var(--navy-card);
     border-bottom: 3px solid var(--navy-ink);
-    padding: 14px 12px;
+    padding: 0 56px;          /* leave room for the corner pills */
     display: flex; gap: 10px; align-items: center; justify-content: center;
     flex-wrap: wrap;
   }
   .player-badge {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 12px;
+    padding: 4px 10px;
     border: 2.5px solid var(--navy-ink);
     border-radius: 999px;
     box-shadow: 2px 2px 0 var(--navy-ink);
-    font-weight: 700; font-size: 13px;
+    font-weight: 700; font-size: 12px;
     color: var(--cream);
   }
   .player-badge.red  { background: var(--coral); }
   .player-badge.blue { background: var(--sky); color: var(--navy); }
-  .player-badge.current {
-    box-shadow: 2px 2px 0 var(--navy-ink), 0 0 0 4px var(--gold);
-  }
+  .player-badge.current { box-shadow: 2px 2px 0 var(--navy-ink), 0 0 0 3px var(--gold); }
   .you-tag {
     font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em;
     background: var(--navy); color: var(--gold);
@@ -100,38 +105,57 @@
   }
   .meter {
     font-family: 'Geist Mono', ui-monospace, monospace;
-    font-size: 12px; font-weight: 600;
+    font-size: 11px; font-weight: 600;
     color: var(--cream); opacity: 0.85;
   }
 
   /* ============================================================ */
-  /* PORTRAIT layout (default)                                    */
-  /* board centered, hand stacked below                           */
+  /* Scroll area (body padding clears turn bar + docked hand)     */
   /* ============================================================ */
-  .stage { padding-top: 60px; padding-bottom: 12px; height: 100dvh; overflow: hidden; }
-  .frame {
-    height: calc(100dvh - 72px);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 8px 12px;
-    gap: 10px;
+  body {
+    padding-top: var(--turnbar-h);
+    padding-bottom: var(--hand-h);   /* portrait: hand docked at bottom */
+    padding-right: 0;
+  }
+  body[data-orientation="landscape"] {
+    padding-bottom: 0;
+    padding-right: var(--hand-w);    /* landscape: hand docked on right */
   }
 
   .board-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    min-height: calc(100dvh - var(--turnbar-h) - var(--hand-h));
+  }
+  body[data-orientation="landscape"] .board-wrap {
+    min-height: calc(100dvh - var(--turnbar-h));
+    padding: 10px;
+  }
+
+  .board {
     background: var(--navy-soft);
     border: 3px solid var(--navy-ink);
     border-radius: 16px;
     padding: 6px;
     box-shadow: 4px 4px 0 var(--navy-ink);
-    flex: none;
-  }
-  .board {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
     gap: 2px;
     aspect-ratio: 1 / 1;
+    width: min(94vw, 94vh - var(--turnbar-h) - var(--hand-h));
+    transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center center;
   }
+  /* LANDSCAPE: literally rotate the whole board 90° CCW.
+     Cells/cards rotate WITH the board — that's the intended look. */
+  body[data-orientation="landscape"] .board {
+    transform: rotate(-90deg);
+    width: min(94vw - var(--hand-w), 94vh - var(--turnbar-h) - 20px);
+  }
+
   .cell {
     background: var(--cream);
     color: var(--navy);
@@ -165,120 +189,119 @@
   .chip.red  { background: var(--coral); }
   .chip.blue { background: var(--sky); }
 
-  /* Hand strip — bottom in portrait, side in landscape */
+  /* ============================================================ */
+  /* Hand dock                                                    */
+  /* PORTRAIT: fixed strip across the bottom                      */
+  /* LANDSCAPE: fixed panel on the right                          */
+  /* ============================================================ */
   .hand-pane {
+    position: fixed;
+    z-index: 30;
     background: var(--navy);
-    border: 3px solid var(--navy-ink);
-    border-radius: 16px;
-    box-shadow: 4px 4px 0 var(--navy-ink);
+    border-top: 3px solid var(--navy-ink);
+    box-shadow: 0 -3px 0 var(--navy-ink);
     padding: 10px;
-    display: flex; flex-direction: column; gap: 8px;
-    flex: none;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  /* Portrait — bottom strip */
+  .hand-pane {
+    bottom: 0; left: 0; right: 0;
+    height: var(--hand-h);
   }
   .hand-label {
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em;
     color: var(--gold); font-weight: 700;
+    display: flex; align-items: center; justify-content: space-between;
   }
   .hand-cards {
+    flex: 1;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 6px;
+    min-height: 0;
   }
   .hand-card {
     background: var(--cream);
     color: var(--navy);
     border: 2.5px solid var(--navy-ink);
     border-radius: 8px;
-    aspect-ratio: 5 / 7;
     padding: 4px 6px;
     display: flex; flex-direction: column;
     font-family: 'Inter', sans-serif;
-    font-weight: 800; font-size: 14px;
+    font-weight: 800;
     box-shadow: 2px 2px 0 var(--navy-ink);
     cursor: pointer;
     transition: transform 120ms ease;
+    aspect-ratio: 5 / 7;
+    min-height: 0;
   }
   .hand-card:hover { transform: translateY(-3px); }
   .hand-card.red { color: #b91c1c; }
-  .hand-card .rank { font-size: 16px; }
-  .hand-card .suit { font-size: 18px; margin-top: auto; align-self: flex-end; }
+  .hand-card .rank { font-size: 14px; }
+  .hand-card .suit { font-size: 16px; margin-top: auto; align-self: flex-end; }
 
-  /* ============================================================ */
-  /* LANDSCAPE layout — board left, hand right                    */
-  /* Trigger 1: body[data-orientation="landscape"] (manual button)*/
-  /* Trigger 2: orientation: landscape on phone (auto, opt-in)    */
-  /* ============================================================ */
-  body[data-orientation="landscape"] .frame {
-    flex-direction: row;
-    align-items: stretch;
-    gap: 12px;
-    padding: 6px;
-  }
-  body[data-orientation="landscape"] .board-wrap {
-    height: 100%;
-    aspect-ratio: 1 / 1;
-    padding: 6px;
-  }
+  /* Landscape — right-side panel, cards stacked in 3s (2 cols × 3 rows). */
   body[data-orientation="landscape"] .hand-pane {
-    flex: 1 1 auto;
-    min-width: 0;
+    top: var(--turnbar-h);
+    bottom: 0;
+    right: 0; left: auto;
+    width: var(--hand-w);
+    height: auto;
+    border-top: none;
+    border-left: 3px solid var(--navy-ink);
+    box-shadow: -3px 0 0 var(--navy-ink);
   }
   body[data-orientation="landscape"] .hand-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: repeat(3, 1fr);
-    gap: 8px;
-    flex: 1;
-    align-content: stretch;
   }
   body[data-orientation="landscape"] .hand-card {
     aspect-ratio: auto;
-    min-height: 0;
   }
-  /* In landscape the turn bar gets a slimmer, narrower treatment */
-  body[data-orientation="landscape"] .turn-bar {
-    padding: 8px 12px;
-    gap: 8px;
+
+  /* Discard / menu buttons inside the hand pane footer.
+     Stays inline on the bottom strip; stacks at the bottom of the right
+     panel in landscape. */
+  .hand-actions {
+    display: flex; gap: 6px;
+    align-items: center;
   }
-  body[data-orientation="landscape"] .stage {
-    padding-top: 50px;
-  }
-  body[data-orientation="landscape"] .frame {
-    height: calc(100dvh - 60px);
+  .hand-actions button {
+    background: var(--coral);
+    color: var(--cream);
+    border: 2.5px solid var(--navy-ink);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 11px;
+    box-shadow: 2px 2px 0 var(--navy-ink);
+    cursor: pointer;
   }
 
   /* ============================================================ */
-  /* AUTO mode — follow device orientation on phones              */
-  /* (desktop browsers report "portrait" by default so the button */
-  /* is the only way to land here on a laptop)                    */
+  /* AUTO mode on mobile: when the device reports landscape and   */
+  /* viewport is short (phone in landscape), apply the same rules */
+  /* the manual button does. Desktop ignores this.                */
   /* ============================================================ */
   @media (orientation: landscape) and (max-height: 600px) {
-    body[data-orientation="auto"] .frame {
-      flex-direction: row;
-      align-items: stretch;
-      gap: 12px;
-      padding: 6px;
-    }
-    body[data-orientation="auto"] .board-wrap {
-      height: 100%;
-      aspect-ratio: 1 / 1;
-      padding: 6px;
+    body[data-orientation="auto"] { padding-bottom: 0; padding-right: var(--hand-w); }
+    body[data-orientation="auto"] .board-wrap { min-height: calc(100dvh - var(--turnbar-h)); }
+    body[data-orientation="auto"] .board {
+      transform: rotate(-90deg);
+      width: min(94vw - var(--hand-w), 94vh - var(--turnbar-h) - 20px);
     }
     body[data-orientation="auto"] .hand-pane {
-      flex: 1 1 auto;
-      min-width: 0;
+      top: var(--turnbar-h); bottom: 0; right: 0; left: auto;
+      width: var(--hand-w); height: auto;
+      border-top: none;
+      border-left: 3px solid var(--navy-ink);
+      box-shadow: -3px 0 0 var(--navy-ink);
     }
     body[data-orientation="auto"] .hand-cards {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr 1fr;
       grid-template-rows: repeat(3, 1fr);
-      gap: 8px;
-      flex: 1;
     }
-    body[data-orientation="auto"] .hand-card {
-      aspect-ratio: auto;
-      min-height: 0;
-    }
-    body[data-orientation="auto"] .stage  { padding-top: 50px; }
-    body[data-orientation="auto"] .frame  { height: calc(100dvh - 60px); }
+    body[data-orientation="auto"] .hand-card { aspect-ratio: auto; }
   }
 </style>
 </head>
@@ -291,42 +314,39 @@
     <path d="M21 12a9 9 0 1 1-3-6.7L21 8"></path>
     <path d="M21 3v5h-5"></path>
   </svg>
-  <span id="rotateLabel">Rotate</span>
+  <span id="rotateLabel">Auto</span>
 </button>
 
-<div class="stage">
-  <!-- Top status strip -->
-  <div class="turn-bar">
-    <span class="player-badge red current">
-      MC <span class="you-tag">YOU</span>
-    </span>
-    <span class="player-badge blue">MB1</span>
-    <span class="meter">Need 2 · Red 0 · Blue 0 · Draw 91</span>
-  </div>
+<!-- Fixed top: turn bar -->
+<div class="turn-bar">
+  <span class="player-badge red current">MC <span class="you-tag">YOU</span></span>
+  <span class="player-badge blue">MB1</span>
+  <span class="meter">Need 2 · Red 0 · Blue 0 · Draw 91</span>
+</div>
 
-  <!-- Frame: flex container that switches direction by orientation -->
-  <div class="frame">
-    <!-- Board -->
-    <div class="board-wrap">
-      <div class="board" id="board"></div>
-    </div>
+<!-- Scrollable board area -->
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
 
-    <!-- Hand pane -->
-    <div class="hand-pane">
-      <div class="hand-label">Your hand (6) — MC <span style="color:var(--coral)">Red</span></div>
-      <div class="hand-cards" id="hand"></div>
+<!-- Fixed bottom (portrait) or right (landscape): hand dock -->
+<div class="hand-pane">
+  <div class="hand-label">
+    <span>Your hand (6) — MC <span style="color:var(--coral)">Red</span></span>
+    <div class="hand-actions">
+      <button type="button">Discard</button>
     </div>
   </div>
+  <div class="hand-cards" id="hand"></div>
 </div>
 
 <script>
-  // ----- Build a representative 10x10 board (just for visual test) -----
+  // ----- Build a representative 10x10 board -----
   const board = document.getElementById('board');
   const RANKS = ['6','7','8','9','10','Q','K','A','2','3','4','5','6','7','8','9','10','J','Q','K','A','2','3','4','5','6','7','8','9','10','J','Q','K','A','2','3','4','5','6','7','8','9','10','J','Q','K','A','2','3','4','5'];
   const SUITS = ['♦','♥','♠','♣'];
   function suitColor(suit) { return (suit === '♦' || suit === '♥') ? 'red' : ''; }
   const corners = new Set(['0,0', '0,9', '9,0', '9,9']);
-  let i = 0;
   for (let r = 0; r < 10; r++) {
     for (let c = 0; c < 10; c++) {
       const key = r + ',' + c;
@@ -341,19 +361,18 @@
         if (colorClass) cell.classList.add(colorClass);
         cell.innerHTML = '<div>' + rank + '</div><div class="suit">' + suit + '</div>';
       }
-      // Sprinkle a couple of chips to show what an in-progress game looks like
+      // Sprinkle a couple of chips so the test mirrors a real in-progress game.
       if (key === '0,7') { const chip = document.createElement('div'); chip.className = 'chip blue'; cell.appendChild(chip); }
       if (key === '4,5') { const chip = document.createElement('div'); chip.className = 'chip red'; cell.appendChild(chip); }
       board.appendChild(cell);
-      i++;
     }
   }
 
-  // ----- Build the 6-card hand strip -----
+  // ----- Build the 6-card hand -----
   const hand = document.getElementById('hand');
   const HAND = [
-    { rank: 'K', suit: '♦', red: true },
-    { rank: '4', suit: '♦', red: true },
+    { rank: 'K', suit: '♦', red: true  },
+    { rank: '4', suit: '♦', red: true  },
     { rank: '3', suit: '♠', red: false },
     { rank: '5', suit: '♠', red: false },
     { rank: 'Q', suit: '♣', red: false },
@@ -368,9 +387,9 @@
 
   // ----- Rotate controller -----
   // Three modes:
-  //   "auto"      — follows device orientation via matchMedia
-  //   "portrait"  — forced portrait, ignores device
-  //   "landscape" — forced landscape, ignores device
+  //   "auto"      → follows device orientation via matchMedia
+  //   "portrait"  → forced portrait
+  //   "landscape" → forced landscape (board rotates 90° CCW; hand on right)
   const MODES = ['auto', 'landscape', 'portrait'];
   const LABELS = { auto: 'Auto', landscape: 'Landscape', portrait: 'Portrait' };
   const STORAGE_KEY = 'fivefive.test.orientation';
@@ -379,16 +398,13 @@
   const btn = document.getElementById('rotateBtn');
   const badge = document.getElementById('modeBadge');
   const label = document.getElementById('rotateLabel');
-
   const mqLandscape = window.matchMedia('(orientation: landscape) and (max-height: 600px)');
 
   function render() {
     document.body.setAttribute('data-orientation', mode);
     label.textContent = LABELS[mode];
     let effective = mode;
-    if (mode === 'auto') {
-      effective = mqLandscape.matches ? 'landscape' : 'portrait';
-    }
+    if (mode === 'auto') effective = mqLandscape.matches ? 'landscape' : 'portrait';
     badge.textContent = mode.toUpperCase() + ' · ' + effective.toUpperCase();
     localStorage.setItem(STORAGE_KEY, mode);
   }
@@ -398,11 +414,7 @@
     mode = MODES[(i + 1) % MODES.length];
     render();
   });
-
-  // React to device-orientation changes when in auto mode.
-  mqLandscape.addEventListener('change', () => {
-    if (mode === 'auto') render();
-  });
+  mqLandscape.addEventListener('change', () => { if (mode === 'auto') render(); });
 
   render();
 </script>
