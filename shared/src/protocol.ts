@@ -100,6 +100,17 @@ export interface RoomView {
   /** UUID of the currently-running (or just-finished) game. Lets the
    *  win-overlay open Faizi analysis. Null until first game starts. */
   gameId: string | null;
+  /** Host-chosen pre-game settings. Auto-start reads these so it doesn't
+   *  silently revert to defaults. Manual host start uses these too unless
+   *  the host overrides on the way out the door. Null fields = use the
+   *  engine default for that knob (defaultFivefivesToWin / built-in deck /
+   *  no timer). Broadcast in the room view so a host who refreshes mid-
+   *  lobby sees their previous picks restored. */
+  lobbySettings: {
+    fivefivesToWin: number | null;
+    deckId: string | null;
+    turnTimerSec: number | null;
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -180,6 +191,18 @@ export interface ClientToServerEvents {
   ) => void;
   setReady: (
     payload: { ready: boolean },
+    ack: (res: AckResult<{}>) => void,
+  ) => void;
+  /** Host-only. Persists a pre-game setting on the room so the auto-start
+   *  countdown (and any future games in the same room) uses it. Pass only
+   *  the fields you're changing; omitted fields stay as-is. Passing null
+   *  for a field clears it (reverts that knob to the engine default). */
+  updateLobbySettings: (
+    payload: {
+      fivefivesToWin?: number | null;
+      deckId?: string | null;
+      turnTimerSec?: number | null;
+    },
     ack: (res: AckResult<{}>) => void,
   ) => void;
   startGame: (

@@ -18,6 +18,11 @@ interface Props {
   onRenameTeam: (team: Team, name: string) => Promise<void>;
   onAddBot: (team: Team, difficulty: "easy" | "medium" | "hard") => Promise<void>;
   onRemoveBot: (playerId: PlayerId) => Promise<void>;
+  onUpdateSettings: (patch: {
+    fivefivesToWin?: number | null;
+    deckId?: string | null;
+    turnTimerSec?: number | null;
+  }) => Promise<void>;
   onStart: (opts: { fivefivesToWin: number; deckId: string | null; turnTimerSec: number | null }) => Promise<void>;
   onLeave: () => Promise<void>;
 }
@@ -34,14 +39,22 @@ export function LobbyScreen({
   onRenameTeam,
   onAddBot,
   onRemoveBot,
+  onUpdateSettings,
   onStart,
   onLeave,
 }: Props) {
   const mySeat = room.seats.find((s) => s.id === myPlayerId);
   const isHost = mySeat?.isHost ?? false;
-  const [fivefivesToWin, setFivefivesToWin] = useState(2);
-  const [deckId, setDeckId] = useState("");
-  const [turnTimerSec, setTurnTimerSec] = useState<number | null>(null);
+  // Local state mirrors room.lobbySettings so non-host re-renders don't
+  // clobber the host's typing. The "source of truth" is the server, but the
+  // controls need synchronous feedback while a push is in flight.
+  const [fivefivesToWin, setFivefivesToWin] = useState(
+    room.lobbySettings.fivefivesToWin ?? 2,
+  );
+  const [deckId, setDeckId] = useState(room.lobbySettings.deckId ?? "");
+  const [turnTimerSec, setTurnTimerSec] = useState<number | null>(
+    room.lobbySettings.turnTimerSec,
+  );
   const [renamingTeam, setRenamingTeam] = useState<Team | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [botDifficulty, setBotDifficulty] = useState<"easy" | "medium" | "hard">("medium");
@@ -401,7 +414,15 @@ export function LobbyScreen({
           <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
             Host controls
           </h2>
-          <SelectRow label="Fivefives to win" value={String(fivefivesToWin)} onChange={(v) => setFivefivesToWin(Number(v))}>
+          <SelectRow
+            label="Fivefives to win"
+            value={String(fivefivesToWin)}
+            onChange={(v) => {
+              const n = Number(v);
+              setFivefivesToWin(n);
+              void onUpdateSettings({ fivefivesToWin: n });
+            }}
+          >
             <option value="1">1 (quick)</option>
             <option value="2">2 (standard)</option>
             <option value="3">3 (long)</option>
@@ -410,7 +431,10 @@ export function LobbyScreen({
           <SelectRow
             label="Card layout"
             value={deckId}
-            onChange={setDeckId}
+            onChange={(v) => {
+              setDeckId(v);
+              void onUpdateSettings({ deckId: v || null });
+            }}
             testId="deck-select"
           >
             <option value="">Built-in</option>
@@ -421,7 +445,11 @@ export function LobbyScreen({
           <SelectRow
             label="Turn timer"
             value={turnTimerSec === null ? "off" : String(turnTimerSec)}
-            onChange={(v) => setTurnTimerSec(v === "off" ? null : Number(v))}
+            onChange={(v) => {
+              const next = v === "off" ? null : Number(v);
+              setTurnTimerSec(next);
+              void onUpdateSettings({ turnTimerSec: next });
+            }}
             testId="turn-timer-select"
           >
             <option value="off">Off (no limit)</option>

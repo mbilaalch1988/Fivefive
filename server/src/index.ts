@@ -608,10 +608,24 @@ function refreshAutoStart(room: Room): void {
     }
     try {
       // Auto-start with the host's last-saved settings (or defaults if none).
-      room.start({});
+      // Previously this passed `{}`, which silently reset deck + win-target
+      // back to engine defaults — losing the host's lobby selections.
+      const lobbyDeckId = room.lobbyDeckId;
+      const deck = lobbyDeckId ? deckRegistry.get(lobbyDeckId) ?? null : null;
+      room.start({
+        fivefivesToWin: room.lobbyFivefivesToWin ?? undefined,
+        deckId: deck?.id ?? null,
+        deck,
+        turnTimerSec: room.lobbyTurnTimerSec,
+      });
       broadcastRoom(room);
       broadcastGame(room);
       scheduleBotTurn(room);
+      // Mirror the manual-start side effects so auto-started games behave
+      // identically (turn timer, push notification for the opening player).
+      scheduleTurnTimer(room);
+      const firstId = room.game?.players[room.game.turnIdx]?.id ?? null;
+      if (firstId) void pushTurnNotification(room, firstId);
     } catch (e) {
       console.warn(`[auto-start] ${room.code} failed: ${(e as Error).message}`);
       broadcastRoom(room);
@@ -939,6 +953,45 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("updateLobbySettings", (payload, ack) => {
+    const code = socketRoom.get(socket.id);
+    const room = code ? registry.get(code) : undefined;
+    if (!room) return ack({ ok: false, error: "not in a room" });
+    const seat = room.seatBySocketId(socket.id);
+    if (!seat) return ack({ ok: false, error: "no seat" });
+    if (seat.id !== room.hostId) {
+      return ack({ ok: false, error: "only the host can change lobby settings" });
+    }
+    // Validate inputs before writing. Unknown deck / out-of-range timer
+    // would otherwise produce a broken auto-start later.
+    if (payload.deckId !== undefined && payload.deckId !== null) {
+      if (!deckRegistry.get(payload.deckId)) {
+        return ack({ ok: false, error: `unknown deck "${payload.deckId}"` });
+      }
+    }
+    if (
+      payload.turnTimerSec !== undefined &&
+      payload.turnTimerSec !== null &&
+      ![30, 60, 90].includes(payload.turnTimerSec)
+    ) {
+      return ack({ ok: false, error: "turnTimerSec must be 30, 60, or 90" });
+    }
+    if (
+      payload.fivefivesToWin !== undefined &&
+      payload.fivefivesToWin !== null &&
+      (payload.fivefivesToWin < 1 || payload.fivefivesToWin > 4 || !Number.isInteger(payload.fivefivesToWin))
+    ) {
+      return ack({ ok: false, error: "fivefivesToWin must be an integer 1–4" });
+    }
+    try {
+      room.updateLobbySettings(payload);
+      ack({ ok: true });
+      broadcastRoom(room);
+    } catch (e) {
+      ack({ ok: false, error: (e as Error).message });
+    }
+  });
+
   socket.on("startGame", ({ fivefivesToWin, deckId, turnTimerSec }, ack) => {
     const code = socketRoom.get(socket.id);
     const room = code ? registry.get(code) : undefined;
@@ -956,6 +1009,13 @@ io.on("connection", (socket) => {
       turnTimerSec && [30, 60, 90].includes(turnTimerSec) ? turnTimerSec : null;
     try {
       cancelAutoStart(room);
+      // Persist the host's selections on the room so a subsequent auto-start
+      // (e.g. after stopGame + everyone-ready) uses the same settings.
+      room.updateLobbySettings({
+        fivefivesToWin: fivefivesToWin ?? null,
+        deckId: deck?.id ?? null,
+        turnTimerSec: validatedTimer,
+      });
       room.start({
         fivefivesToWin,
         deckId: deck?.id ?? null,

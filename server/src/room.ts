@@ -67,6 +67,13 @@ export class Room {
   turnExpiresAt: number | null = null;
   /** MVP player names from the most recently-completed game (cleared on next start). */
   lastMvpNames: string[] = [];
+  /** Host-chosen lobby settings, persisted on the room so the auto-start
+   *  countdown uses them (the manual-start path passed them inline, but the
+   *  auto-start path had no source — it was falling back to engine defaults).
+   *  Null = use the engine default for that knob. */
+  lobbyFivefivesToWin: number | null = null;
+  lobbyDeckId: string | null = null;
+  lobbyTurnTimerSec: number | null = null;
   deck: DeckManifest | null = null;
   teamNames: Record<Team, string> = { red: "Red", blue: "Blue", green: "Green" };
   teamScores: Record<Team, number> = { red: 0, blue: 0, green: 0 };
@@ -452,7 +459,31 @@ export class Room {
       spectatorCount: this.spectators.length,
       autoStartAt: this.autoStartAt,
       gameId: this.gameId,
+      lobbySettings: {
+        fivefivesToWin: this.lobbyFivefivesToWin,
+        deckId: this.lobbyDeckId,
+        turnTimerSec: this.lobbyTurnTimerSec,
+      },
     };
+  }
+
+  /** Patch the persisted lobby settings. Pass undefined to leave a field
+   *  untouched; pass null to explicitly revert it to the engine default. */
+  updateLobbySettings(patch: {
+    fivefivesToWin?: number | null;
+    deckId?: string | null;
+    turnTimerSec?: number | null;
+  }): void {
+    if (this.game) throw new Error("cannot change lobby settings: game in progress");
+    if (patch.fivefivesToWin !== undefined) {
+      this.lobbyFivefivesToWin = patch.fivefivesToWin;
+    }
+    if (patch.deckId !== undefined) {
+      this.lobbyDeckId = patch.deckId;
+    }
+    if (patch.turnTimerSec !== undefined) {
+      this.lobbyTurnTimerSec = patch.turnTimerSec;
+    }
   }
 
   gameView(viewerId: PlayerId | null): GameView | null {

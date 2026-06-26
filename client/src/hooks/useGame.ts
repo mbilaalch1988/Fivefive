@@ -92,6 +92,14 @@ export interface UseGame {
   chooseTeam: (team: Team) => Promise<void>;
   setReady: (ready: boolean) => Promise<void>;
   decks: DeckSummary[];
+  /** Host-only. Pushes one or more lobby settings to the server so the
+   *  auto-start countdown uses them. Pass null on a field to revert it to
+   *  the engine default. Omit a field to leave it untouched. */
+  updateLobbySettings: (patch: {
+    fivefivesToWin?: number | null;
+    deckId?: string | null;
+    turnTimerSec?: number | null;
+  }) => Promise<void>;
   startGame: (opts?: { fivefivesToWin?: number; deckId?: string | null; turnTimerSec?: number | null }) => Promise<void>;
   stopGame: () => Promise<void>;
   renameTeam: (team: Team, name: string) => Promise<void>;
@@ -333,6 +341,22 @@ export function useGame(): UseGame {
     [handleAck],
   );
 
+  const updateLobbySettings = useCallback(
+    async (patch: {
+      fivefivesToWin?: number | null;
+      deckId?: string | null;
+      turnTimerSec?: number | null;
+    }) => {
+      const s = socketRef.current!;
+      const res = (await emit(s, "updateLobbySettings", patch)) as {
+        ok: boolean;
+        error?: string;
+      };
+      handleAck(res);
+    },
+    [handleAck],
+  );
+
   const startGame = useCallback(
     async (opts: { fivefivesToWin?: number; deckId?: string | null; turnTimerSec?: number | null } = {}) => {
       const s = socketRef.current!;
@@ -447,6 +471,7 @@ export function useGame(): UseGame {
     chooseTeam,
     setReady,
     decks,
+    updateLobbySettings,
     startGame,
     stopGame,
     renameTeam,
