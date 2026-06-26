@@ -8,13 +8,60 @@ interface Props {
   myPlayerId: PlayerId | null;
 }
 
+/** Team-color CSS values keyed off the brand palette. The scorebar pill
+ *  uses these for the chip dot and the swappable outer glow. */
+const TEAM_COLOR_VAR: Record<Team, string> = {
+  red:   "var(--ff-coral)",
+  blue:  "var(--ff-sky)",
+  green: "var(--ff-mint)",
+};
+
+/**
+ * Top-of-screen scoreboard. Single black pill modelled on a soccer broadcast
+ * overlay:  [⏱ timer] · [chip RED  N] · [brand mark] · [N  BLUE chip] · [meta]
+ *
+ * The outer glow tints to the CURRENT player's team color so a glance tells
+ * you whose turn it is. Below the pill: compact player badges (still useful
+ * for multi-player games), an optional reconnect banner, and the existing
+ * turn-countdown progress bar that mirrors the timer text in the pill.
+ */
 export function TurnBar({ view, myPlayerId }: Props) {
-  const teams = Object.keys(view.teamFivefiveCounts) as Team[];
   const nextIdx = (view.turnIdx + 1) % view.players.length;
+  const currentPlayer = view.players[view.turnIdx];
+  const currentTeam: Team | null = currentPlayer?.team ?? null;
+
+  // Teams that actually have a player seated. Empty fivefive counts for
+  // teams with no player don't render.
+  const seatedTeams = new Set<Team>();
+  for (const p of view.players) seatedTeams.add(p.team);
+
+  // Order the pill: red·blue·green priority, drop unseated teams, then the
+  // first two go in the pill and any third spills onto its own line beneath.
+  const ordered: Team[] = (["red", "blue", "green"] as Team[]).filter((t) =>
+    seatedTeams.has(t),
+  );
+  const leftTeam: Team = ordered[0] ?? "red";
+  const rightTeam: Team = ordered[1] ?? "blue";
+  const extraTeam: Team | null = ordered[2] ?? null;
 
   return (
-    <div className="w-full flex flex-col gap-2">
-      {/* Row of player badges — current player highlighted, next subtly. */}
+    <div className="w-full flex flex-col items-center gap-2">
+      <ScoreBarPill
+        view={view}
+        leftTeam={leftTeam}
+        rightTeam={rightTeam}
+        glowTeam={currentTeam}
+      />
+
+      {extraTeam !== null && (
+        <ExtraTeamLine
+          team={extraTeam}
+          name={view.teamNames[extraTeam]}
+          score={view.teamFivefiveCounts[extraTeam]}
+        />
+      )}
+
+      {/* Player badges — compact row, current player highlighted, next subtly. */}
       <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center justify-center">
         {view.players.map((p, i) => {
           const isCurrent = i === view.turnIdx;
@@ -34,14 +81,13 @@ export function TurnBar({ view, myPlayerId }: Props) {
         })}
       </div>
 
-      {/* "Waiting for X to reconnect…" — only shown when it's the disconnected
-          player's turn, otherwise the badge dot is enough. */}
+      {/* "Waiting for X to reconnect…" — only when it's the disconnected
+          player's turn; the badge dot covers the off-turn case. */}
       {(() => {
-        const current = view.players[view.turnIdx];
-        if (!current || current.connected || view.winner) return null;
+        if (!currentPlayer || currentPlayer.connected || view.winner) return null;
         return (
           <div
-            className="self-center inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border"
             style={{
               background: "rgba(244, 63, 94, 0.1)",
               borderColor: "rgba(244, 63, 94, 0.4)",
@@ -50,42 +96,182 @@ export function TurnBar({ view, myPlayerId }: Props) {
             data-testid="reconnect-banner"
           >
             <span className="reconnect-dot relative inline-flex w-2 h-2 rounded-full bg-rose-400" />
-            Waiting for {current.name} to reconnect…
+            Waiting for {currentPlayer.name} to reconnect…
           </div>
         );
       })()}
-
-      <div
-        className="w-full flex flex-wrap items-center gap-x-3 gap-y-1 p-2 sm:p-2.5 rounded-2xl text-xs sm:text-sm"
-        style={{ background: "var(--md-surface-1)" }}
-      >
-        <span style={{ color: "var(--md-on-surface-variant)" }}>Need {view.fivefivesToWin}:</span>
-        {teams.map((t) => {
-          const count = view.teamFivefiveCounts[t];
-          if (count === 0 && !view.players.some((p) => p.team === t)) return null;
-          return (
-            <span key={t} className="flex items-center gap-1.5">
-              <span className={`inline-block w-3 h-3 rounded-full border ${TEAM_CHIP[t]}`} />
-              {view.teamNames[t]}: <span className="font-semibold">{count}</span>
-            </span>
-          );
-        })}
-        <span className="ml-auto" style={{ color: "var(--md-on-surface-variant)" }}>
-          Draw: {view.drawPileCount}
-        </span>
-      </div>
 
       {view.turnTimerSec !== null && view.turnExpiresAt !== null && !view.winner && (
         <TurnCountdown
           expiresAt={view.turnExpiresAt}
           totalSec={view.turnTimerSec}
-          currentPlayerName={view.players[view.turnIdx]?.name ?? "Player"}
-          isMyTurn={view.players[view.turnIdx]?.id === myPlayerId}
+          currentPlayerName={currentPlayer?.name ?? "Player"}
+          isMyTurn={currentPlayer?.id === myPlayerId}
         />
       )}
     </div>
   );
 }
+
+/* ============================================================ */
+/* ScoreBarPill — the main soccer-overlay pill                  */
+/* ============================================================ */
+
+function ScoreBarPill({
+  view,
+  leftTeam,
+  rightTeam,
+  glowTeam,
+}: {
+  view: GameView;
+  leftTeam: Team;
+  rightTeam: Team;
+  glowTeam: Team | null;
+}) {
+  // Time slot: per-turn countdown if the host enabled one, else show "--:--"
+  // so the slot doesn't collapse and surrounding spacing stays stable.
+  const timeText = useTimerText(view);
+
+  const glowColor = glowTeam ? TEAM_COLOR_VAR[glowTeam] : "var(--ff-gold)";
+
+  return (
+    <div
+      className="ff-scorebar-pill"
+      style={{ ["--ff-glow" as string]: glowColor }}
+      data-testid="scorebar"
+    >
+      <div className="ff-scorebar-pill__time" data-testid="scorebar-time">
+        {timeText}
+      </div>
+
+      <TeamSlot
+        side="left"
+        team={leftTeam}
+        name={view.teamNames[leftTeam]}
+        score={view.teamFivefiveCounts[leftTeam]}
+      />
+
+      <div className="ff-scorebar-pill__mark" aria-hidden="true">
+        <MarkSvg />
+      </div>
+
+      <TeamSlot
+        side="right"
+        team={rightTeam}
+        name={view.teamNames[rightTeam]}
+        score={view.teamFivefiveCounts[rightTeam]}
+      />
+
+      <div className="ff-scorebar-pill__meta">
+        <span>NEED&nbsp;{view.fivefivesToWin}</span>
+        <span className="opacity-50">·</span>
+        <span>{view.drawPileCount}&nbsp;LEFT</span>
+      </div>
+    </div>
+  );
+}
+
+function TeamSlot({
+  side,
+  team,
+  name,
+  score,
+}: {
+  side: "left" | "right";
+  team: Team;
+  name: string;
+  score: number;
+}) {
+  // Right side mirrors the left so the brand mark sits centered between
+  // matching shapes (chip-name-score on left, score-name-chip on right).
+  const chip = (
+    <span
+      className="ff-scorebar-pill__chip"
+      style={{ background: TEAM_COLOR_VAR[team] }}
+    />
+  );
+  const nameEl = <span className="ff-scorebar-pill__name">{name.toUpperCase().slice(0, 4)}</span>;
+  const scoreEl = <span className="ff-scorebar-pill__score">{score}</span>;
+  return (
+    <div className={`ff-scorebar-pill__team ff-scorebar-pill__team--${side}`}>
+      {side === "left" ? (
+        <>
+          {chip}
+          {nameEl}
+          {scoreEl}
+        </>
+      ) : (
+        <>
+          {scoreEl}
+          {nameEl}
+          {chip}
+        </>
+      )}
+    </div>
+  );
+}
+
+function ExtraTeamLine({ team, name, score }: { team: Team; name: string; score: number }) {
+  return (
+    <div className="ff-scorebar-extra" data-testid="scorebar-extra-team">
+      <span
+        className="ff-scorebar-pill__chip"
+        style={{ background: TEAM_COLOR_VAR[team] }}
+      />
+      <span className="ff-scorebar-pill__name">{name.toUpperCase().slice(0, 4)}</span>
+      <span className="ff-scorebar-pill__score">{score}</span>
+    </div>
+  );
+}
+
+/** Brand mark in the center of the pill — five chips in a row, center coral. */
+function MarkSvg() {
+  return (
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect x="6" y="6" width="88" height="88" rx="20" fill="var(--ff-gold)" stroke="var(--ff-navy-ink)" strokeWidth="3" />
+      <g stroke="var(--ff-navy-ink)" strokeWidth="2.6">
+        <circle cx="18" cy="50" r="5.2" fill="var(--ff-navy)" />
+        <circle cx="34" cy="50" r="5.2" fill="var(--ff-navy)" />
+        <circle cx="50" cy="50" r="6.8" fill="var(--ff-coral)" />
+        <circle cx="66" cy="50" r="5.2" fill="var(--ff-navy)" />
+        <circle cx="82" cy="50" r="5.2" fill="var(--ff-navy)" />
+      </g>
+    </svg>
+  );
+}
+
+/* ============================================================ */
+/* useTimerText — picks turn-countdown text or a stable dash    */
+/* ============================================================ */
+
+function useTimerText(view: GameView): string {
+  const [remaining, setRemaining] = useState<number | null>(() =>
+    view.turnExpiresAt
+      ? Math.max(0, Math.ceil((view.turnExpiresAt - Date.now()) / 1000))
+      : null,
+  );
+  useEffect(() => {
+    if (view.turnExpiresAt === null || view.winner !== null) {
+      setRemaining(null);
+      return;
+    }
+    function tick() {
+      setRemaining(Math.max(0, Math.ceil((view.turnExpiresAt! - Date.now()) / 1000)));
+    }
+    tick();
+    const h = window.setInterval(tick, 250);
+    return () => window.clearInterval(h);
+  }, [view.turnExpiresAt, view.winner]);
+
+  if (remaining === null) return "––:––";
+  const mm = Math.floor(remaining / 60);
+  const ss = remaining % 60;
+  return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+}
+
+/* ============================================================ */
+/* TurnCountdown — thin progress bar that mirrors the timer     */
+/* ============================================================ */
 
 function TurnCountdown({
   expiresAt,
@@ -116,25 +302,26 @@ function TurnCountdown({
 
   return (
     <div
-      className="w-full flex items-center gap-2 px-2 py-1 rounded-2xl text-xs"
+      className="w-full max-w-md flex items-center gap-2 px-2 py-1 rounded-2xl text-xs"
       style={{ background: "var(--md-surface-1)" }}
       data-testid="turn-countdown"
     >
-      <span className={`shrink-0 font-semibold tabular-nums ${urgent ? "text-rose-300" : "text-ff-cream"}`}>
-        ⏱ {remaining}s
-      </span>
       <div className="flex-1 h-1.5 rounded-full bg-ff-navy-soft overflow-hidden">
         <div
           className={`h-full ${fillColor} transition-all duration-200`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span className="shrink-0 truncate max-w-[8rem]" style={{ color: "var(--md-on-surface-variant)" }}>
+      <span className="shrink-0 truncate max-w-[8rem] text-ff-cream">
         {isMyTurn ? "your turn" : currentPlayerName}
       </span>
     </div>
   );
 }
+
+/* ============================================================ */
+/* PlayerBadge — same component as before, unchanged behaviour  */
+/* ============================================================ */
 
 function PlayerBadge({
   name,
@@ -153,9 +340,6 @@ function PlayerBadge({
 }) {
   const isBot = /\bbot\b/i.test(name);
   const nick = makeNickname(name);
-  // Visual hierarchy: current > next > others. Current player uses an animated
-  // gold pulse (.turn-pulse drives the box-shadow keyframe) instead of a flat
-  // ring — much harder to miss than the static highlight before.
   const ring = isCurrent
     ? "turn-pulse scale-110"
     : isNext

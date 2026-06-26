@@ -371,6 +371,109 @@ body[data-orientation-effective="landscape"] .ff-hand-card--selected {
   transform: translateY(0) translateX(-14px);
 }
 
+/* ----- Scorebar pill (TurnBar top-of-screen overlay) -----------------
+   Soccer-broadcast-style: black pill with a soft outer glow that swaps
+   to the current player's team color (--ff-glow set inline by React).
+   Layout: timer · team chip + name + score · brand mark · score + name +
+   chip · meta. Designed for 360-720px wide; wraps when room is tight. */
+.ff-scorebar-pill {
+  --ff-glow: var(--ff-gold);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #050b22;                  /* deeper than --ff-navy-ink */
+  color: var(--ff-cream);
+  border: 2px solid var(--ff-navy-ink);
+  border-radius: 999px;
+  padding: 5px 12px;
+  max-width: 100%;
+  font-family: var(--ff-display);
+  font-weight: 800;
+  font-size: 13px;
+  flex-wrap: wrap;
+  justify-content: center;
+  box-shadow:
+    0 0 18px 1px var(--ff-glow),
+    0 0 36px 4px color-mix(in srgb, var(--ff-glow) 45%, transparent),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  transition: box-shadow 360ms ease;
+}
+@media (min-width: 640px) {
+  .ff-scorebar-pill { font-size: 14px; padding: 6px 16px; gap: 8px; }
+}
+.ff-scorebar-pill__time {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ff-cream);
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 5ch;
+  text-align: center;
+  tabular-nums: 1;
+}
+.ff-scorebar-pill__team {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 2px;
+}
+.ff-scorebar-pill__chip {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--ff-navy-ink);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+.ff-scorebar-pill__name {
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  font-size: 13px;
+}
+.ff-scorebar-pill__score {
+  font-size: 19px;
+  font-weight: 900;
+  min-width: 1.3ch;
+  text-align: center;
+  line-height: 1;
+}
+.ff-scorebar-pill__mark {
+  width: 26px; height: 26px;
+  margin: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ff-scorebar-pill__meta {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  display: inline-flex;
+  gap: 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: 10px;
+  margin-left: 4px;
+}
+/* Third-team line (3-team games) — same pill style, narrower, no mark. */
+.ff-scorebar-extra {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #050b22;
+  color: var(--ff-cream);
+  border: 2px solid var(--ff-navy-ink);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-family: var(--ff-display);
+  font-weight: 800;
+  font-size: 13px;
+}
+
 /* ----- Right deck (large screens, ≥1024×768) --------------------------
    When useLargeScreen() returns true the burger popup + bottom hand strip
    are replaced by a permanent right sidebar containing the menu items on
