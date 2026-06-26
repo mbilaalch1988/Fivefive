@@ -97,19 +97,25 @@ export function useBoardZoom<E extends HTMLElement>(
         pinchDistance0 = Math.max(1, distance(pts[0], pts[1]));
         pinchScale0 = scaleRef.current;
         mode = "pinch";
+        // Capture only when we're actually gesturing — otherwise the
+        // browser retargets the subsequent click onto the zoom container
+        // and Square cells never receive their click event.
+        try { el!.setPointerCapture(e.pointerId); } catch { /* ignore */ }
         e.preventDefault();
       } else if (pointers.size === 1 && scaleRef.current > 1.001) {
         panX0 = e.clientX; panY0 = e.clientY;
         panTx0 = txRef.current; panTy0 = tyRef.current;
         mode = "pan";
+        try { el!.setPointerCapture(e.pointerId); } catch { /* ignore */ }
       } else {
+        // Single-finger tap at default zoom — leave the event alone so the
+        // click bubbles through to the cell's onClick handler.
         const now = performance.now();
         if (now - lastTapRef.current < DOUBLE_TAP_MS && scaleRef.current !== 1) {
           reset();
         }
         lastTapRef.current = now;
       }
-      try { el!.setPointerCapture(e.pointerId); } catch { /* ignore */ }
     }
 
     function onPointerMove(e: PointerEvent) {
