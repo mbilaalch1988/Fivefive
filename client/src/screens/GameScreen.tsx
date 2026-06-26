@@ -12,6 +12,7 @@ import {
   type RoomView,
   type Team,
 } from "@fivefive/shared";
+import { useBoardZoom } from "../lib/boardZoom";
 import { Board } from "../components/Board";
 import { Hand } from "../components/Hand";
 import { GameMenu } from "../components/GameMenu";
@@ -84,6 +85,8 @@ export function GameScreen({
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmingStop, setConfirmingStop] = useState(false);
+  const zoomRef = useRef<HTMLDivElement | null>(null);
+  const zoom = useBoardZoom(zoomRef);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
   const [quickChatOpen, setQuickChatOpen] = useState(false);
@@ -383,17 +386,36 @@ export function GameScreen({
           </div>
         )}
 
-        <div className="ff-board-rotor w-full max-w-3xl">
-          <Board
-            view={view}
-            justLocked={justLocked}
-            justPlaced={justPlaced}
-            celebratingTeam={celebratingTeam}
-            highlight={highlight}
-            onSquareClick={onSquareClick}
-          />
+        <div
+          ref={zoomRef}
+          className="ff-board-zoom w-full max-w-3xl"
+          style={{
+            transform: `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`,
+          }}
+        >
+          <div className="ff-board-rotor w-full">
+            <Board
+              view={view}
+              justLocked={justLocked}
+              justPlaced={justPlaced}
+              celebratingTeam={celebratingTeam}
+              highlight={highlight}
+              onSquareClick={onSquareClick}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Zoom-state chip — only renders when the board is zoomed away from
+          1×. Click "Reset" to snap back. */}
+      {Math.abs(zoom.scale - 1) > 0.01 && (
+        <div className="ff-zoom-chip" data-testid="zoom-chip" aria-live="polite">
+          <span>Zoom {zoom.scale.toFixed(2)}×</span>
+          <button type="button" onClick={zoom.reset} data-testid="zoom-reset">
+            Reset
+          </button>
+        </div>
+      )}
 
       {/* Fixed hand dock — bottom strip in portrait, right panel in landscape.
           Stays visible while the board scrolls. */}

@@ -169,6 +169,64 @@ body[data-orientation-effective="landscape"] .ff-game-area {
   gap: 0;
 }
 
+/* Zoom wrapper sits OUTSIDE the rotor so its scale+translate compose
+   cleanly with the rotor's rotation. touch-action: none disables the
+   browser's default pinch/scroll on the board, handing those gestures
+   to useBoardZoom. cell clicks still fire normally at 1x. */
+.ff-board-zoom {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  touch-action: none;
+  will-change: transform;
+  transition: transform 80ms linear;
+  transform-origin: center center;
+}
+.ff-board-zoom.ff-board-zoom--gesturing {
+  /* Mid-gesture we update transform every pointermove; the easing would
+     fight the live update, so kill the transition while gesturing. */
+  transition: none;
+}
+
+/* Floating "Zoom 1.5× · Reset" chip — appears only when scale != 1.
+   Positioned bottom-center in portrait, top-left in landscape (where it
+   doesn't collide with the side hand dock). */
+.ff-zoom-chip {
+  position: fixed;
+  z-index: 35;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--ff-gold);
+  color: var(--ff-navy);
+  border: 2.5px solid var(--ff-navy-ink);
+  border-radius: 999px;
+  padding: 4px 10px 4px 12px;
+  font-family: var(--ff-display);
+  font-weight: 700; font-size: 12px;
+  box-shadow: 2px 2px 0 var(--ff-navy-ink);
+  cursor: pointer;
+  user-select: none;
+  bottom: calc(var(--ff-hand-dock-h) + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.ff-zoom-chip > button {
+  background: var(--ff-navy);
+  color: var(--ff-cream);
+  border: 2px solid var(--ff-navy-ink);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-family: var(--ff-display);
+  font-weight: 700; font-size: 10px;
+  cursor: pointer;
+}
+body[data-orientation-effective="landscape"] .ff-zoom-chip {
+  bottom: auto;
+  top: calc(var(--ff-turnbar-h) + 8px);
+  left: 8px;
+  transform: none;
+}
+
 /* ----- Board rotor ----------------------------------------------------
    Portrait: simple full-width wrapper, no transform.
    Landscape: an aspect-ratio:7/5 outer box sized to fit available area,
