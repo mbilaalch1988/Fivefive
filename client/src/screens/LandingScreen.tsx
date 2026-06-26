@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AccountSetup } from "../components/AccountSetup";
+import { BackgroundLoop } from "../components/BackgroundLoop";
 import { FivefiveLockup } from "../components/BrandMark";
 import { AuthPanel } from "../components/AuthPanel";
 import { ClaimNamePrompt } from "../components/ClaimNamePrompt";
@@ -116,18 +117,7 @@ export function LandingScreen({
       className="relative min-h-screen flex flex-col items-center justify-center p-4 overflow-hidden"
       style={{ background: "var(--ff-navy)" }}
     >
-      {/* Royal-navy ambient glow — gold + coral + sky tints, no blobs. */}
-      <div
-        aria-hidden="true"
-        className="fixed inset-0 -z-0 pointer-events-none"
-        style={{
-          backgroundImage: [
-            "radial-gradient(circle at 12% 18%, rgba(228,195,115,0.10), transparent 45%)",
-            "radial-gradient(circle at 88% 82%, rgba(251,113,133,0.08), transparent 45%)",
-            "radial-gradient(circle at 50% 55%, rgba(56,189,248,0.06), transparent 55%)",
-          ].join(", "),
-        }}
-      />
+      <BackgroundLoop />
 
       <div className="relative w-full max-w-sm lg:max-w-5xl space-y-6">
         <header className="text-center flex flex-col items-center gap-3">

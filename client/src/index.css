@@ -99,6 +99,46 @@ body {
   height: 100%;
 }
 
+/* ------------------------------------------------------------ */
+/* Ambient background loops — 5 variants picked at random on    */
+/* every mount of <RandomBackground>. Pure CSS keyframes; the   */
+/* DOM-element layout is generated in components/BackgroundLoop. */
+/* ------------------------------------------------------------ */
+@keyframes ff-bg-rise {
+  0%   { transform: translateY(0);     opacity: 0; }
+  8%   { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-380px); opacity: 0; }
+}
+@keyframes ff-bg-drift {
+  0%, 100% { transform: translateX(-8px); }
+  50%      { transform: translateX(8px); }
+}
+@keyframes ff-bg-orb {
+  0%   { transform: translate(0, 0); }
+  33%  { transform: translate(38px, -26px); }
+  66%  { transform: translate(-28px, 22px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes ff-bg-fall {
+  0%   { transform: translateY(-360px); opacity: 0; }
+  12%  { opacity: 1; }
+  84%  { opacity: 1; }
+  100% { transform: translateY(0);      opacity: 0; }
+}
+@keyframes ff-bg-pulse {
+  0%, 100% { opacity: 0.14; }
+  50%      { opacity: 0.5; }
+}
+@keyframes ff-bg-win {
+  0%, 100% { opacity: 0.2; transform: scale(0.86); }
+  50%      { opacity: 1;   transform: scale(1); }
+}
+@keyframes ff-bg-pan {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 /* Cartoon surface primitives — apply for any panel/card that should
    read as part of the royal-navy casino theme. */
 .ff-sticker {

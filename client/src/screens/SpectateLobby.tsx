@@ -1,4 +1,5 @@
 import type { RoomView, Team } from "@fivefive/shared";
+import { BackgroundLoop } from "../components/BackgroundLoop";
 import { TEAM_CHIP, TEAM_TEXT } from "../lib/cards";
 import { makeNickname } from "../lib/nickname";
 
@@ -17,10 +18,11 @@ export function SpectateLobby({ room, onLeave }: Props) {
   const teams: Team[] = ["red", "blue", "green"];
   return (
     <main
-      className="min-h-screen flex flex-col items-center p-4 gap-4"
+      className="relative min-h-screen flex flex-col items-center p-4 gap-4 overflow-hidden"
       style={{ background: "var(--md-surface)" }}
     >
-      <header className="w-full max-w-md flex items-center justify-between pt-2">
+      <BackgroundLoop />
+      <header className="relative w-full max-w-md flex items-center justify-between pt-2">
         <div className="flex items-center gap-2">
           <span className="text-2xl">👁</span>
           <div>

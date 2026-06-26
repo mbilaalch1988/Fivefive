@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DeckSummary, PlayerId, RoomView, Team } from "@fivefive/shared";
 import { AutoStartBanner } from "../components/AutoStartBanner";
+import { BackgroundLoop } from "../components/BackgroundLoop";
 import { Scoreboard } from "../components/Scoreboard";
 import { TEAM_CHIP, TEAM_SURFACE, TEAM_TEXT } from "../lib/cards";
 import { FilledButton, TonalButton } from "./LandingScreen";
@@ -74,12 +75,13 @@ export function LobbyScreen({
 
   return (
     <main
-      className="min-h-screen flex flex-col items-center p-4 gap-4"
+      className="relative min-h-screen flex flex-col items-center p-4 gap-4 overflow-hidden"
       style={{ background: "var(--md-surface)" }}
     >
+      <BackgroundLoop />
       {/* Outer wrapper: responsive max-width — narrow on phones, wide on lg+
           screens so desktop users get a 2-column layout instead of a sliver. */}
-      <div className="w-full max-w-md lg:max-w-5xl space-y-4">
+      <div className="relative w-full max-w-md lg:max-w-5xl space-y-4">
 
       <header className="w-full flex items-center justify-between">
         <h1 className="text-2xl font-medium tracking-tight">Fivefive</h1>
