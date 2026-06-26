@@ -334,14 +334,13 @@ body[data-orientation-effective="landscape"] .ff-hand-dock {
   transition: transform 180ms cubic-bezier(0.2, 0, 0, 1), margin 180ms ease;
 }
 /* PORTRAIT — horizontal stack, expose the LEFT corner of each card.
-   Card width is 52px (responsive) / 72px (sm:). We overlap by the card
-   width minus a small peek so the rank glyph at top-left stays readable. */
+   Card width is 52px (responsive) / 72px (sm:). Peek = 30px on both. */
 .ff-hand-card + .ff-hand-card {
-  margin-left: -34px;          /* peek ≈ 18px on 52px-wide cards */
+  margin-left: -22px;          /* 52w - 30 = 22 → 30px peek */
 }
 @media (min-width: 640px) {
   .ff-hand-card + .ff-hand-card {
-    margin-left: -50px;        /* peek ≈ 22px on 72px-wide cards */
+    margin-left: -42px;        /* 72w - 30 = 42 → 30px peek */
   }
 }
 .ff-hand-card--selected {
@@ -349,7 +348,7 @@ body[data-orientation-effective="landscape"] .ff-hand-dock {
 }
 
 /* LANDSCAPE — vertical stack, expose the TOP corner of each card.
-   Card height is 72px / 104px; overlap a bit less than the height. */
+   Card height is 72px (responsive) / 104px (sm:). Peek = 30px on both. */
 body[data-orientation-effective="landscape"] .ff-hand-cards {
   flex-direction: column;
   padding: 8px 6px;
@@ -361,15 +360,91 @@ body[data-orientation-effective="landscape"] .ff-hand-card {
 }
 body[data-orientation-effective="landscape"] .ff-hand-card + .ff-hand-card {
   margin-left: 0;
-  margin-top: -50px;           /* peek ≈ 22px on 72px-tall cards */
+  margin-top: -42px;           /* 72h - 30 = 42 → 30px peek */
 }
 @media (min-width: 640px) {
   body[data-orientation-effective="landscape"] .ff-hand-card + .ff-hand-card {
-    margin-top: -76px;         /* peek ≈ 28px on 104px-tall cards */
+    margin-top: -74px;         /* 104h - 30 = 74 → 30px peek */
   }
 }
 body[data-orientation-effective="landscape"] .ff-hand-card--selected {
   transform: translateY(0) translateX(-14px);
+}
+
+/* ----- Right deck (large screens, ≥1024×768) --------------------------
+   When useLargeScreen() returns true the burger popup + bottom hand strip
+   are replaced by a permanent right sidebar containing the menu items on
+   top and the stacked hand below. The board reclaims everything to the
+   left of the deck and works the same in both orientations.
+   --------------------------------------------------------------------- */
+:root {
+  --ff-right-deck-w: 280px;
+}
+.ff-right-deck {
+  position: fixed;
+  top: var(--ff-turnbar-h);
+  right: 0;
+  bottom: 0;
+  width: var(--ff-right-deck-w);
+  background: var(--ff-navy);
+  border-left: 3px solid var(--ff-navy-ink);
+  box-shadow: -3px 0 0 var(--ff-navy-ink);
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+  overflow: hidden;
+}
+.ff-right-deck__menu {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+.ff-game-menu-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+.ff-right-deck__hand {
+  flex: 0 0 auto;
+  padding: 10px 12px env(safe-area-inset-bottom, 10px);
+  border-top: 3px solid var(--ff-navy-ink);
+  background: var(--ff-navy-soft);
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+/* On large screens the game area reserves the right-deck width regardless
+   of orientation, and there's no bottom hand strip to clear. */
+@media (min-width: 1024px) and (min-height: 768px) {
+  .ff-game-area {
+    padding-bottom: 0.5rem;
+    padding-right: var(--ff-right-deck-w);
+  }
+  body[data-orientation-effective="landscape"] .ff-game-area {
+    padding-right: var(--ff-right-deck-w);
+  }
+  body[data-orientation-effective="landscape"] .ff-board-rotor {
+    /* The rotor's landscape width formula already constrains by the dock
+       width, but on large screens we use --ff-right-deck-w instead so the
+       rotated paint sizes to the wider sidebar. */
+    width: min(
+      calc((100dvh - var(--ff-turnbar-h) - 1rem) * 7 / 5),
+      calc(100vw - var(--ff-right-deck-w) - 1rem)
+    );
+  }
+  /* Right-deck hand stacks vertically (panel is narrow), like landscape. */
+  .ff-right-deck__hand .ff-hand-cards {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: visible;
+    padding: 8px 6px;
+  }
+  .ff-right-deck__hand .ff-hand-card { margin-left: 0; }
+  .ff-right-deck__hand .ff-hand-card + .ff-hand-card {
+    margin-left: 0;
+    margin-top: -74px;          /* sm: card 104h → 30px peek */
+  }
+  .ff-right-deck__hand .ff-hand-card--selected {
+    transform: translateY(0) translateX(-14px);
+  }
 }
 
 /* Cartoon surface primitives — apply for any panel/card that should

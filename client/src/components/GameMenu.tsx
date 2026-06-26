@@ -24,6 +24,9 @@ interface Props {
   /** Room code + player id needed to scope push subscriptions. */
   roomCode: string;
   myPlayerId: string | null;
+  /** When true, render the items as a permanent panel (no burger button,
+   *  no popup) — used inside the large-screen right deck. */
+  sidebar?: boolean;
 }
 
 /**
@@ -39,6 +42,7 @@ export function GameMenu({
   onStopGame,
   roomCode,
   myPlayerId,
+  sidebar = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [chimeMuted, setChimeMutedState]     = useState<boolean>(() => isChimeMuted());
@@ -92,6 +96,109 @@ export function GameMenu({
     }
   }
 
+  // Closure for closing the popup. In sidebar mode it's a no-op since the
+  // panel is always visible — but the menu actions still need to fire their
+  // open* callbacks the same way.
+  const closePopup = () => { if (!sidebar) setOpen(false); };
+
+  const items = (
+    <>
+      <MenuItem
+        icon="😀"
+        label="Stickers"
+        onClick={() => { closePopup(); onOpenStickers(); }}
+        testId="menu-stickers"
+      />
+      <MenuItem
+        icon="💬"
+        label="Quick chat"
+        onClick={() => { closePopup(); onOpenQuickChat(); }}
+        testId="menu-quickchat"
+      />
+      <MenuItem
+        icon="📜"
+        label="Last played"
+        onClick={() => { closePopup(); onOpenHistory(); }}
+        testId="menu-history"
+      />
+      <MenuItem
+        icon="❓"
+        label="How to play"
+        onClick={() => { closePopup(); onOpenRules(); }}
+        testId="menu-rules"
+      />
+      <Divider />
+      <ToggleItem
+        icon="🔄"
+        label="Layout rotation"
+        value={
+          orientation.mode === "auto"
+            ? `auto · ${orientation.effective}`
+            : orientation.mode
+        }
+        onClick={orientation.cycle}
+        testId="menu-orientation"
+      />
+      <Divider />
+      <ToggleItem
+        icon={chimeMuted ? "🔕" : "🔔"}
+        label="Your-turn chime"
+        value={chimeMuted ? "muted" : "on"}
+        onClick={toggleChime}
+        testId="menu-chime"
+      />
+      <ToggleItem
+        icon={vibrateMuted ? "📵" : "📳"}
+        label="Vibration"
+        value={vibrateMuted ? "muted" : "on"}
+        onClick={toggleVibrate}
+        testId="menu-vibrate"
+      />
+      <ToggleItem
+        icon={colorBlind ? "👁️" : "🎨"}
+        label="Color-blind chips"
+        value={colorBlind ? "on" : "off"}
+        onClick={toggleColorBlind}
+        testId="menu-colorblind"
+      />
+      {pushSupported && myPlayerId && (
+        <ToggleItem
+          icon={pushEnabled ? "🔔" : "🔕"}
+          label="Push when my turn"
+          value={pushBusy ? "…" : pushEnabled ? "on" : "off"}
+          onClick={togglePush}
+          testId="menu-push"
+        />
+      )}
+      {onStopGame && (
+        <>
+          <Divider />
+          <button
+            type="button"
+            onClick={() => { closePopup(); onStopGame(); }}
+            data-testid="menu-stop-game"
+            role="menuitem"
+            className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-rose-300 hover:bg-rose-500/15 transition-colors font-medium"
+          >
+            <span className="text-base w-5 text-center">⏹</span>
+            <span className="flex-1">Stop game</span>
+            <span className="text-rose-400">›</span>
+          </button>
+        </>
+      )}
+    </>
+  );
+
+  // Sidebar mode: render the list inline (no burger, no popup wrapper).
+  // GameScreen places this inside .ff-right-deck on large screens.
+  if (sidebar) {
+    return (
+      <div className="ff-game-menu-sidebar" role="menu" data-testid="game-menu-sidebar">
+        {items}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={menuRef}
@@ -123,89 +230,7 @@ export function GameMenu({
           style={{ background: "var(--md-surface-1)" }}
           role="menu"
         >
-          <MenuItem
-            icon="😀"
-            label="Stickers"
-            onClick={() => { setOpen(false); onOpenStickers(); }}
-            testId="menu-stickers"
-          />
-          <MenuItem
-            icon="💬"
-            label="Quick chat"
-            onClick={() => { setOpen(false); onOpenQuickChat(); }}
-            testId="menu-quickchat"
-          />
-          <MenuItem
-            icon="📜"
-            label="Last played"
-            onClick={() => { setOpen(false); onOpenHistory(); }}
-            testId="menu-history"
-          />
-          <MenuItem
-            icon="❓"
-            label="How to play"
-            onClick={() => { setOpen(false); onOpenRules(); }}
-            testId="menu-rules"
-          />
-          <Divider />
-          <ToggleItem
-            icon="🔄"
-            label="Layout rotation"
-            value={
-              orientation.mode === "auto"
-                ? `auto · ${orientation.effective}`
-                : orientation.mode
-            }
-            onClick={orientation.cycle}
-            testId="menu-orientation"
-          />
-          <Divider />
-          <ToggleItem
-            icon={chimeMuted ? "🔕" : "🔔"}
-            label="Your-turn chime"
-            value={chimeMuted ? "muted" : "on"}
-            onClick={toggleChime}
-            testId="menu-chime"
-          />
-          <ToggleItem
-            icon={vibrateMuted ? "📵" : "📳"}
-            label="Vibration"
-            value={vibrateMuted ? "muted" : "on"}
-            onClick={toggleVibrate}
-            testId="menu-vibrate"
-          />
-          <ToggleItem
-            icon={colorBlind ? "👁️" : "🎨"}
-            label="Color-blind chips"
-            value={colorBlind ? "on" : "off"}
-            onClick={toggleColorBlind}
-            testId="menu-colorblind"
-          />
-          {pushSupported && myPlayerId && (
-            <ToggleItem
-              icon={pushEnabled ? "🔔" : "🔕"}
-              label="Push when my turn"
-              value={pushBusy ? "…" : pushEnabled ? "on" : "off"}
-              onClick={togglePush}
-              testId="menu-push"
-            />
-          )}
-          {onStopGame && (
-            <>
-              <Divider />
-              <button
-                type="button"
-                onClick={() => { setOpen(false); onStopGame(); }}
-                data-testid="menu-stop-game"
-                role="menuitem"
-                className="state-layer w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-rose-300 hover:bg-rose-500/15 transition-colors font-medium"
-              >
-                <span className="text-base w-5 text-center">⏹</span>
-                <span className="flex-1">Stop game</span>
-                <span className="text-rose-400">›</span>
-              </button>
-            </>
-          )}
+          {items}
         </div>
       )}
     </div>

@@ -13,6 +13,7 @@ import {
   type Team,
 } from "@fivefive/shared";
 import { useBoardZoom } from "../lib/boardZoom";
+import { useLargeScreen } from "../lib/largeScreen";
 import { Board } from "../components/Board";
 import { Hand } from "../components/Hand";
 import { GameMenu } from "../components/GameMenu";
@@ -87,6 +88,9 @@ export function GameScreen({
   const [confirmingStop, setConfirmingStop] = useState(false);
   const zoomRef = useRef<HTMLDivElement | null>(null);
   const zoom = useBoardZoom(zoomRef);
+  // ≥1024×768 viewport → permanent right deck (menu + hand) instead of
+  // burger popup + bottom hand strip.
+  const isLargeScreen = useLargeScreen();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
   const [quickChatOpen, setQuickChatOpen] = useState(false);
@@ -417,49 +421,107 @@ export function GameScreen({
         </div>
       )}
 
-      {/* Fixed hand dock — bottom strip in portrait, right panel in landscape.
-          Stays visible while the board scrolls. */}
-      <div className="ff-hand-dock" data-testid="hand-dock">
-        {me ? (
-          <>
-            <div className="flex items-center justify-between text-xs sm:text-sm gap-2 text-ff-gold/80">
-              <span className="truncate font-semibold">
-                Hand · {view.myHand.length}
-              </span>
-              {showDiscardButton && (
-                <button
-                  type="button"
-                  onClick={onDiscardDead}
-                  className="bg-ff-coral hover:bg-ff-coral-deep text-ff-cream font-bold px-3 py-1 rounded-full text-[0.65rem] sm:text-xs uppercase tracking-wider shrink-0 border-2 border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)]"
-                >
-                  Discard
-                </button>
+      {/* SMALL SCREENS — fixed hand dock (bottom in portrait, right in
+          landscape) plus the burger-button GameMenu at the corner.
+          LARGE SCREENS (≥1024×768) — permanent right deck holds menu items
+          on top and the stacked hand below, no popup, no bottom strip. */}
+      {!isLargeScreen && (
+        <div className="ff-hand-dock" data-testid="hand-dock">
+          {me ? (
+            <>
+              <div className="flex items-center justify-between text-xs sm:text-sm gap-2 text-ff-gold/80">
+                <span className="truncate font-semibold">
+                  Hand · {view.myHand.length}
+                </span>
+                {showDiscardButton && (
+                  <button
+                    type="button"
+                    onClick={onDiscardDead}
+                    className="bg-ff-coral hover:bg-ff-coral-deep text-ff-cream font-bold px-3 py-1 rounded-full text-[0.65rem] sm:text-xs uppercase tracking-wider shrink-0 border-2 border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)]"
+                  >
+                    Discard
+                  </button>
+                )}
+              </div>
+              <Hand
+                hand={view.myHand}
+                selectedCardId={selectedCardId}
+                deadCardIds={deadCardIds}
+                disabled={view.winner !== null}
+                deck={view.deck}
+                onSelect={(id) =>
+                  setSelectedCardId((prev) => (prev === id ? null : id))
+                }
+              />
+              {!myTurn && !view.winner && (
+                <p className="text-center text-[0.65rem] sm:text-xs" style={{ color: "var(--md-on-surface-variant)" }}>
+                  {selectedCard
+                    ? `Preview — waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`
+                    : `Waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-center text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
+              Spectating.
+            </p>
+          )}
+        </div>
+      )}
+
+      {isLargeScreen && (
+        <aside className="ff-right-deck" data-testid="right-deck">
+          <div className="ff-right-deck__menu">
+            {!view.winner && (
+              <GameMenu
+                sidebar
+                onOpenStickers={() => setStickerPickerOpen(true)}
+                onOpenQuickChat={() => setQuickChatOpen(true)}
+                onOpenHistory={() => setHistoryOpen(true)}
+                onOpenRules={() => setRulesOpen(true)}
+                onStopGame={isHost ? () => setConfirmingStop(true) : null}
+                roomCode={room?.code ?? ""}
+                myPlayerId={myPlayerId}
+              />
+            )}
+          </div>
+          {me && (
+            <div className="ff-right-deck__hand">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <span className="text-xs font-bold uppercase tracking-wider text-ff-gold/80 truncate">
+                  Hand · {view.myHand.length}
+                </span>
+                {showDiscardButton && (
+                  <button
+                    type="button"
+                    onClick={onDiscardDead}
+                    className="bg-ff-coral hover:bg-ff-coral-deep text-ff-cream font-bold px-3 py-1 rounded-full text-[0.65rem] uppercase tracking-wider shrink-0 border-2 border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)]"
+                  >
+                    Discard
+                  </button>
+                )}
+              </div>
+              <Hand
+                hand={view.myHand}
+                selectedCardId={selectedCardId}
+                deadCardIds={deadCardIds}
+                disabled={view.winner !== null}
+                deck={view.deck}
+                onSelect={(id) =>
+                  setSelectedCardId((prev) => (prev === id ? null : id))
+                }
+              />
+              {!myTurn && !view.winner && (
+                <p className="text-center text-[0.65rem] mt-1 text-ff-gold/60">
+                  {selectedCard
+                    ? `Preview — waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`
+                    : `Waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`}
+                </p>
               )}
             </div>
-            <Hand
-              hand={view.myHand}
-              selectedCardId={selectedCardId}
-              deadCardIds={deadCardIds}
-              disabled={view.winner !== null}
-              deck={view.deck}
-              onSelect={(id) =>
-                setSelectedCardId((prev) => (prev === id ? null : id))
-              }
-            />
-            {!myTurn && !view.winner && (
-              <p className="text-center text-[0.65rem] sm:text-xs" style={{ color: "var(--md-on-surface-variant)" }}>
-                {selectedCard
-                  ? `Preview — waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`
-                  : `Waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`}
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-center text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
-            Spectating.
-          </p>
-        )}
-      </div>
+          )}
+        </aside>
+      )}
 
       {historyOpen && (
         <LastPlayedHistory
@@ -538,7 +600,9 @@ export function GameScreen({
         />
       )}
 
-      {!view.winner && (
+      {/* Burger-button menu — only on small screens (large screens render
+          the same items in the right deck above). */}
+      {!view.winner && !isLargeScreen && (
         <GameMenu
           onOpenStickers={() => setStickerPickerOpen(true)}
           onOpenQuickChat={() => setQuickChatOpen(true)}
