@@ -311,6 +311,18 @@ export function GameScreen({
   }
 
   async function onSquareClick(pos: Pos) {
+    // Diagnostic for the zoom-related click bug: if a user reports they
+    // can't place chips while zoomed, these logs reveal whether the click
+    // is reaching the handler at all (vs being hit-test-stolen by a fixed
+    // chrome element overlapping the scaled board).
+    if (typeof window !== "undefined") {
+      console.debug("[click] cell", pos, {
+        myTurn,
+        selectedCardId: selectedCard?.id ?? null,
+        winner: view.winner,
+        zoom: zoom.scale,
+      });
+    }
     if (!myTurn || !selectedCard || view.winner) return;
     const h = highlight(pos);
     if (h === "none") return;

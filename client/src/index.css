@@ -192,6 +192,7 @@ body[data-orientation-effective="landscape"] .ff-game-area {
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  position: relative;
   /* manipulation = allow pan + tap-to-click synthesis (so a finger tap on
      touchscreen still places a chip) but DO disable the browser's own
      double-tap-to-zoom (we own zoom via the pinch handler). Two-finger
@@ -201,11 +202,14 @@ body[data-orientation-effective="landscape"] .ff-game-area {
   transition: transform 80ms linear;
   transform-origin: center center;
 }
-/* Once the user has actively zoomed in, we own all gestures inside the
-   board area — switch to touch-action: none so 1-finger drag pans the
-   board instead of scrolling the page. */
+/* When the board is scaled, its painted cells can extend past the layout
+   box and into the regions occupied by fixed chrome (turnbar top, hand
+   dock bottom, right deck side). Those chrome elements sit at z-index ~30
+   so they steal click hit-tests from the overlapping cells. Lifting the
+   zoom container above them while zoomed restores cell hit-testing. */
 .ff-board-zoom[data-zoomed="true"] {
   touch-action: none;
+  z-index: 35;
 }
 .ff-board-zoom.ff-board-zoom--gesturing {
   /* Mid-gesture we update transform every pointermove; the easing would
