@@ -390,24 +390,38 @@ export function GameScreen({
           </div>
         )}
 
-        <div
-          ref={zoomRef}
-          className="ff-board-zoom w-full max-w-3xl"
-          style={{
-            transform: `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})`,
-          }}
-        >
-          <div className="ff-board-rotor w-full">
-            <Board
-              view={view}
-              justLocked={justLocked}
-              justPlaced={justPlaced}
-              celebratingTeam={celebratingTeam}
-              highlight={highlight}
-              onSquareClick={onSquareClick}
-            />
-          </div>
-        </div>
+        {(() => {
+          // Only set a CSS transform when the board is actually moved away
+          // from 1×/0,0 — at the identity state the transform string can
+          // create a compositing layer that's measurably slower for nothing.
+          const isZoomed =
+            Math.abs(zoom.scale - 1) > 0.001 ||
+            Math.abs(zoom.tx) > 0.5 ||
+            Math.abs(zoom.ty) > 0.5;
+          return (
+            <div
+              ref={zoomRef}
+              className="ff-board-zoom w-full max-w-3xl"
+              data-zoomed={isZoomed ? "true" : "false"}
+              style={
+                isZoomed
+                  ? { transform: `translate(${zoom.tx}px, ${zoom.ty}px) scale(${zoom.scale})` }
+                  : undefined
+              }
+            >
+              <div className="ff-board-rotor w-full">
+                <Board
+                  view={view}
+                  justLocked={justLocked}
+                  justPlaced={justPlaced}
+                  celebratingTeam={celebratingTeam}
+                  highlight={highlight}
+                  onSquareClick={onSquareClick}
+                />
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Zoom-state chip — only renders when the board is zoomed away from

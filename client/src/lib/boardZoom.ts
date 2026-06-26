@@ -91,6 +91,12 @@ export function useBoardZoom<E extends HTMLElement>(
     }
 
     function onPointerDown(e: PointerEvent) {
+      // Mouse input doesn't need any gesture handling — single-button clicks
+      // can always pass straight through to the cells. Skipping entirely
+      // here guarantees nothing in this hook can ever intercept a mouse
+      // click, even by accident (touch-action, capture, preventDefault).
+      if (e.pointerType === "mouse") return;
+
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (pointers.size === 2) {
         const pts = Array.from(pointers.values()) as [Pointer, Pointer];
@@ -108,8 +114,8 @@ export function useBoardZoom<E extends HTMLElement>(
         mode = "pan";
         try { el!.setPointerCapture(e.pointerId); } catch { /* ignore */ }
       } else {
-        // Single-finger tap at default zoom — leave the event alone so the
-        // click bubbles through to the cell's onClick handler.
+        // Single-finger touch at default zoom — leave the event alone so
+        // the synthesized click bubbles through to the cell's onClick.
         const now = performance.now();
         if (now - lastTapRef.current < DOUBLE_TAP_MS && scaleRef.current !== 1) {
           reset();
@@ -119,6 +125,7 @@ export function useBoardZoom<E extends HTMLElement>(
     }
 
     function onPointerMove(e: PointerEvent) {
+      if (e.pointerType === "mouse") return;
       if (!pointers.has(e.pointerId)) return;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -138,6 +145,7 @@ export function useBoardZoom<E extends HTMLElement>(
     }
 
     function onPointerUp(e: PointerEvent) {
+      if (e.pointerType === "mouse") return;
       pointers.delete(e.pointerId);
       try { el!.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
       if (pointers.size === 1 && mode === "pinch") {
