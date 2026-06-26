@@ -146,20 +146,34 @@ body {
 /* body[data-orientation-effective].                            */
 /* ------------------------------------------------------------ */
 :root {
-  --ff-turnbar-h:   88px;   /* portrait: matches GameScreen's pt-24 / sm:pt-28 */
-  --ff-hand-dock-h: 156px;  /* portrait: hand strip at bottom */
-  --ff-hand-dock-w: 220px;  /* landscape: hand panel on right */
+  --ff-turnbar-h:   72px;   /* portrait: clears fixed TurnBar */
+  --ff-hand-dock-h: 132px;  /* portrait: stacked-hand strip at bottom */
+  --ff-hand-dock-w: 130px;  /* landscape: vertical stacked-hand on right */
+}
+@media (min-width: 640px) {
+  :root {
+    --ff-turnbar-h:   80px;
+    --ff-hand-dock-h: 162px;
+  }
 }
 /* Landscape claws back vertical + horizontal space — small phones held
    sideways only have ~360-450px of usable height. */
 body[data-orientation-effective="landscape"] {
-  --ff-turnbar-h:   64px;
-  --ff-hand-dock-w: 184px;
+  --ff-turnbar-h:   60px;
+  --ff-hand-dock-w: 116px;
+}
+@media (min-width: 640px) {
+  body[data-orientation-effective="landscape"] {
+    --ff-hand-dock-w: 140px;
+  }
 }
 
 /* The game scrolls between the fixed turn bar and the fixed hand dock.
-   .ff-game-area is the inner column GameScreen uses for board + spacing. */
+   .ff-game-area is the inner column GameScreen uses for board + spacing.
+   Top + bottom padding are driven by the CSS vars so the board gets every
+   pixel that isn't claimed by chrome. */
 .ff-game-area {
+  padding-top: calc(var(--ff-turnbar-h) + 0.5rem);
   padding-bottom: var(--ff-hand-dock-h);
 }
 body[data-orientation-effective="landscape"] .ff-game-area {
@@ -297,22 +311,65 @@ body[data-orientation-effective="landscape"] .ff-hand-dock {
   gap: 4px;
 }
 
-/* Hand-cards container — Hand.tsx sets `.ff-hand-cards` on its inner div.
-   Portrait: keep flex-wrap strip behavior. Landscape: re-grid to 2x3 ("stacked in 3s")
-   and let it scroll vertically if cards don't fit on a tiny landscape phone. */
-body[data-orientation-effective="landscape"] .ff-hand-cards {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr;
-  grid-auto-rows: minmax(72px, 1fr);
-  gap: 4px;
-  flex: 1;
+/* ----- Stacked hand ---------------------------------------------------
+   Cards overlap so only the top-left rank+suit corner peeks out (like
+   holding a fan). Selected card "pops" away from the stack (UP in
+   portrait, LEFT in landscape) so its full face is visible.
+   --------------------------------------------------------------------- */
+.ff-hand-cards {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  background: var(--ff-navy-soft);
+  border-radius: 14px;
   min-height: 0;
-  overflow-y: auto;
-  padding: 4px !important;
-  align-items: stretch;
-  justify-items: center;
-  background: var(--ff-navy-soft) !important;
-  border-radius: 12px;
+  flex: 1;
+  /* Pop transforms can shoot above the flex baseline; let them show. */
+  overflow: visible;
+}
+.ff-hand-card {
+  position: relative;
+  flex: none;
+  transition: transform 180ms cubic-bezier(0.2, 0, 0, 1), margin 180ms ease;
+}
+/* PORTRAIT — horizontal stack, expose the LEFT corner of each card.
+   Card width is 52px (responsive) / 72px (sm:). We overlap by the card
+   width minus a small peek so the rank glyph at top-left stays readable. */
+.ff-hand-card + .ff-hand-card {
+  margin-left: -34px;          /* peek ≈ 18px on 52px-wide cards */
+}
+@media (min-width: 640px) {
+  .ff-hand-card + .ff-hand-card {
+    margin-left: -50px;        /* peek ≈ 22px on 72px-wide cards */
+  }
+}
+.ff-hand-card--selected {
+  transform: translateY(-14px);
+}
+
+/* LANDSCAPE — vertical stack, expose the TOP corner of each card.
+   Card height is 72px / 104px; overlap a bit less than the height. */
+body[data-orientation-effective="landscape"] .ff-hand-cards {
+  flex-direction: column;
+  padding: 8px 6px;
+  overflow-y: auto;        /* scroll if 6+ cards don't fit vertically */
+  overflow-x: visible;
+}
+body[data-orientation-effective="landscape"] .ff-hand-card {
+  margin-left: 0;
+}
+body[data-orientation-effective="landscape"] .ff-hand-card + .ff-hand-card {
+  margin-left: 0;
+  margin-top: -50px;           /* peek ≈ 22px on 72px-tall cards */
+}
+@media (min-width: 640px) {
+  body[data-orientation-effective="landscape"] .ff-hand-card + .ff-hand-card {
+    margin-top: -76px;         /* peek ≈ 28px on 104px-tall cards */
+  }
+}
+body[data-orientation-effective="landscape"] .ff-hand-card--selected {
+  transform: translateY(0) translateX(-14px);
 }
 
 /* Cartoon surface primitives — apply for any panel/card that should

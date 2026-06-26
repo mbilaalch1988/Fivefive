@@ -372,12 +372,12 @@ export function GameScreen({
         </div>
       </header>
 
-      {/* Scrollable board area. Top padding clears the fixed TurnBar; bottom/
-          right padding (set by .ff-game-area in index.css) clears the fixed
-          hand dock so the player can scroll the board without the dock ever
-          hiding underneath it. */}
+      {/* Scrollable board area. Padding (top clears turnbar, bottom clears
+          hand dock, right also clears dock in landscape) is set by
+          .ff-game-area in index.css from --ff-turnbar-h / --ff-hand-dock-*
+          so the board reclaims any pixel chrome doesn't need. */}
       <div
-        className="ff-game-area min-h-screen flex flex-col items-center p-2 sm:p-4 gap-2 sm:gap-3 pt-24 sm:pt-28"
+        className="ff-game-area min-h-screen flex flex-col items-center p-2 sm:p-4 gap-2 sm:gap-3"
         style={{ background: "var(--md-surface)" }}
       >
         {error && (
@@ -422,17 +422,15 @@ export function GameScreen({
       <div className="ff-hand-dock" data-testid="hand-dock">
         {me ? (
           <>
-            <div className="flex items-center justify-between text-xs sm:text-sm gap-2" style={{ color: "var(--md-on-surface-variant)" }}>
-              <span className="truncate">
-                Hand ({view.myHand.length}) —{" "}
-                <span className="font-medium text-ff-cream">{me.name}</span>{" "}
-                <span className="opacity-80">({view.teamNames[me.team]})</span>
+            <div className="flex items-center justify-between text-xs sm:text-sm gap-2 text-ff-gold/80">
+              <span className="truncate font-semibold">
+                Hand · {view.myHand.length}
               </span>
               {showDiscardButton && (
                 <button
                   type="button"
                   onClick={onDiscardDead}
-                  className="bg-amber-400 hover:bg-amber-300 text-zinc-900 font-semibold px-3 py-1 rounded-full text-[0.65rem] sm:text-xs uppercase tracking-wider shrink-0"
+                  className="bg-ff-coral hover:bg-ff-coral-deep text-ff-cream font-bold px-3 py-1 rounded-full text-[0.65rem] sm:text-xs uppercase tracking-wider shrink-0 border-2 border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)]"
                 >
                   Discard
                 </button>
