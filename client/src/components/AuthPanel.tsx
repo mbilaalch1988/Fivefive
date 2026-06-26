@@ -36,38 +36,32 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
   // Signed-in compact profile row.
   if (auth.user) {
     return (
-      <section
-        className="rounded-3xl p-5 shadow-sm"
-        style={{ background: "var(--md-surface-1)" }}
-      >
+      <section className="ff-sticker p-5">
         <div className="flex items-center gap-3">
           {auth.avatarUrl ? (
             <img
               src={auth.avatarUrl}
               alt=""
-              className="w-10 h-10 rounded-full border border-ff-navy-ink"
+              className="w-11 h-11 rounded-full border-[3px] border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)]"
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-ff-gold/20 border border-ff-gold/40 flex items-center justify-center text-ff-cream font-semibold">
+            <div className="w-11 h-11 rounded-full bg-ff-coral border-[3px] border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)] flex items-center justify-center text-ff-cream font-bold text-lg">
               {(auth.displayName ?? "?").charAt(0).toUpperCase()}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">
+            <div className="text-sm font-bold truncate text-ff-cream">
               {auth.displayName ?? "Signed in"}
             </div>
-            <div
-              className="text-xs truncate"
-              style={{ color: "var(--md-on-surface-variant)" }}
-            >
+            <div className="text-xs truncate text-ff-gold/80 font-mono">
               {auth.user.email ?? "—"}
             </div>
           </div>
           <button
             type="button"
             onClick={() => void auth.signOut()}
-            className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-navy-ink"
+            className="state-layer text-ff-cream text-xs uppercase tracking-widest font-bold px-3 py-1.5 rounded-full border-2 border-ff-gold/70 hover:bg-ff-gold/15 transition-colors"
           >
             Sign out
           </button>
@@ -127,12 +121,11 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
 
   return (
     <section
-      className="rounded-3xl p-5 space-y-4 shadow-sm"
-      style={{ background: "var(--md-surface-1)" }}
+      className="ff-sticker p-5 space-y-4"
       data-testid="auth-panel"
     >
-      {/* Tabs */}
-      <div className="flex rounded-full p-1" style={{ background: "var(--md-surface-2)" }}>
+      {/* Tabs — sit on a darker navy track so the active gold pill clearly pops. */}
+      <div className="flex rounded-full p-1 bg-ff-navy border-2 border-ff-navy-ink">
         <TabButton label="Sign in" active={tab === "signin"} onClick={() => setTab("signin")} />
         <TabButton label="Sign up" active={tab === "signup"} onClick={() => setTab("signup")} />
       </div>
@@ -158,9 +151,10 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
             autoComplete="email"
             placeholder="you@example.com"
             data-testid="auth-email"
-            className="w-full px-4 py-2.5 rounded-xl border bg-ff-navy/60 placeholder:text-zinc-600
-                       focus:outline-none focus:border-ff-gold transition-colors"
-            style={{ borderColor: "var(--md-outline)" }}
+            className="w-full px-4 py-2.5 rounded-xl border-[2.5px] border-ff-navy-ink bg-ff-navy
+                       text-ff-cream placeholder:text-ff-cream/30
+                       focus:outline-none focus:border-ff-gold transition-colors
+                       shadow-[2px_2px_0_var(--ff-navy-ink)]"
           />
         </FieldLabel>
         <FieldLabel label="Password" hint="At least 6 characters">
@@ -172,9 +166,10 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
             placeholder="••••••••"
             minLength={6}
             data-testid="auth-password"
-            className="w-full px-4 py-2.5 rounded-xl border bg-ff-navy/60 placeholder:text-zinc-600
-                       focus:outline-none focus:border-ff-gold transition-colors"
-            style={{ borderColor: "var(--md-outline)" }}
+            className="w-full px-4 py-2.5 rounded-xl border-[2.5px] border-ff-navy-ink bg-ff-navy
+                       text-ff-cream placeholder:text-ff-cream/30
+                       focus:outline-none focus:border-ff-gold transition-colors
+                       shadow-[2px_2px_0_var(--ff-navy-ink)]"
           />
         </FieldLabel>
 
@@ -182,10 +177,9 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
           type="submit"
           disabled={!canSubmit}
           data-testid="auth-submit"
-          className="state-layer w-full py-3 rounded-full font-medium text-ff-navy
-                     bg-ff-gold hover:bg-ff-cream-soft active:bg-ff-gold-deep
+          className="state-layer ff-pill ff-pill--gold w-full py-3 font-bold text-base
                      disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:cursor-not-allowed
-                     transition-colors shadow-sm shadow-ff-navy-ink/40"
+                     disabled:hover:translate-x-0 disabled:hover:translate-y-0"
         >
           {busy ? "…" : tab === "signin" ? "Sign in" : "Create account"}
         </button>
@@ -195,7 +189,7 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
             type="button"
             onClick={() => void onForgotPassword()}
             disabled={busy}
-            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-ff-cream py-1"
+            className="state-layer w-full text-xs uppercase tracking-widest font-semibold text-ff-gold/80 hover:text-ff-gold py-1"
           >
             Forgot password?
           </button>
@@ -210,18 +204,12 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
         )}
       </form>
 
-      {/* "or" divider */}
+      {/* "or" divider — span bg matches the .ff-sticker panel (navy-card). */}
       <div className="relative py-1 text-center">
-        <span
-          className="text-xs uppercase tracking-widest px-3"
-          style={{ background: "var(--md-surface-1)", color: "var(--md-on-surface-variant)" }}
-        >
+        <span className="text-xs uppercase tracking-widest font-bold px-3 text-ff-gold bg-ff-navy-card">
           or
         </span>
-        <div
-          className="absolute inset-x-0 top-1/2 border-t -z-10"
-          style={{ borderColor: "var(--md-outline)" }}
-        />
+        <div className="absolute inset-x-0 top-1/2 border-t-2 border-ff-navy-ink/60 -z-10" />
       </div>
 
       <button
@@ -229,10 +217,10 @@ export function AuthPanel({ errorAbove, onClearError }: Props) {
         onClick={() => void onGoogle()}
         disabled={auth.loading || busy}
         data-testid="signin-google"
-        className="state-layer w-full py-2.5 rounded-full font-medium text-ff-cream
-                   bg-ff-navy-soft hover:bg-ff-navy-card border border-ff-navy-ink
+        className="state-layer ff-pill w-full py-2.5 font-bold text-white
+                   bg-[#ea4335] hover:bg-[#d33b2c] active:bg-[#b8302a]
                    disabled:opacity-50 disabled:cursor-not-allowed
-                   transition-colors flex items-center justify-center gap-3"
+                   flex items-center justify-center gap-3"
       >
         <GoogleGlyph />
         <span>Continue with Google</span>
@@ -256,10 +244,10 @@ function TabButton({
       onClick={onClick}
       data-testid={`auth-tab-${label.toLowerCase().replace(" ", "")}`}
       aria-pressed={active}
-      className={`flex-1 py-2 rounded-full text-sm font-medium transition-colors ${
+      className={`flex-1 py-2 rounded-full text-sm font-bold transition-all ${
         active
-          ? "bg-ff-gold text-white shadow-sm shadow-ff-navy-ink/50"
-          : "text-zinc-300 hover:text-white"
+          ? "bg-ff-gold text-ff-navy border-2 border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)]"
+          : "text-ff-cream/70 hover:text-ff-cream"
       }`}
     >
       {label}

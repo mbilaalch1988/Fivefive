@@ -224,21 +224,14 @@ export function LandingScreen({
             spectate stays reachable even before sign-in. */}
         <div className="relative py-1 text-center">
           <span
-            className="text-xs uppercase tracking-widest px-3"
-            style={{ background: "var(--md-surface)", color: "var(--md-on-surface-variant)" }}
+            className="text-xs uppercase tracking-widest font-bold px-3 text-ff-gold bg-ff-navy"
           >
             or join a room
           </span>
-          <div
-            className="absolute inset-x-0 top-1/2 border-t -z-10"
-            style={{ borderColor: "var(--md-outline)" }}
-          />
+          <div className="absolute inset-x-0 top-1/2 border-t-2 border-ff-navy-ink/60 -z-10" />
         </div>
 
-        <section
-          className="rounded-3xl p-5 space-y-4 shadow-sm"
-          style={{ background: "var(--md-surface-1)" }}
-        >
+        <section className="ff-sticker p-5 space-y-4">
           <FilledTextField
             label="Room code"
             value={code}
@@ -256,7 +249,7 @@ export function LandingScreen({
           <button
             type="button"
             onClick={() => setShowSpectate((v) => !v)}
-            className="state-layer w-full text-xs uppercase tracking-widest text-zinc-400 hover:text-ff-cream py-1"
+            className="state-layer w-full text-xs uppercase tracking-widest font-semibold text-ff-gold/70 hover:text-ff-gold py-1"
           >
             {showSpectate ? "Hide spectate option" : "Just watching? Spectate a game"}
           </button>
@@ -276,10 +269,11 @@ export function LandingScreen({
                   go(() => onSpectate(code.trim(), spectateName.trim() || "Spectator"))
                 }
                 disabled={!canSpectate}
-                className="state-layer w-full py-3 rounded-full font-medium text-amber-100
-                           bg-amber-500/15 border border-amber-400/40 hover:bg-amber-500/25
-                           disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:border-ff-navy-ink
-                           disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="state-layer ff-pill w-full py-3 font-bold
+                           bg-ff-coral hover:bg-ff-coral-deep active:bg-ff-coral-deep text-ff-cream
+                           disabled:bg-ff-navy-soft disabled:text-ff-cream/40
+                           disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0
+                           flex items-center justify-center gap-2"
               >
                 <span>👁</span>
                 <span>Spectate room</span>
@@ -291,12 +285,9 @@ export function LandingScreen({
 
         {/* Right column on lg+: Hall of Fame card. */}
         <div className="space-y-6">
-        <section
-          className="rounded-3xl p-5 space-y-3 shadow-sm"
-          style={{ background: "var(--md-surface-1)" }}
-        >
+        <section className="ff-sticker p-5 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs uppercase tracking-widest" style={{ color: "var(--md-on-surface-variant)" }}>
+            <h2 className="text-xs uppercase tracking-widest font-bold text-ff-gold">
               Hall of fame
             </h2>
             <div className="flex items-center gap-2">
@@ -304,7 +295,7 @@ export function LandingScreen({
                 type="button"
                 onClick={() => setReplayListOpen(true)}
                 data-testid="replays-button"
-                className="state-layer text-amber-200 hover:text-amber-100 text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-amber-400/40"
+                className="state-layer text-ff-cream text-xs uppercase tracking-widest font-bold px-3 py-1.5 rounded-full border-2 border-ff-gold/70 hover:bg-ff-gold/15 transition-colors"
               >
                 ▶ Replays
               </button>
@@ -312,7 +303,7 @@ export function LandingScreen({
                 type="button"
                 onClick={() => setScoreboardOpen(true)}
                 data-testid="scoreboard-button"
-                className="state-layer text-ff-gold hover:text-ff-cream text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-gold/40"
+                className="state-layer text-ff-cream text-xs uppercase tracking-widest font-bold px-3 py-1.5 rounded-full border-2 border-ff-gold/70 hover:bg-ff-gold/15 transition-colors"
               >
                 View all
               </button>
@@ -387,11 +378,10 @@ function ProfileBar({
 
   return (
     <section
-      className="rounded-3xl p-4 shadow-sm flex items-center gap-3"
-      style={{ background: "var(--md-surface-1)" }}
+      className="ff-sticker p-4 flex items-center gap-3"
       data-testid="profile-bar"
     >
-      <div className="w-10 h-10 rounded-full bg-ff-gold/20 border border-ff-gold/40 flex items-center justify-center text-ff-cream font-bold text-sm">
+      <div className="w-11 h-11 rounded-full bg-ff-coral border-[3px] border-ff-navy-ink shadow-[2px_2px_0_var(--ff-navy-ink)] flex items-center justify-center text-ff-cream font-bold text-base">
         {account.displayName.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
@@ -433,7 +423,7 @@ function ProfileBar({
       <button
         type="button"
         onClick={onSignOut}
-        className="state-layer text-zinc-300 hover:text-white text-xs uppercase tracking-widest font-medium px-3 py-1 rounded-full border border-ff-navy-ink"
+        className="state-layer text-ff-cream text-xs uppercase tracking-widest font-bold px-3 py-1.5 rounded-full border-2 border-ff-gold/70 hover:bg-ff-gold/15 transition-colors"
       >
         Sign out
       </button>
@@ -533,10 +523,7 @@ function FilledTextField(props: {
 }) {
   return (
     <label className="block">
-      <span
-        className="block text-xs font-medium mb-1.5"
-        style={{ color: "var(--md-on-surface-variant)" }}
-      >
+      <span className="block text-xs font-bold mb-1.5 text-ff-gold uppercase tracking-wider">
         {props.label}
       </span>
       <input
@@ -547,10 +534,11 @@ function FilledTextField(props: {
         maxLength={props.maxLength}
         placeholder={props.placeholder}
         data-testid={props.testId}
-        className={`w-full px-4 py-3 rounded-xl border bg-ff-navy/60 placeholder:text-zinc-600
+        className={`w-full px-4 py-3 rounded-xl border-[2.5px] border-ff-navy-ink bg-ff-navy
+                    text-ff-cream placeholder:text-ff-cream/30
                     focus:outline-none focus:border-ff-gold transition-colors
-                    ${props.mono ? "font-mono tracking-[0.3em] uppercase" : ""}`}
-        style={{ borderColor: "var(--md-outline)" }}
+                    shadow-[2px_2px_0_var(--ff-navy-ink)]
+                    ${props.mono ? "font-mono tracking-[0.3em] uppercase text-lg" : ""}`}
       />
     </label>
   );
@@ -568,10 +556,9 @@ export function FilledButton(props: {
       onClick={props.onClick}
       disabled={props.disabled}
       data-testid={props.testId}
-      className="state-layer w-full py-3 rounded-full font-medium text-ff-navy
-                 bg-ff-gold hover:bg-ff-cream-soft active:bg-ff-gold-deep
+      className="state-layer ff-pill ff-pill--gold w-full py-3 font-bold text-base
                  disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:cursor-not-allowed
-                 transition-colors shadow-sm shadow-ff-navy-ink/40"
+                 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
     >
       {props.children}
     </button>
@@ -590,9 +577,9 @@ export function TonalButton(props: {
       onClick={props.onClick}
       disabled={props.disabled}
       data-testid={props.testId}
-      className="state-layer w-full py-3 rounded-full font-medium text-ff-cream
-                 bg-ff-gold/15 border border-ff-gold/30 hover:bg-ff-gold/25
-                 disabled:bg-ff-navy-soft disabled:text-ff-cream/40 disabled:border-ff-navy-ink
+      className="state-layer w-full py-3 rounded-full font-bold text-ff-gold border-2 border-ff-gold/70
+                 hover:bg-ff-gold/15 active:bg-ff-gold/25
+                 disabled:text-ff-cream/40 disabled:border-ff-navy-ink
                  disabled:cursor-not-allowed transition-colors"
     >
       {props.children}
