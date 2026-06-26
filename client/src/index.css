@@ -139,6 +139,91 @@ body {
   to   { transform: translateX(-50%); }
 }
 
+/* ------------------------------------------------------------ */
+/* Game-board orientation — portrait (default) + landscape      */
+/* (board rotates -90° CCW, hand docks on the right).           */
+/* useOrientationBodyAttr() mirrors the orientation pref onto   */
+/* body[data-orientation-effective].                            */
+/* ------------------------------------------------------------ */
+:root {
+  --ff-turnbar-h:   88px;   /* matches GameScreen's pt-24 / sm:pt-28 */
+  --ff-hand-dock-h: 156px;  /* portrait: hand strip at bottom */
+  --ff-hand-dock-w: 220px;  /* landscape: hand panel on right */
+}
+
+/* The game scrolls between the fixed turn bar and the fixed hand dock.
+   .ff-game-area is the inner column GameScreen uses for board + spacing. */
+.ff-game-area {
+  padding-bottom: var(--ff-hand-dock-h);
+}
+body[data-orientation-effective="landscape"] .ff-game-area {
+  padding-bottom: 1rem;
+  padding-right: var(--ff-hand-dock-w);
+}
+
+/* Board rotor — wraps <Board /> so transforms don't leak into the grid. */
+.ff-board-rotor {
+  width: 100%;
+  transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+}
+body[data-orientation-effective="landscape"] .ff-board-rotor {
+  transform: rotate(-90deg);
+  /* In landscape the board's LAYOUT box is still portrait-shaped (5:7),
+     but it paints rotated. Constrain its container width by the available
+     viewport HEIGHT so the rotated paint fits without overlapping the hand
+     dock or the turn bar. */
+  max-width: min(
+    calc(100dvh - var(--ff-turnbar-h) - 2rem),
+    calc(100vw - var(--ff-hand-dock-w) - 2rem)
+  );
+  margin: 0 auto;
+}
+
+/* Hand dock — fixed strip (portrait) or fixed panel (landscape).
+   Lives outside the scrollable area so it stays put while the board scrolls. */
+.ff-hand-dock {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 30;
+  background: var(--ff-navy);
+  border-top: 3px solid var(--ff-navy-ink);
+  box-shadow: 0 -3px 0 var(--ff-navy-ink);
+  padding: 10px 12px env(safe-area-inset-bottom, 10px);
+  display: flex; flex-direction: column; gap: 6px;
+  min-height: var(--ff-hand-dock-h);
+  max-height: var(--ff-hand-dock-h);
+}
+body[data-orientation-effective="landscape"] .ff-hand-dock {
+  top: var(--ff-turnbar-h);
+  bottom: 0;
+  right: 0; left: auto;
+  width: var(--ff-hand-dock-w);
+  min-height: 0; max-height: none;
+  border-top: none;
+  border-left: 3px solid var(--ff-navy-ink);
+  box-shadow: -3px 0 0 var(--ff-navy-ink);
+  padding: 10px env(safe-area-inset-right, 10px) 10px 10px;
+}
+
+/* Hand-cards container — Hand.tsx sets `.ff-hand-cards` on its inner div.
+   In portrait we keep the default flex-wrap behavior (a strip). In landscape
+   we override to a 2-col × 3-row grid so 6 cards "stack in 3s". */
+body[data-orientation-effective="landscape"] .ff-hand-cards {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+  justify-items: stretch;
+}
+body[data-orientation-effective="landscape"] .ff-hand-cards > * {
+  width: 100%;
+  height: 100%;
+}
+
 /* Cartoon surface primitives — apply for any panel/card that should
    read as part of the royal-navy casino theme. */
 .ff-sticker {

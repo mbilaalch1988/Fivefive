@@ -5,6 +5,7 @@ import { LandingScreen } from "./screens/LandingScreen";
 import { LobbyScreen } from "./screens/LobbyScreen";
 import { SpectateLobby } from "./screens/SpectateLobby";
 import { applyColorBlindClass, onPrefsChange } from "./lib/prefs";
+import { useOrientationBodyAttr } from "./lib/orientation";
 
 export default function App() {
   const g = useGame();
@@ -14,6 +15,10 @@ export default function App() {
     applyColorBlindClass();
     return onPrefsChange(applyColorBlindClass);
   }, []);
+
+  // Mirror the user's orientation preference onto body data-attributes so the
+  // CSS rules in index.css can pivot the board + hand dock layout.
+  useOrientationBodyAttr();
 
   // Spectator: pre-game lobby view.
   if (g.isSpectator && g.room && !g.game) {

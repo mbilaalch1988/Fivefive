@@ -369,11 +369,12 @@ export function GameScreen({
         </div>
       </header>
 
-      {/* Main scrollable content. Top padding clears the fixed TurnBar (now
-          compact, just badges + counts row); bottom padding clears the fixed
-          Last-Played card + Stop button. */}
+      {/* Scrollable board area. Top padding clears the fixed TurnBar; bottom/
+          right padding (set by .ff-game-area in index.css) clears the fixed
+          hand dock so the player can scroll the board without the dock ever
+          hiding underneath it. */}
       <div
-        className="min-h-screen flex flex-col items-center p-2 sm:p-4 gap-2 sm:gap-3 pt-24 sm:pt-28 pb-36 sm:pb-40"
+        className="ff-game-area min-h-screen flex flex-col items-center p-2 sm:p-4 gap-2 sm:gap-3 pt-24 sm:pt-28"
         style={{ background: "var(--md-surface)" }}
       >
         {error && (
@@ -382,7 +383,7 @@ export function GameScreen({
           </div>
         )}
 
-        <div className="w-full max-w-3xl">
+        <div className="ff-board-rotor w-full max-w-3xl">
           <Board
             view={view}
             justLocked={justLocked}
@@ -392,50 +393,52 @@ export function GameScreen({
             onSquareClick={onSquareClick}
           />
         </div>
+      </div>
 
-        <div className="w-full max-w-3xl space-y-2">
-          {me ? (
-            <>
-              <div className="flex items-center justify-between text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
-                <span>
-                  Your hand ({view.myHand.length}) —{" "}
-                  <span className="font-medium text-ff-cream">{me.name}</span>{" "}
-                  <span className="opacity-80">({view.teamNames[me.team]})</span>
-                </span>
-                {showDiscardButton && (
-                  <button
-                    type="button"
-                    onClick={onDiscardDead}
-                    className="bg-amber-400 hover:bg-amber-300 text-zinc-900 font-semibold px-3 py-1 rounded-full text-xs uppercase tracking-wider"
-                  >
-                    Discard dead card
-                  </button>
-                )}
-              </div>
-              <Hand
-                hand={view.myHand}
-                selectedCardId={selectedCardId}
-                deadCardIds={deadCardIds}
-                disabled={view.winner !== null}
-                deck={view.deck}
-                onSelect={(id) =>
-                  setSelectedCardId((prev) => (prev === id ? null : id))
-                }
-              />
-              {!myTurn && !view.winner && (
-                <p className="text-center text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
-                  {selectedCard
-                    ? `Preview only — waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`
-                    : `Waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`}
-                </p>
+      {/* Fixed hand dock — bottom strip in portrait, right panel in landscape.
+          Stays visible while the board scrolls. */}
+      <div className="ff-hand-dock" data-testid="hand-dock">
+        {me ? (
+          <>
+            <div className="flex items-center justify-between text-xs sm:text-sm gap-2" style={{ color: "var(--md-on-surface-variant)" }}>
+              <span className="truncate">
+                Hand ({view.myHand.length}) —{" "}
+                <span className="font-medium text-ff-cream">{me.name}</span>{" "}
+                <span className="opacity-80">({view.teamNames[me.team]})</span>
+              </span>
+              {showDiscardButton && (
+                <button
+                  type="button"
+                  onClick={onDiscardDead}
+                  className="bg-amber-400 hover:bg-amber-300 text-zinc-900 font-semibold px-3 py-1 rounded-full text-[0.65rem] sm:text-xs uppercase tracking-wider shrink-0"
+                >
+                  Discard
+                </button>
               )}
-            </>
-          ) : (
-            <p className="text-center text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
-              Spectating.
-            </p>
-          )}
-        </div>
+            </div>
+            <Hand
+              hand={view.myHand}
+              selectedCardId={selectedCardId}
+              deadCardIds={deadCardIds}
+              disabled={view.winner !== null}
+              deck={view.deck}
+              onSelect={(id) =>
+                setSelectedCardId((prev) => (prev === id ? null : id))
+              }
+            />
+            {!myTurn && !view.winner && (
+              <p className="text-center text-[0.65rem] sm:text-xs" style={{ color: "var(--md-on-surface-variant)" }}>
+                {selectedCard
+                  ? `Preview — waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`
+                  : `Waiting for ${view.players[view.turnIdx]?.name ?? "next player"}…`}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-center text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
+            Spectating.
+          </p>
+        )}
       </div>
 
       {historyOpen && (

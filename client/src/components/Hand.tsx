@@ -15,7 +15,7 @@ export function Hand({ hand, selectedCardId, deadCardIds, disabled, deck, onSele
   // (mobile, where 7 enlarged cards no longer fit on one line).
   return (
     <div
-      className="flex flex-wrap gap-1.5 sm:gap-2 items-end justify-center p-2.5 sm:p-3 rounded-2xl"
+      className="ff-hand-cards flex flex-wrap gap-1.5 sm:gap-2 items-end justify-center p-2.5 sm:p-3 rounded-2xl"
       style={{ background: "var(--md-surface-1)" }}
     >
       {hand.map((card) => {

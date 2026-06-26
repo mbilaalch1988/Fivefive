@@ -5,6 +5,7 @@ import {
   setChimeMuted,
   setVibrationMuted,
 } from "../lib/notify";
+import { useOrientation } from "../lib/orientation";
 import { isColorBlindMode, setColorBlindMode } from "../lib/prefs";
 import {
   disablePush,
@@ -47,6 +48,7 @@ export function GameMenu({
   const [pushBusy, setPushBusy]              = useState(false);
   const pushSupported = isPushSupported();
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const orientation = useOrientation();
 
   // Close on outside click.
   useEffect(() => {
@@ -144,6 +146,18 @@ export function GameMenu({
             label="How to play"
             onClick={() => { setOpen(false); onOpenRules(); }}
             testId="menu-rules"
+          />
+          <Divider />
+          <ToggleItem
+            icon="🔄"
+            label="Layout rotation"
+            value={
+              orientation.mode === "auto"
+                ? `auto · ${orientation.effective}`
+                : orientation.mode
+            }
+            onClick={orientation.cycle}
+            testId="menu-orientation"
           />
           <Divider />
           <ToggleItem
