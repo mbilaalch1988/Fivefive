@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLargeScreen } from "./largeScreen";
 
 /**
  * Per-user board orientation preference. Three modes:
@@ -101,16 +102,36 @@ export function useOrientation(): OrientationState {
 }
 
 /**
- * Side-effect hook: mirrors the current orientation onto two body data
- * attributes so CSS can target both the user's chosen mode and the
- * effective render orientation independently. Mount once at the app root.
- *   body[data-orientation="auto"]                  ← user pref
- *   body[data-orientation-effective="landscape"]   ← what's rendered
+ * Side-effect hook: mirrors the current orientation onto body data
+ * attributes so CSS can target the user's chosen mode, the effective
+ * render orientation, and whether the body should be rotated as a whole.
+ * Mount once at the app root.
+ *
+ *   body[data-orientation="auto"]                   ← user pref
+ *   body[data-orientation-effective="landscape"]    ← what's rendered
+ *   body[data-rotator-active="true"]                ← whole-body 90° rotation
+ *
+ * On SMALL screens (phones / small tablets), landscape mode is expressed
+ * by rotating the entire body -90° via CSS transform — the portrait UI
+ * layout stays unchanged inside the rotation, board cells stay upright,
+ * hand stays at the bottom. data-orientation-effective is forced to
+ * "portrait" so the landscape-only CSS (board rotation, right-side hand
+ * dock) doesn't fire. data-rotator-active flips the body transform on.
+ *
+ * On LARGE screens (laptops, tablets ≥ 1024×768), landscape mode applies
+ * the layout-changing rules directly (board rotated, hand on right) and
+ * no wrapper rotation is needed.
  */
 export function useOrientationBodyAttr(): void {
   const { mode, effective } = useOrientation();
+  const isLargeScreen = useLargeScreen();
   useEffect(() => {
     document.body.dataset.orientation = mode;
-    document.body.dataset.orientationEffective = effective;
-  }, [mode, effective]);
+    document.body.dataset.orientationEffective = isLargeScreen ? effective : "portrait";
+    if (!isLargeScreen && mode === "landscape") {
+      document.body.dataset.rotatorActive = "true";
+    } else {
+      delete document.body.dataset.rotatorActive;
+    }
+  }, [mode, effective, isLargeScreen]);
 }
