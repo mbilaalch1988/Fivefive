@@ -146,24 +146,30 @@ body {
 /* body[data-orientation-effective].                            */
 /* ------------------------------------------------------------ */
 :root {
-  --ff-turnbar-h:   72px;   /* portrait: clears fixed TurnBar */
+  /* TurnBar reserve has to cover the soccer-style scorebar pill + the
+     player-badges row underneath. Measured around 100-130px depending on
+     viewport; values include a small safety margin so the top of the
+     board never disappears under the chrome. */
+  --ff-turnbar-h:   116px;  /* portrait mobile */
   --ff-hand-dock-h: 132px;  /* portrait: stacked-hand strip at bottom */
   --ff-hand-dock-w: 130px;  /* landscape: vertical stacked-hand on right */
 }
 @media (min-width: 640px) {
   :root {
-    --ff-turnbar-h:   80px;
+    --ff-turnbar-h:   136px;
     --ff-hand-dock-h: 162px;
   }
 }
 /* Landscape claws back vertical + horizontal space — small phones held
-   sideways only have ~360-450px of usable height. */
+   sideways only have ~360-450px of usable height. The scorebar wraps
+   slightly tighter when there's less horizontal room so we save a bit. */
 body[data-orientation-effective="landscape"] {
-  --ff-turnbar-h:   60px;
+  --ff-turnbar-h:   100px;
   --ff-hand-dock-w: 116px;
 }
 @media (min-width: 640px) {
   body[data-orientation-effective="landscape"] {
+    --ff-turnbar-h:   112px;
     --ff-hand-dock-w: 140px;
   }
 }
@@ -218,41 +224,35 @@ body[data-orientation-effective="landscape"] .ff-game-area {
 }
 
 /* Floating "Zoom 1.5× · Reset" chip — appears only when scale != 1.
-   Positioned bottom-center in portrait, top-left in landscape (where it
-   doesn't collide with the side hand dock). */
+   Anchored to the top-left corner just below the turnbar in every
+   orientation so it never blocks the board or the hand dock. Compact,
+   easy to reach, and out of the way of the play surface. */
 .ff-zoom-chip {
   position: fixed;
-  z-index: 35;
-  display: inline-flex; align-items: center; gap: 8px;
+  z-index: 36;
+  top: calc(var(--ff-turnbar-h) + 6px);
+  left: calc(env(safe-area-inset-left, 0px) + 8px);
+  display: inline-flex; align-items: center; gap: 6px;
   background: var(--ff-gold);
   color: var(--ff-navy);
   border: 2.5px solid var(--ff-navy-ink);
   border-radius: 999px;
-  padding: 4px 10px 4px 12px;
+  padding: 3px 8px 3px 10px;
   font-family: var(--ff-display);
-  font-weight: 700; font-size: 12px;
+  font-weight: 700; font-size: 11px;
   box-shadow: 2px 2px 0 var(--ff-navy-ink);
   cursor: pointer;
   user-select: none;
-  bottom: calc(var(--ff-hand-dock-h) + 10px);
-  left: 50%;
-  transform: translateX(-50%);
 }
 .ff-zoom-chip > button {
   background: var(--ff-navy);
   color: var(--ff-cream);
   border: 2px solid var(--ff-navy-ink);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 1px 7px;
   font-family: var(--ff-display);
-  font-weight: 700; font-size: 10px;
+  font-weight: 700; font-size: 9px;
   cursor: pointer;
-}
-body[data-orientation-effective="landscape"] .ff-zoom-chip {
-  bottom: auto;
-  top: calc(var(--ff-turnbar-h) + 8px);
-  left: 8px;
-  transform: none;
 }
 
 /* ----- Board rotor ----------------------------------------------------
