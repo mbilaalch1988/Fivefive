@@ -14,6 +14,7 @@ import {
 } from "@fivefive/shared";
 import { useBoardZoom } from "../lib/boardZoom";
 import { useLargeScreen } from "../lib/largeScreen";
+import { useBoardRotator } from "../lib/orientation";
 import { Board } from "../components/Board";
 import { Hand } from "../components/Hand";
 import { GameMenu } from "../components/GameMenu";
@@ -91,6 +92,10 @@ export function GameScreen({
   // ≥1024×768 viewport → permanent right deck (menu + hand) instead of
   // burger popup + bottom hand strip.
   const isLargeScreen = useLargeScreen();
+  // Scoped to GameScreen: toggle the small-screen landscape-mode body
+  // rotation only while the game is on the page. Cleanup on unmount means
+  // leaving the game (back to lobby/landing) immediately un-rotates the UI.
+  useBoardRotator();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
   const [quickChatOpen, setQuickChatOpen] = useState(false);

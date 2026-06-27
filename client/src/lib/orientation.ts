@@ -103,24 +103,20 @@ export function useOrientation(): OrientationState {
 
 /**
  * Side-effect hook: mirrors the current orientation onto body data
- * attributes so CSS can target the user's chosen mode, the effective
- * render orientation, and whether the body should be rotated as a whole.
- * Mount once at the app root.
+ * attributes so CSS can target the user's chosen mode and the effective
+ * render orientation. Mount once at the app root.
  *
  *   body[data-orientation="auto"]                   ← user pref
  *   body[data-orientation-effective="landscape"]    ← what's rendered
- *   body[data-rotator-active="true"]                ← whole-body 90° rotation
  *
- * On SMALL screens (phones / small tablets), landscape mode is expressed
- * by rotating the entire body -90° via CSS transform — the portrait UI
- * layout stays unchanged inside the rotation, board cells stay upright,
- * hand stays at the bottom. data-orientation-effective is forced to
- * "portrait" so the landscape-only CSS (board rotation, right-side hand
- * dock) doesn't fire. data-rotator-active flips the body transform on.
+ * On SMALL screens, data-orientation-effective is forced to "portrait"
+ * so the landscape-only CSS (board rotation, right-side hand dock) only
+ * fires on large screens where the layout makes sense.
  *
- * On LARGE screens (laptops, tablets ≥ 1024×768), landscape mode applies
- * the layout-changing rules directly (board rotated, hand on right) and
- * no wrapper rotation is needed.
+ * The whole-body landscape rotation (data-rotator-active) is handled
+ * separately by useBoardRotator() — that hook is mounted only inside
+ * GameScreen so landing/lobby/spectate stay un-rotated even when the
+ * user has landscape mode selected.
  */
 export function useOrientationBodyAttr(): void {
   const { mode, effective } = useOrientation();
@@ -128,15 +124,38 @@ export function useOrientationBodyAttr(): void {
   useEffect(() => {
     document.body.dataset.orientation = mode;
     document.body.dataset.orientationEffective = isLargeScreen ? effective : "portrait";
-    // We also toggle a class on <html> when the rotator is active so the
-    // viewport-level overflow lock can target html. CSS :has() would work
-    // too, but the class is simpler and supported everywhere.
-    if (!isLargeScreen && mode === "landscape") {
+  }, [mode, effective, isLargeScreen]);
+}
+
+/**
+ * Mount this in GameScreen. Toggles data-rotator-active on body + a
+ * ff-rotator-active class on html when the user is on a small screen
+ * AND has landscape mode selected. The matching CSS rotates the entire
+ * body -90° so the portrait UI fits a sideways phone.
+ *
+ * Scoped to GameScreen on purpose — landing/lobby/spectate screens have
+ * portrait-only layouts and don't have the game menu (which is where the
+ * orientation toggle lives), so rotating them would trap the user with
+ * a rotated lobby and no way back.
+ *
+ * The cleanup callback removes both markers on unmount, so leaving the
+ * game (back to lobby) instantly un-rotates whatever comes next.
+ */
+export function useBoardRotator(): void {
+  const { mode } = useOrientation();
+  const isLargeScreen = useLargeScreen();
+  useEffect(() => {
+    const active = !isLargeScreen && mode === "landscape";
+    if (active) {
       document.body.dataset.rotatorActive = "true";
       document.documentElement.classList.add("ff-rotator-active");
     } else {
       delete document.body.dataset.rotatorActive;
       document.documentElement.classList.remove("ff-rotator-active");
     }
-  }, [mode, effective, isLargeScreen]);
+    return () => {
+      delete document.body.dataset.rotatorActive;
+      document.documentElement.classList.remove("ff-rotator-active");
+    };
+  }, [mode, isLargeScreen]);
 }
