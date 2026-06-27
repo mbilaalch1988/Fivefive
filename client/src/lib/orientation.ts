@@ -128,10 +128,15 @@ export function useOrientationBodyAttr(): void {
   useEffect(() => {
     document.body.dataset.orientation = mode;
     document.body.dataset.orientationEffective = isLargeScreen ? effective : "portrait";
+    // We also toggle a class on <html> when the rotator is active so the
+    // viewport-level overflow lock can target html. CSS :has() would work
+    // too, but the class is simpler and supported everywhere.
     if (!isLargeScreen && mode === "landscape") {
       document.body.dataset.rotatorActive = "true";
+      document.documentElement.classList.add("ff-rotator-active");
     } else {
       delete document.body.dataset.rotatorActive;
+      document.documentElement.classList.remove("ff-rotator-active");
     }
   }, [mode, effective, isLargeScreen]);
 }

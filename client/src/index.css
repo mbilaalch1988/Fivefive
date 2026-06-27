@@ -402,7 +402,16 @@ body[data-orientation-effective="landscape"] .ff-hand-card--selected {
      to push the rotated visual back into the viewport bounds.
 */
 @media (max-width: 1023px) {
-  html, body { overflow: hidden; }
+  /* Lock viewport scrolling ONLY while the wrapper rotation is active —
+     the rotated body's pre-transform layout box (100vh wide × 100vw tall)
+     extends past the viewport and would otherwise produce a scroll-track
+     on the html element. The previous version applied overflow:hidden to
+     every small-screen page including portrait mode, which broke menu and
+     page scrolling everywhere. */
+  html.ff-rotator-active,
+  body[data-rotator-active="true"] {
+    overflow: hidden;
+  }
   body[data-rotator-active="true"] {
     position: absolute;
     top: 0;
