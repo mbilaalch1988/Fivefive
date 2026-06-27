@@ -412,6 +412,15 @@ body[data-orientation-effective="landscape"] .ff-hand-card--selected {
     transform-origin: 0 0;
     transform: translate(0, 100vh) rotate(-90deg);
   }
+  /* Counter-rotate the board so cells/cards stay in their natural portrait
+     orientation despite the body's -90° rotation. Body -90° + rotor +90° =
+     0° net for board content in the viewport. All other UI elements rotate
+     with the body and appear upright for the user holding the phone
+     sideways; only the board stays in its original orientation. */
+  body[data-rotator-active="true"] .ff-board-rotor {
+    transform: rotate(90deg);
+    transform-origin: center center;
+  }
 }
 
 /* ----- Scorebar pill (TurnBar top-of-screen overlay) -----------------
