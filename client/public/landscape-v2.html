@@ -205,12 +205,13 @@
   /* ============== RIGHT COLUMN — menu (top) + hand (bottom) ============== */
   .rail {
     grid-area: right;
-    display: grid;
-    grid-template-rows: 1fr auto;  /* menu flex, hand auto-fit */
+    display: flex;
+    flex-direction: column;
     gap: var(--rail-gap);
     min-height: 0;
   }
   .menu {
+    flex: 1 1 auto;
     background: var(--navy);
     border: 2px solid var(--navy-ink);
     border-radius: 14px;
@@ -239,10 +240,10 @@
     box-shadow: 3px 3px 0 var(--navy-ink);
     padding: 10px 12px;
     display: flex; flex-direction: column; gap: 6px;
-    /* Bigger hand area now that all 6 cards stack horizontally so none
-       have to scroll off-screen. Menu above gets the rest. */
-    flex: 0 0 auto;
-    min-height: 110px;
+    /* Hand takes a chunky 48% of the right rail's vertical space so the
+       cards can grow taller. Menu (flex:1) takes the rest. */
+    flex: 0 0 48%;
+    min-height: 0;
   }
   .hand__label {
     font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
@@ -276,24 +277,25 @@
     background: var(--cream);
     color: var(--navy);
     border: 2px solid var(--navy-ink);
-    border-radius: 6px;
-    /* Card width scales with viewport width, clamped so a 6-card horizontal
-       stack always fits inside the right column. Default tuned for a ~22%
-       right column on a ~700-900px landscape phone viewport. */
-    width: clamp(34px, 6.5vw, 58px);
+    border-radius: 7px;
+    /* Card sizing — height anchors to the hand panel so when the hand
+       grows vertically the cards do too. Width follows from 5:7 aspect.
+       Caps at 64px wide so the 6-card stack still fits the right column. */
+    height: clamp(56px, 22dvh, 110px);
     aspect-ratio: 5 / 7;
-    box-shadow: 1.5px 1.5px 0 var(--navy-ink);
-    padding: 3px 4px;
+    box-shadow: 2px 2px 0 var(--navy-ink);
+    padding: 4px 5px;
     display: flex; flex-direction: column;
     font-family: 'Inter', sans-serif;
-    font-weight: 800; font-size: 11px;
+    font-weight: 800; font-size: 12px;
     flex: none;
     position: relative;
     transition: transform 120ms ease;
   }
-  /* Horizontal overlap — peek width ≈ card width minus |margin|. */
+  /* Horizontal overlap — keeps peek ≈ 30% of card width so all 6 fit in
+     the right column regardless of viewport size. */
   .hand__card + .hand__card {
-    margin-left: clamp(-42px, -4.2vw, -22px);
+    margin-left: clamp(-48px, -5vw, -28px);
   }
   /* z-index ramp so later cards layer on top of earlier ones */
   .hand__card:nth-child(1) { z-index: 1; }
@@ -304,7 +306,7 @@
   .hand__card:nth-child(6) { z-index: 6; }
   .hand__card:hover { transform: translateY(-6px); z-index: 100; }
   .hand__card.red { color: #b91c1c; }
-  .hand__card .suit { font-size: 11px; margin-top: auto; align-self: flex-end; }
+  .hand__card .suit { font-size: 13px; margin-top: auto; align-self: flex-end; }
 
   /* ============== Sketch knob — proportions controls ============== */
   .knobs {
