@@ -141,17 +141,30 @@
     justify-content: center;
     min-width: 0; min-height: 0;
   }
-  .board {
+  /* Outer container = post-rotation shape (7:5, wider than tall). Fills
+     the middle column height-first, capped by available width. */
+  .board-outer {
+    position: relative;
+    aspect-ratio: 7 / 5;
+    height: 100%;
+    width: auto;
+    max-width: 100%;
     background: var(--navy-soft);
     border: 3px solid var(--navy-ink);
     border-radius: 14px;
     padding: 5px;
     box-shadow: 4px 4px 0 var(--navy-ink);
-    /* 5:7 aspect-ratio because cells are 5:7 portrait and there are 10×10 */
-    aspect-ratio: 5 / 7;
-    /* Fill the smaller of: height-driven width or column width */
-    height: min(100%, calc((100vw - var(--col-score) - var(--col-right) - var(--rail-gap) * 4) * 7 / 5));
-    width: auto;
+  }
+  /* Inner board = the actual 10×10 grid, sized so its 5:7 portrait shape
+     produces a post-rotation paint that exactly fills the 7:5 outer.
+     Math: outer W × W·5/7. Inner pre-rotation = (W·5/7) × W. After
+     rotate(-90deg) paint = W × (W·5/7) = matches outer ✓. */
+  .board {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: calc(100% * 5 / 7);
+    transform: translate(-50%, -50%) rotate(-90deg);
+    transform-origin: center center;
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
@@ -381,7 +394,9 @@
 
   <!-- ============== MIDDLE — board ============== -->
   <div class="board-wrap">
-    <div class="board" id="board"></div>
+    <div class="board-outer">
+      <div class="board" id="board"></div>
+    </div>
   </div>
 
   <!-- ============== RIGHT — menu + hand ============== -->
