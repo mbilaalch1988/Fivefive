@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Fivefive · Landscape v2 — 3-column sketch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:       #0a1840;
+    --navy-soft:  #122560;
+    --navy-card:  #1a2f78;
+    --navy-ink:   #060d2a;
+    --gold:       #e4c373;
+    --gold-deep:  #c9a35b;
+    --cream:      #fef3c7;
+    --coral:      #fb7185;
+    --sky:        #38bdf8;
+    --mint:       #86efac;
+
+    /* Three-column proportions for small-screen landscape mode.
+       Left = score strip · middle = board · right = menu + hand. */
+    --col-score: 20%;    /* try 18–22% */
+    --col-right: 22%;    /* try 20–26% */
+    --rail-gap:  6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--navy);
+    color: var(--cream);
+    font-family: 'Fredoka', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    /* Subtle radial ambient — matches the rest of the app. */
+    background:
+      radial-gradient(circle at 12% 20%, rgba(228,195,115,0.10), transparent 45%),
+      radial-gradient(circle at 88% 80%, rgba(251,113,133,0.08), transparent 45%),
+      var(--navy);
+  }
+
+  /* ============== 3-column landscape layout ============== */
+  .stage {
+    height: 100dvh;
+    display: grid;
+    grid-template-columns: var(--col-score) 1fr var(--col-right);
+    grid-template-rows: 1fr;
+    grid-template-areas: "score board right";
+    gap: var(--rail-gap);
+    padding: var(--rail-gap);
+  }
+
+  /* ============== LEFT COLUMN — score strip ============== */
+  .score {
+    grid-area: score;
+    background: #050b22;
+    border: 2px solid var(--navy-ink);
+    border-radius: 18px;
+    box-shadow: 0 0 18px 1px var(--gold),
+                0 0 36px 4px color-mix(in srgb, var(--gold) 45%, transparent),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    display: flex; flex-direction: column;
+    align-items: stretch;
+    padding: 10px;
+    gap: 8px;
+    min-width: 0;
+  }
+  .score__time {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 12px;
+    text-align: center;
+    color: var(--cream);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 4px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    letter-spacing: 0.04em;
+  }
+  .score__team {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    padding: 8px 6px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1.5px solid rgba(255, 255, 255, 0.06);
+  }
+  .score__team--current {
+    background: rgba(228, 195, 115, 0.10);
+    border-color: rgba(228, 195, 115, 0.45);
+  }
+  .score__chip {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--navy-ink);
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.3);
+  }
+  .score__chip--red  { background: var(--coral); }
+  .score__chip--blue { background: var(--sky); }
+  .score__name {
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: var(--cream);
+  }
+  .score__num {
+    font-weight: 900;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--cream);
+    font-variant-numeric: tabular-nums;
+  }
+  .score__mark {
+    width: 36px; height: 36px;
+    margin: 4px auto;
+  }
+  .score__mark svg { width: 100%; height: 100%; display: block; }
+  .score__meta {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 9px;
+    text-align: center;
+    color: var(--gold);
+    opacity: 0.85;
+    letter-spacing: 0.08em;
+    margin-top: auto;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .score__meta span { display: block; }
+
+  /* ============== MIDDLE COLUMN — board ============== */
+  .board-wrap {
+    grid-area: board;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0; min-height: 0;
+  }
+  .board {
+    background: var(--navy-soft);
+    border: 3px solid var(--navy-ink);
+    border-radius: 14px;
+    padding: 5px;
+    box-shadow: 4px 4px 0 var(--navy-ink);
+    /* 5:7 aspect-ratio because cells are 5:7 portrait and there are 10×10 */
+    aspect-ratio: 5 / 7;
+    /* Fill the smaller of: height-driven width or column width */
+    height: min(100%, calc((100vw - var(--col-score) - var(--col-right) - var(--rail-gap) * 4) * 7 / 5));
+    width: auto;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 1.5px;
+  }
+  .cell {
+    background: var(--cream);
+    color: var(--navy);
+    border: 1px solid var(--navy-ink);
+    border-radius: 3px;
+    aspect-ratio: 5 / 7;
+    display: flex; flex-direction: column;
+    padding: 1px 2px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800; font-size: 7px;
+    line-height: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  .cell.red { color: #b91c1c; }
+  .cell .suit { font-size: 9px; margin-top: 1px; }
+  .cell.corner {
+    background: var(--gold);
+    color: var(--navy);
+    align-items: center; justify-content: center;
+    font-size: 7px;
+  }
+  .cell.corner::after { content: "FREE"; letter-spacing: 0.04em; }
+  .chip {
+    position: absolute; inset: 18%;
+    border-radius: 50%;
+    border: 1.5px solid var(--navy-ink);
+    box-shadow: 1px 1px 0 var(--navy-ink);
+  }
+  .chip.red  { background: var(--coral); }
+  .chip.blue { background: var(--sky); }
+
+  /* ============== RIGHT COLUMN — menu (top) + hand (bottom) ============== */
+  .rail {
+    grid-area: right;
+    display: grid;
+    grid-template-rows: 1fr auto;  /* menu flex, hand auto-fit */
+    gap: var(--rail-gap);
+    min-height: 0;
+  }
+  .menu {
+    background: var(--navy);
+    border: 2px solid var(--navy-ink);
+    border-radius: 14px;
+    box-shadow: 3px 3px 0 var(--navy-ink);
+    padding: 6px;
+    overflow-y: auto;
+    min-height: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .menu__item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: var(--cream);
+    font-weight: 600; font-size: 12px;
+    cursor: pointer;
+  }
+  .menu__item:hover { background: rgba(255, 255, 255, 0.05); }
+  .menu__item .icon { font-size: 14px; width: 18px; text-align: center; }
+  .menu__divider { height: 1px; background: rgba(255, 255, 255, 0.08); margin: 4px 0; }
+
+  .hand {
+    background: var(--navy-soft);
+    border: 2px solid var(--navy-ink);
+    border-radius: 14px;
+    box-shadow: 3px 3px 0 var(--navy-ink);
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    /* Bigger hand area now that all 6 cards stack horizontally so none
+       have to scroll off-screen. Menu above gets the rest. */
+    flex: 0 0 auto;
+    min-height: 110px;
+  }
+  .hand__label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--gold);
+    font-weight: 700;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .hand__discard {
+    background: var(--coral); color: var(--cream);
+    border: 1.5px solid var(--navy-ink);
+    border-radius: 999px;
+    font-size: 8px; font-weight: 800;
+    padding: 2px 6px;
+    box-shadow: 1px 1px 0 var(--navy-ink);
+    cursor: pointer;
+  }
+  /* Horizontal fan — every card always visible. Each card overlaps the
+     previous so only its top-left rank+suit corner peeks out, the last
+     card shows its full face. Total row width fits in the right column
+     because cards size from the column (--col-right) at render time. */
+  .hand__cards {
+    flex: 1;
+    display: flex; flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    min-height: 0; min-width: 0;
+    padding: 4px 0;
+    overflow: visible;
+  }
+  .hand__card {
+    background: var(--cream);
+    color: var(--navy);
+    border: 2px solid var(--navy-ink);
+    border-radius: 6px;
+    /* Card width scales with viewport width, clamped so a 6-card horizontal
+       stack always fits inside the right column. Default tuned for a ~22%
+       right column on a ~700-900px landscape phone viewport. */
+    width: clamp(34px, 6.5vw, 58px);
+    aspect-ratio: 5 / 7;
+    box-shadow: 1.5px 1.5px 0 var(--navy-ink);
+    padding: 3px 4px;
+    display: flex; flex-direction: column;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800; font-size: 11px;
+    flex: none;
+    position: relative;
+    transition: transform 120ms ease;
+  }
+  /* Horizontal overlap — peek width ≈ card width minus |margin|. */
+  .hand__card + .hand__card {
+    margin-left: clamp(-42px, -4.2vw, -22px);
+  }
+  /* z-index ramp so later cards layer on top of earlier ones */
+  .hand__card:nth-child(1) { z-index: 1; }
+  .hand__card:nth-child(2) { z-index: 2; }
+  .hand__card:nth-child(3) { z-index: 3; }
+  .hand__card:nth-child(4) { z-index: 4; }
+  .hand__card:nth-child(5) { z-index: 5; }
+  .hand__card:nth-child(6) { z-index: 6; }
+  .hand__card:hover { transform: translateY(-6px); z-index: 100; }
+  .hand__card.red { color: #b91c1c; }
+  .hand__card .suit { font-size: 11px; margin-top: auto; align-self: flex-end; }
+
+  /* ============== Sketch knob — proportions controls ============== */
+  .knobs {
+    position: fixed; bottom: 10px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--gold);
+    color: var(--navy);
+    border: 2px solid var(--navy-ink);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    box-shadow: 3px 3px 0 var(--navy-ink);
+    display: flex; gap: 12px; align-items: center;
+    z-index: 50;
+  }
+  .knobs input {
+    width: 70px;
+  }
+  .knobs label { display: flex; align-items: center; gap: 4px; }
+
+  /* ============== Portrait fallback hint ============== */
+  @media (orientation: portrait) {
+    .stage { display: none; }
+    .portrait-hint {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100dvh;
+      padding: 24px;
+      text-align: center;
+      gap: 12px;
+    }
+    .portrait-hint .icon { font-size: 64px; }
+    .portrait-hint h1 { font-size: 22px; color: var(--gold); }
+    .portrait-hint p { font-size: 14px; color: var(--cream); opacity: 0.8; max-width: 280px; }
+  }
+  @media (orientation: landscape) {
+    .portrait-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="portrait-hint">
+  <div class="icon">📱↻</div>
+  <h1>Rotate to landscape</h1>
+  <p>This sketch demonstrates the small-screen landscape layout. Rotate your phone or resize the browser window to wider-than-tall.</p>
+</div>
+
+<div class="stage">
+  <!-- ============== LEFT — score ============== -->
+  <div class="score">
+    <div class="score__time">––:––</div>
+
+    <div class="score__team score__team--current">
+      <span class="score__chip score__chip--red"></span>
+      <div class="score__name">RED</div>
+      <div class="score__num">2</div>
+    </div>
+
+    <div class="score__mark">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="6" width="88" height="88" rx="20" fill="var(--gold)" stroke="var(--navy-ink)" stroke-width="3" />
+        <g stroke="var(--navy-ink)" stroke-width="2.6">
+          <circle cx="18" cy="50" r="5.2" fill="var(--navy)" />
+          <circle cx="34" cy="50" r="5.2" fill="var(--navy)" />
+          <circle cx="50" cy="50" r="6.8" fill="var(--coral)" />
+          <circle cx="66" cy="50" r="5.2" fill="var(--navy)" />
+          <circle cx="82" cy="50" r="5.2" fill="var(--navy)" />
+        </g>
+      </svg>
+    </div>
+
+    <div class="score__team">
+      <span class="score__chip score__chip--blue"></span>
+      <div class="score__name">BLUE</div>
+      <div class="score__num">1</div>
+    </div>
+
+    <div class="score__meta">
+      <span>NEED 2</span>
+      <span>91 LEFT</span>
+    </div>
+  </div>
+
+  <!-- ============== MIDDLE — board ============== -->
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <!-- ============== RIGHT — menu + hand ============== -->
+  <aside class="rail">
+    <div class="menu">
+      <div class="menu__item"><span class="icon">😀</span><span>Stickers</span></div>
+      <div class="menu__item"><span class="icon">💬</span><span>Quick chat</span></div>
+      <div class="menu__item"><span class="icon">📜</span><span>Last played</span></div>
+      <div class="menu__item"><span class="icon">❓</span><span>How to play</span></div>
+      <div class="menu__divider"></div>
+      <div class="menu__item"><span class="icon">🔄</span><span>Layout</span></div>
+      <div class="menu__item"><span class="icon">🔔</span><span>Chime</span></div>
+      <div class="menu__item"><span class="icon">📳</span><span>Vibrate</span></div>
+      <div class="menu__divider"></div>
+      <div class="menu__item" style="color: #fb7185"><span class="icon">⏹</span><span>Stop game</span></div>
+    </div>
+
+    <div class="hand">
+      <div class="hand__label">
+        <span>Hand · 6</span>
+        <button class="hand__discard">Discard</button>
+      </div>
+      <div class="hand__cards" id="hand"></div>
+    </div>
+  </aside>
+</div>
+
+<!-- ============== Knobs for the sketch ============== -->
+<div class="knobs">
+  <label>Left
+    <input type="range" min="12" max="30" value="20" id="kScore" />
+    <span id="vScore">20%</span>
+  </label>
+  <label>Right
+    <input type="range" min="14" max="32" value="22" id="kRight" />
+    <span id="vRight">22%</span>
+  </label>
+</div>
+
+<script>
+  // Build a representative board
+  const board = document.getElementById('board');
+  const RANKS = ['6','7','8','9','10','Q','K','A','2','3','4','5','6','7','8','9','10','J','Q','K','A','2','3','4','5','6','7','8','9','10','J','Q','K','A','2','3','4','5','6','7','8','9','10','J','Q','K','A','2','3','4','5'];
+  const SUITS = ['♦','♥','♠','♣'];
+  const corners = new Set(['0,0','0,9','9,0','9,9']);
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      const key = r + ',' + c;
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      if (corners.has(key)) {
+        cell.classList.add('corner');
+      } else {
+        const suit = SUITS[(r + c) % 4];
+        const rank = RANKS[(r * 10 + c) % RANKS.length];
+        const isRed = suit === '♦' || suit === '♥';
+        if (isRed) cell.classList.add('red');
+        cell.innerHTML = '<div>' + rank + '</div><div class="suit">' + suit + '</div>';
+      }
+      if (key === '0,7') { const ch = document.createElement('div'); ch.className = 'chip blue'; cell.appendChild(ch); }
+      if (key === '4,5') { const ch = document.createElement('div'); ch.className = 'chip red'; cell.appendChild(ch); }
+      board.appendChild(cell);
+    }
+  }
+
+  // Hand cards
+  const hand = document.getElementById('hand');
+  const HAND = [
+    { rank: 'K', suit: '♦', red: true  },
+    { rank: '4', suit: '♦', red: true  },
+    { rank: '3', suit: '♠', red: false },
+    { rank: '5', suit: '♠', red: false },
+    { rank: 'Q', suit: '♣', red: false },
+    { rank: 'A', suit: '♠', red: false },
+  ];
+  for (const c of HAND) {
+    const card = document.createElement('div');
+    card.className = 'hand__card' + (c.red ? ' red' : '');
+    card.innerHTML = '<div>' + c.rank + '</div><div class="suit">' + c.suit + '</div>';
+    hand.appendChild(card);
+  }
+
+  // Knobs to adjust column proportions live
+  const kScore = document.getElementById('kScore');
+  const kRight = document.getElementById('kRight');
+  const vScore = document.getElementById('vScore');
+  const vRight = document.getElementById('vRight');
+  function applyKnobs() {
+    document.documentElement.style.setProperty('--col-score', kScore.value + '%');
+    document.documentElement.style.setProperty('--col-right', kRight.value + '%');
+    vScore.textContent = kScore.value + '%';
+    vRight.textContent = kRight.value + '%';
+  }
+  kScore.addEventListener('input', applyKnobs);
+  kRight.addEventListener('input', applyKnobs);
+</script>
+
+</body>
+</html>
