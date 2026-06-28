@@ -384,51 +384,156 @@ body[data-orientation-effective="landscape"] .ff-hand-card--selected {
   transform: translateY(0) translateX(-14px);
 }
 
-/* ----- Whole-body rotation for small-screen landscape MODE -----------
-   On a phone or small tablet (max-width 1023px), landscape mode keeps
-   the portrait UI layout untouched (board cells upright, hand at the
-   bottom, score at the top) and rotates the entire body -90° CCW so
-   the portrait UI appears upright when the phone is held sideways.
-   The transform also fires when the viewport is still portrait — the
-   user explicitly opted in, so we always rotate regardless of physical
-   orientation. data-orientation-effective is forced to "portrait" on
-   small screens (see useOrientationBodyAttr) so the landscape-only
-   layout CSS below this block doesn't fire and double-rotate anything.
+/* ----- Small-screen LANDSCAPE 3-column layout ------------------------
+   On a phone in landscape (max-width 1023px + effective landscape):
+     [score column · board · menu+hand rail]
+   - The fixed top header becomes a fixed LEFT column (vertical scorebar)
+   - The right deck (mounted by GameScreen when useSidebarLayout is true)
+     becomes a narrower RIGHT column with menu items top + hand bottom
+   - The board rotor rotation (defined earlier for effective=landscape)
+     already does the -90° board rotation; this section just resizes
+     the game-area padding and re-positions the chrome columns.
 
-   Math:
-     body width  = 100vh (= viewport HEIGHT)
-     body height = 100vw (= viewport WIDTH)
-     rotate(-90deg) around the body's top-left, then translate(0, 100vh)
-     to push the rotated visual back into the viewport bounds.
-*/
+   --col-score and --col-rail-w-mobile are the column widths. Tune them
+   in one place. */
+:root {
+  --col-score-w-mobile: 12%;
+  --col-rail-w-mobile:  20%;
+}
 @media (max-width: 1023px) {
-  /* Lock viewport scrolling ONLY while the wrapper rotation is active —
-     the rotated body's pre-transform layout box (100vh wide × 100vw tall)
-     extends past the viewport and would otherwise produce a scroll-track
-     on the html element. The previous version applied overflow:hidden to
-     every small-screen page including portrait mode, which broke menu and
-     page scrolling everywhere. */
-  html.ff-rotator-active,
-  body[data-rotator-active="true"] {
-    overflow: hidden;
+  body[data-orientation-effective="landscape"] .ff-game-area {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: calc(var(--col-score-w-mobile) + 0.5rem);
+    padding-right: calc(var(--col-rail-w-mobile) + 0.5rem);
+    gap: 0;
   }
-  body[data-rotator-active="true"] {
-    position: absolute;
+
+  /* GameScreen's fixed top header → left column on small landscape. */
+  body[data-orientation-effective="landscape"] header.fixed {
     top: 0;
+    bottom: 0;
     left: 0;
-    width: 100vh;
-    height: 100vw;
-    transform-origin: 0 0;
-    transform: translate(0, 100vh) rotate(-90deg);
+    right: auto;
+    width: var(--col-score-w-mobile);
+    height: 100dvh;
+    /* Container becomes a flex column so the inner pill can render
+       vertically. */
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 8px 6px;
   }
-  /* Counter-rotate the board so cells/cards stay in their natural portrait
-     orientation despite the body's -90° rotation. Body -90° + rotor +90° =
-     0° net for board content in the viewport. All other UI elements rotate
-     with the body and appear upright for the user holding the phone
-     sideways; only the board stays in its original orientation. */
-  body[data-rotator-active="true"] .ff-board-rotor {
-    transform: rotate(90deg);
-    transform-origin: center center;
+  body[data-orientation-effective="landscape"] header.fixed > div {
+    /* The inner wrapper (max-w-3xl mx-auto py-2 sm:py-3) becomes a full-
+       size flex column hosting the TurnBar's children. */
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Right deck → right column on small landscape (narrower than the
+     default 280px sidebar used on large screens). */
+  body[data-orientation-effective="landscape"] .ff-right-deck {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: var(--col-rail-w-mobile);
+    border-left: 3px solid var(--ff-navy-ink);
+    box-shadow: -3px 0 0 var(--ff-navy-ink);
+  }
+  /* Hand inside right deck on small landscape: horizontal stack of all 6
+     cards always visible, height-anchored sizing so cards grow as the
+     panel does. */
+  body[data-orientation-effective="landscape"] .ff-right-deck__hand {
+    flex: 0 0 48%;
+  }
+  body[data-orientation-effective="landscape"] .ff-right-deck__hand .ff-hand-cards {
+    flex-direction: row;
+    overflow: visible;
+    padding: 4px 0;
+    align-items: center;
+    justify-content: center;
+  }
+  body[data-orientation-effective="landscape"] .ff-right-deck__hand .ff-hand-card {
+    margin-left: 0;
+    margin-top: 0;
+    height: clamp(56px, 22dvh, 110px);
+    width: auto;
+    aspect-ratio: 5 / 7;
+  }
+  body[data-orientation-effective="landscape"] .ff-right-deck__hand .ff-hand-card + .ff-hand-card {
+    margin-left: clamp(-48px, -5vw, -28px);
+    margin-top: 0;
+  }
+  body[data-orientation-effective="landscape"] .ff-right-deck__hand .ff-hand-card--selected {
+    transform: translateY(-8px);
+  }
+
+  /* Override the board rotor's max-width calc for small-landscape columns. */
+  body[data-orientation-effective="landscape"] .ff-board-rotor {
+    width: min(
+      calc((100dvh - 1rem) * 7 / 5),
+      calc(100vw - var(--col-score-w-mobile) - var(--col-rail-w-mobile) - 1rem)
+    );
+  }
+
+  /* Scorebar pill becomes a tall vertical strip in the left column. */
+  body[data-orientation-effective="landscape"] .ff-scorebar-pill {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 18px;
+    padding: 10px 6px;
+    gap: 8px;
+    max-width: none;
+    flex: 1;
+  }
+  body[data-orientation-effective="landscape"] .ff-scorebar-pill__time {
+    text-align: center;
+    align-self: stretch;
+  }
+  body[data-orientation-effective="landscape"] .ff-scorebar-pill__team {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+  body[data-orientation-effective="landscape"] .ff-scorebar-pill__score {
+    font-size: 24px;
+  }
+  body[data-orientation-effective="landscape"] .ff-scorebar-pill__mark {
+    width: 28px; height: 28px;
+    margin: 4px auto;
+  }
+  body[data-orientation-effective="landscape"] .ff-scorebar-pill__meta {
+    flex-direction: column;
+    align-items: center;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-left: 0;
+    padding-top: 8px;
+    margin-left: 0;
+    margin-top: auto;
+    gap: 2px;
+  }
+  body[data-orientation-effective="landscape"] .ff-scorebar-pill__meta > span:nth-child(2) {
+    /* hide the "·" separator — vertical layout doesn't need it */
+    display: none;
+  }
+
+  /* Hide the player badges + reconnect banner + countdown bar in the
+     vertical scorebar to keep it tidy. The current player is signalled
+     by the pill's glow color anyway. */
+  body[data-orientation-effective="landscape"] header.fixed > div > .flex.flex-wrap,
+  body[data-orientation-effective="landscape"] header.fixed > div > .inline-flex,
+  body[data-orientation-effective="landscape"] header.fixed [data-testid="reconnect-banner"],
+  body[data-orientation-effective="landscape"] header.fixed [data-testid="turn-countdown"] {
+    display: none;
   }
 }
 

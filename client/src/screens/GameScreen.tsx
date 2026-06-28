@@ -14,7 +14,7 @@ import {
 } from "@fivefive/shared";
 import { useBoardZoom } from "../lib/boardZoom";
 import { useLargeScreen } from "../lib/largeScreen";
-import { useBoardRotator } from "../lib/orientation";
+import { useOrientation } from "../lib/orientation";
 import { Board } from "../components/Board";
 import { Hand } from "../components/Hand";
 import { GameMenu } from "../components/GameMenu";
@@ -92,10 +92,12 @@ export function GameScreen({
   // ≥1024×768 viewport → permanent right deck (menu + hand) instead of
   // burger popup + bottom hand strip.
   const isLargeScreen = useLargeScreen();
-  // Scoped to GameScreen: toggle the small-screen landscape-mode body
-  // rotation only while the game is on the page. Cleanup on unmount means
-  // leaving the game (back to lobby/landing) immediately un-rotates the UI.
-  useBoardRotator();
+  // On SMALL screens + landscape mode we also render the right deck (and
+  // CSS rearranges the page into a 3-column layout). The burger button
+  // and bottom hand strip are suppressed in that case.
+  const orientation = useOrientation();
+  const useSidebarLayout =
+    isLargeScreen || (!isLargeScreen && orientation.effective === "landscape");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [stickerPickerOpen, setStickerPickerOpen] = useState(false);
   const [quickChatOpen, setQuickChatOpen] = useState(false);
@@ -456,7 +458,7 @@ export function GameScreen({
           landscape) plus the burger-button GameMenu at the corner.
           LARGE SCREENS (≥1024×768) — permanent right deck holds menu items
           on top and the stacked hand below, no popup, no bottom strip. */}
-      {!isLargeScreen && (
+      {!useSidebarLayout && (
         <div className="ff-hand-dock" data-testid="hand-dock">
           {me ? (
             <>
@@ -500,7 +502,7 @@ export function GameScreen({
         </div>
       )}
 
-      {isLargeScreen && (
+      {useSidebarLayout && (
         <aside className="ff-right-deck" data-testid="right-deck">
           <div className="ff-right-deck__menu">
             {!view.winner && (
@@ -631,9 +633,10 @@ export function GameScreen({
         />
       )}
 
-      {/* Burger-button menu — only on small screens (large screens render
-          the same items in the right deck above). */}
-      {!view.winner && !isLargeScreen && (
+      {/* Burger-button menu — only when the sidebar layout isn't active.
+          When sidebar layout is on (large screen, or small screen in
+          landscape mode), the same items render inside the right deck. */}
+      {!view.winner && !useSidebarLayout && (
         <GameMenu
           onOpenStickers={() => setStickerPickerOpen(true)}
           onOpenQuickChat={() => setQuickChatOpen(true)}

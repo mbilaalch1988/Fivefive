@@ -109,53 +109,14 @@ export function useOrientation(): OrientationState {
  *   body[data-orientation="auto"]                   ← user pref
  *   body[data-orientation-effective="landscape"]    ← what's rendered
  *
- * On SMALL screens, data-orientation-effective is forced to "portrait"
- * so the landscape-only CSS (board rotation, right-side hand dock) only
- * fires on large screens where the layout makes sense.
- *
- * The whole-body landscape rotation (data-rotator-active) is handled
- * separately by useBoardRotator() — that hook is mounted only inside
- * GameScreen so landing/lobby/spectate stay un-rotated even when the
- * user has landscape mode selected.
+ * Both data-orientation-effective="landscape" CSS branches (small-screen
+ * 3-column layout AND large-screen right-deck) live in index.css and
+ * fire from this single attribute.
  */
 export function useOrientationBodyAttr(): void {
   const { mode, effective } = useOrientation();
-  const isLargeScreen = useLargeScreen();
   useEffect(() => {
     document.body.dataset.orientation = mode;
-    document.body.dataset.orientationEffective = isLargeScreen ? effective : "portrait";
-  }, [mode, effective, isLargeScreen]);
-}
-
-/**
- * Mount this in GameScreen. Toggles data-rotator-active on body + a
- * ff-rotator-active class on html when the user is on a small screen
- * AND has landscape mode selected. The matching CSS rotates the entire
- * body -90° so the portrait UI fits a sideways phone.
- *
- * Scoped to GameScreen on purpose — landing/lobby/spectate screens have
- * portrait-only layouts and don't have the game menu (which is where the
- * orientation toggle lives), so rotating them would trap the user with
- * a rotated lobby and no way back.
- *
- * The cleanup callback removes both markers on unmount, so leaving the
- * game (back to lobby) instantly un-rotates whatever comes next.
- */
-export function useBoardRotator(): void {
-  const { mode } = useOrientation();
-  const isLargeScreen = useLargeScreen();
-  useEffect(() => {
-    const active = !isLargeScreen && mode === "landscape";
-    if (active) {
-      document.body.dataset.rotatorActive = "true";
-      document.documentElement.classList.add("ff-rotator-active");
-    } else {
-      delete document.body.dataset.rotatorActive;
-      document.documentElement.classList.remove("ff-rotator-active");
-    }
-    return () => {
-      delete document.body.dataset.rotatorActive;
-      document.documentElement.classList.remove("ff-rotator-active");
-    };
-  }, [mode, isLargeScreen]);
+    document.body.dataset.orientationEffective = effective;
+  }, [mode, effective]);
 }
