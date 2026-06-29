@@ -9,7 +9,8 @@
   "workspaces": [
     "shared",
     "server",
-    "client"
+    "client",
+    "app"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=server & npm run dev --workspace=client",

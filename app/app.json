@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "Fivefive",
+    "slug": "fivefive",
+    "version": "0.1.0",
+    "scheme": "fivefive",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0a1840",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a1840"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fivefive.play",
+      "backgroundColor": "#0a1840"
+    },
+    "android": {
+      "package": "com.fivefive.play",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0a1840"
+      },
+      "predictiveBackGestureEnabled": false,
+      "edgeToEdgeEnabled": true,
+      "navigationBar": {
+        "backgroundColor": "#0a1840"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0a1840",
+          "image": "./assets/splash.png",
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#e4c373"
+        }
+      ]
+    ]
+  }
+}
